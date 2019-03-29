@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "820074775423",
+    "firebase_url": "https://bobaexplorer-c4179.firebaseio.com",
+    "project_id": "bobaexplorer-c4179",
+    "storage_bucket": "bobaexplorer-c4179.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:820074775423:android:e7efc29332db90c6",
+        "android_client_info": {
+          "package_name": "com.cooplay.boba_explorer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "820074775423-ioshiqekcrr2720gs44fohvn9kv3ofpb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDXC6RLGRO8hGimtXYhDsr1fw2GIPmY_I"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
