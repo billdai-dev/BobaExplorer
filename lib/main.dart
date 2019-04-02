@@ -71,8 +71,9 @@ class _BobaMapState extends State<BobaMap> {
               },
             );
           }),
-      floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.search),
+      floatingActionButton: FloatingActionButton.extended(
+          label: Text("Search"),
+          icon: Icon(Icons.search),
           onPressed: () {
             if (_cameraPos == null) {
               return;
@@ -80,6 +81,7 @@ class _BobaMapState extends State<BobaMap> {
             LatLng latLng = _cameraPos.target;
             bloc.seekBoba(latLng.latitude, latLng.longitude);
           }),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
