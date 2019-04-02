@@ -63,7 +63,7 @@ class _BobaMapState extends State<BobaMap> {
               markers: _isCameraTooFar || !snapshot.hasData ? null : _markers,
               onCameraMove: (pos) {
                 _cameraPos = pos;
-                bool tooFar = pos.zoom <= 14.5;
+                bool tooFar = pos.zoom <= 13;
                 if (tooFar == _isCameraTooFar) {
                   return;
                 }
@@ -92,8 +92,13 @@ class _BobaMapState extends State<BobaMap> {
       double hue;
       switch (shop) {
         case "50嵐":
+          hue = 61;
           break;
         case "迷客夏":
+          hue = 91;
+          break;
+        case "大苑子":
+          hue = 85;
           break;
       }
       GeoPoint geo = data.data["position"]["geopoint"];
@@ -101,12 +106,11 @@ class _BobaMapState extends State<BobaMap> {
       return Marker(
           markerId: MarkerId(data.documentID),
           position: pos,
-          icon: BitmapDescriptor.defaultMarker,
+          icon: BitmapDescriptor.defaultMarkerWithHue(hue),
           infoWindow: InfoWindow(
-            title: shop,
-            snippet:
-                "Address: ${data.data["city"]}${data.data["district"]}${data.data["address"]}",
-          ),
+              title: shop,
+              snippet:
+                  "Address: ${data.data["city"]}${data.data["district"]}${data.data["address"]}"),
           onTap: () => _mapController
               ?.animateCamera(CameraUpdate.newLatLngZoom(pos, 16)));
     });
