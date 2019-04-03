@@ -91,24 +91,16 @@ class _BobaMapState extends State<BobaMap> {
     }
     Iterable<Marker> markers = snapshots.map((data) {
       final shop = data.data["shopName"];
-      double hue;
-      switch (shop) {
-        case "50嵐":
-          hue = 61;
-          break;
-        case "迷客夏":
-          hue = 91;
-          break;
-        case "大苑子":
-          hue = 85;
-          break;
-      }
+      var hue = data.data["pinColor"];
+      hue = double.tryParse(hue.toString()) ?? hue;
       GeoPoint geo = data.data["position"]["geopoint"];
       final pos = LatLng(geo.latitude, geo.longitude);
       return Marker(
           markerId: MarkerId(data.documentID),
           position: pos,
-          icon: BitmapDescriptor.defaultMarkerWithHue(hue),
+          icon: hue == null
+              ? BitmapDescriptor.defaultMarker
+              : BitmapDescriptor.defaultMarkerWithHue(hue),
           infoWindow: InfoWindow(
               title: shop,
               snippet:
