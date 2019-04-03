@@ -1,16 +1,5 @@
-# boba_explorer
+# Boba Explorer
+Bubble tea shop is very famous in Taiwan. This app aims to show information of bubble tea shops around the user. However, currently I comment the function that asks user's location because judges do not live in Taiwan. So, the camera will move to Taiwan 101 initially. Try to zoom in and tap search button around Taiwan:)
 
-A application for searching Taiwanese tea shops
+p.s. There is a tea shop located in "10787 S Blaney Ave, Cupertino, CA 95014". You can also try to find it :D
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
-
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.

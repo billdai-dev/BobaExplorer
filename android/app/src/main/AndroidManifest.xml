@@ -11,7 +11,7 @@
 
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="boba_explorer"
+        android:label="Boba Explorer"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAejNrfQBqK45EVlhOdpDrUirNu-O3WxXg"/>

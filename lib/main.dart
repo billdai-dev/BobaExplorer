@@ -1,7 +1,6 @@
 import 'package:boba_explorer/boba_map_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() => runApp(MaterialApp(
@@ -50,15 +49,15 @@ class _BobaMapState extends State<BobaMap> {
                   const CameraPosition(target: _tw101, zoom: 15),
               onMapCreated: (controller) async {
                 _mapController = controller;
-                LatLng _curPosition = await Geolocator()
+                /*LatLng _curPosition = await Geolocator()
                     .getCurrentPosition()
                     .then((pos) => pos == null
                         ? null
                         : LatLng(pos.latitude, pos.longitude))
                     .catchError((err) {});
                 LatLng pos = _curPosition ?? _tw101;
-                controller.animateCamera(CameraUpdate.newLatLng(pos));
-                bloc.seekBoba(pos.latitude, pos.longitude);
+                controller.animateCamera(CameraUpdate.newLatLng(pos));*/ //Temporarily disabled :)
+                bloc.seekBoba(_tw101.latitude, _tw101.longitude);
               },
               markers: _isCameraTooFar || !snapshot.hasData ? null : _markers,
               onCameraMove: (pos) {
