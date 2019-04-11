@@ -25,9 +25,18 @@ PODS:
   - Firebase/Firestore (5.12.0):
     - Firebase/CoreOnly
     - FirebaseFirestore (= 0.14.0)
+  - Firebase/RemoteConfig (5.12.0):
+    - Firebase/Core
+    - FirebaseRemoteConfig (= 3.1.0)
   - firebase_core (0.0.1):
     - Firebase/Core
     - Flutter
+  - firebase_remote_config (0.0.1):
+    - Firebase/RemoteConfig
+    - Flutter
+  - FirebaseABTesting (2.0.0):
+    - FirebaseCore (~> 5.0)
+    - Protobuf (~> 3.5)
   - FirebaseAnalytics (5.3.0):
     - FirebaseCore (~> 5.1)
     - FirebaseInstanceID (~> 3.3)
@@ -69,6 +78,14 @@ PODS:
     - FirebaseCore (~> 5.1)
     - GoogleUtilities/Environment (~> 5.3)
     - GoogleUtilities/UserDefaults (~> 5.3)
+  - FirebaseRemoteConfig (3.1.0):
+    - FirebaseABTesting (~> 2.0)
+    - FirebaseAnalytics (~> 5.3)
+    - FirebaseCore (~> 5.1)
+    - FirebaseInstanceID (~> 3.3)
+    - GoogleUtilities/Environment (~> 5.2)
+    - "GoogleUtilities/NSData+zlib (~> 5.2)"
+    - Protobuf (~> 3.5)
   - Flutter (1.0.0)
   - geoflutterfire (0.0.1):
     - Flutter
@@ -151,6 +168,7 @@ PODS:
 DEPENDENCIES:
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
+  - firebase_remote_config (from `.symlinks/plugins/firebase_remote_config/ios`)
   - Flutter (from `.symlinks/flutter/ios`)
   - geoflutterfire (from `.symlinks/plugins/geoflutterfire/ios`)
   - geolocator (from `.symlinks/plugins/geolocator/ios`)
@@ -162,6 +180,7 @@ SPEC REPOS:
   https://github.com/cocoapods/specs.git:
     - BoringSSL
     - Firebase
+    - FirebaseABTesting
     - FirebaseAnalytics
     - FirebaseAuth
     - FirebaseAuthInterop
@@ -169,6 +188,7 @@ SPEC REPOS:
     - FirebaseDatabase
     - FirebaseFirestore
     - FirebaseInstanceID
+    - FirebaseRemoteConfig
     - GoogleAppMeasurement
     - GoogleMaps
     - GoogleUtilities
@@ -187,6 +207,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/cloud_firestore/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
+  firebase_remote_config:
+    :path: ".symlinks/plugins/firebase_remote_config/ios"
   Flutter:
     :path: ".symlinks/flutter/ios"
   geoflutterfire:
@@ -205,6 +227,8 @@ SPEC CHECKSUMS:
   cloud_firestore: 980813a98d8beb5c321b589845fabf6c4c5bd571
   Firebase: 9190018e296139d938b99521cde0c15a6e8d2946
   firebase_core: c96aa8b2fcf7f5167d32f22034f502f9304952b8
+  firebase_remote_config: 2777b8b63365dfcae3041a9e1cf7d04d927ac585
+  FirebaseABTesting: 1f50b8d50f5e3469eea54e7463a7b7fe221d1f5e
   FirebaseAnalytics: 63202d2665de4e6adcbdce189135255d8b5962ba
   FirebaseAuth: 9299ab178271bec7426967b05b2718bb6fc31f17
   FirebaseAuthInterop: 0ffa57668be100582bb7643d4fcb7615496c41fc
@@ -212,6 +236,7 @@ SPEC CHECKSUMS:
   FirebaseDatabase: e2bcbc106adc4b11a2da3ec2eb63c0c4a44f2f54
   FirebaseFirestore: 6dc97a9685c421767cc96bf644fc963166cddbe7
   FirebaseInstanceID: e2fa4cb35ef5558c200f7f0ad8a53e212215f93e
+  FirebaseRemoteConfig: 7e11c65f0769c09bff6947997c209515058c5318
   Flutter: 9d0fac939486c9aba2809b7982dfdbb47a7b0296
   geoflutterfire: 44694e56250c715a43f3fe75706538cc4fb105dc
   geolocator: e054ad14f577d282c418eb5e32c5f0a8a5e6c69d

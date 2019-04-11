@@ -1,4 +1,5 @@
 import 'package:boba_explorer/boba_map_bloc.dart';
+import 'package:boba_explorer/remote_config_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -40,37 +41,75 @@ class _BobaMapState extends State<BobaMap> {
       appBar: AppBar(
         title: Text('BobaExplorer'),
       ),
-      body: StreamBuilder<List<DocumentSnapshot>>(
-          stream: bloc?.bobaData,
-          builder: (ctx, snapshot) {
-            _markers = _genMarkers(snapshot.data);
-            return GoogleMap(
-              compassEnabled: false,
-              initialCameraPosition:
-                  const CameraPosition(target: _tw101, zoom: 15),
-              onMapCreated: (controller) async {
-                _mapController = controller;
-                LatLng _curPosition = await Geolocator()
-                    .getCurrentPosition()
-                    .then((pos) => pos == null
-                        ? null
-                        : LatLng(pos.latitude, pos.longitude))
-                    .catchError((err) {});
-                LatLng pos = _curPosition ?? _tw101;
-                controller.animateCamera(CameraUpdate.newLatLng(pos));
-                bloc.seekBoba(pos.latitude, pos.longitude);
-              },
-              markers: _isCameraTooFar || !snapshot.hasData ? null : _markers,
-              onCameraMove: (pos) {
-                _cameraPos = pos;
-                bool tooFar = pos.zoom <= 13;
-                if (tooFar == _isCameraTooFar) {
-                  return;
-                }
-                setState(() => _isCameraTooFar = !_isCameraTooFar);
-              },
-            );
-          }),
+      body: Column(
+        children: <Widget>[
+          Container(
+            height: 50,
+            color: Colors.white,
+            child: StreamBuilder<List<Shop>>(
+                stream: bloc.supportedShops,
+                builder: (context, snapshot) {
+                  List<Shop> shops = snapshot.hasData ? snapshot.data : null;
+                  return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: shops == null ? 0 : shops.length,
+                      padding: EdgeInsets.all(8),
+                      itemBuilder: (context, index) {
+                        Color color = Color.fromARGB(
+                            shops[index].color.a,
+                            shops[index].color.r,
+                            shops[index].color.g,
+                            shops[index].color.b);
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: RaisedButton(
+                            color: Colors.white,
+                            textColor: color,
+                            shape: StadiumBorder(
+                                side: BorderSide(color: color, width: 1.5)),
+                            child: Text(shops[index].name),
+                            onPressed: () {},
+                          ),
+                        );
+                      });
+                }),
+          ),
+          Expanded(
+            child: StreamBuilder<List<DocumentSnapshot>>(
+                stream: bloc?.bobaData,
+                builder: (ctx, snapshot) {
+                  _markers = _genMarkers(snapshot.data);
+                  return GoogleMap(
+                    compassEnabled: false,
+                    initialCameraPosition:
+                        const CameraPosition(target: _tw101, zoom: 15),
+                    onMapCreated: (controller) async {
+                      _mapController = controller;
+                      LatLng _curPosition = await Geolocator()
+                          .getCurrentPosition()
+                          .then((pos) => pos == null
+                              ? null
+                              : LatLng(pos.latitude, pos.longitude))
+                          .catchError((err) {});
+                      LatLng pos = _curPosition ?? _tw101;
+                      controller.animateCamera(CameraUpdate.newLatLng(pos));
+                      bloc.seekBoba(pos.latitude, pos.longitude);
+                    },
+                    markers:
+                        _isCameraTooFar || !snapshot.hasData ? null : _markers,
+                    onCameraMove: (pos) {
+                      _cameraPos = pos;
+                      bool tooFar = pos.zoom <= 13;
+                      if (tooFar == _isCameraTooFar) {
+                        return;
+                      }
+                      setState(() => _isCameraTooFar = !_isCameraTooFar);
+                    },
+                  );
+                }),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
           label: Text("Search"),
           icon: Icon(Icons.search),
