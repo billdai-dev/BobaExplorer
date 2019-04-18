@@ -1,3 +1,5 @@
+import 'package:bloc_pattern/bloc_pattern.dart';
+import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/boba_map_bloc.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,38 +7,44 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-void main() => runApp(MaterialApp(
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocProviderList(
+      listBloc: [Bloc(AppBloc())],
+      child: MaterialApp(
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: BlocProvider(
+          bloc: BobaMapBloc(),
+          child: BobaMap(),
+        ),
       ),
-      home: BobaMap(BobaMapBloc()),
-    ));
+    );
+  }
+}
 
 class BobaMap extends StatefulWidget {
-  final BobaMapBloc bloc;
-
-  BobaMap(this.bloc, {Key key}) : super(key: key);
+  BobaMap({Key key}) : super(key: key);
 
   @override
   _BobaMapState createState() => _BobaMapState();
 }
 
 class _BobaMapState extends State<BobaMap> {
-  static const _tw101 = LatLng(25.0339639, 121.5622835);
+  static const _tw101 = const LatLng(25.0339639, 121.5622835);
   GoogleMapController _mapController;
   CameraPosition _cameraPos;
   Set<Marker> _markers;
   bool _isCameraTooFar = false;
 
   @override
-  void dispose() {
-    widget.bloc?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    BobaMapBloc bloc = widget.bloc;
+    BobaMapBloc bobaMapBloc = BlocProvider.of<BobaMapBloc>(context);
+    AppBloc appBloc = BlocProviderList.of<AppBloc>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('BobaExplorer'),
@@ -47,7 +55,7 @@ class _BobaMapState extends State<BobaMap> {
             height: 50,
             color: Colors.white,
             child: StreamBuilder<List<Shop>>(
-                stream: bloc.supportedShops,
+                stream: appBloc.supportedShops,
                 builder: (context, snapshot) {
                   List<Shop> shops = snapshot.hasData ? snapshot.data : null;
                   return ListView.builder(
@@ -76,7 +84,7 @@ class _BobaMapState extends State<BobaMap> {
           ),
           Expanded(
             child: StreamBuilder<List<DocumentSnapshot>>(
-                stream: bloc?.bobaData,
+                stream: bobaMapBloc?.bobaData,
                 builder: (ctx, snapshot) {
                   _markers = _genMarkers(snapshot.data);
                   return GoogleMap(
@@ -93,7 +101,7 @@ class _BobaMapState extends State<BobaMap> {
                           .catchError((err) {});
                       LatLng pos = _curPosition ?? _tw101;
                       controller.animateCamera(CameraUpdate.newLatLng(pos));
-                      bloc.seekBoba(pos.latitude, pos.longitude);
+                      bobaMapBloc.seekBoba(pos.latitude, pos.longitude);
                     },
                     markers:
                         _isCameraTooFar || !snapshot.hasData ? null : _markers,
@@ -118,7 +126,7 @@ class _BobaMapState extends State<BobaMap> {
               return;
             }
             LatLng latLng = _cameraPos.target;
-            bloc.seekBoba(latLng.latitude, latLng.longitude);
+            bobaMapBloc.seekBoba(latLng.latitude, latLng.longitude);
           }),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );

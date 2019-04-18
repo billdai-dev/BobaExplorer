@@ -30,6 +30,7 @@ dependencies:
   geoflutterfire: ^2.0.3+2
   rxdart: ^0.20.0
   firebase_remote_config: ^0.1.0+2
+  bloc_pattern: ^1.5.2
 
 dev_dependencies:
   flutter_test:
