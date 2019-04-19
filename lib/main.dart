@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:launch_review/launch_review.dart';
 
 void main() => runApp(BlocProviderList(
       listBloc: [Bloc(AppBloc())],
@@ -36,11 +37,17 @@ class _MyAppState extends State<MyApp> {
           return;
         }
         _appVersionChecked = true;
-        showDialog(
-            context: context,
-            barrierDismissible: !event.forceUpdate,
-            builder: (context) =>
-                _AppUpdateDialog(event.forceUpdate, event.requiredVersion));
+        showDialog<bool>(
+                context: context,
+                barrierDismissible: !event.forceUpdate,
+                builder: (context) =>
+                    _AppUpdateDialog(event.forceUpdate, event.requiredVersion))
+            .then((agreeUpdate) {
+          if (!agreeUpdate) {
+            return;
+          }
+          LaunchReview.launch(writeReview: false);
+        });
       });
     }
   }
