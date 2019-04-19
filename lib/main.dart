@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/boba_map_bloc.dart';
@@ -7,23 +9,85 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BlocProviderList(
+void main() => runApp(BlocProviderList(
       listBloc: [Bloc(AppBloc())],
       child: MaterialApp(
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        home: BlocProvider(
-          bloc: BobaMapBloc(),
-          child: BobaMap(),
-        ),
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: MyApp(),
       ),
+    ));
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  StreamSubscription _checkVersionSub;
+  bool _appVersionChecked = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_appVersionChecked) {
+      AppBloc appBloc = BlocProviderList.of<AppBloc>(context);
+      _checkVersionSub = appBloc.appVersion.listen((event) {
+        if (!event.shouldUpdate) {
+          return;
+        }
+        _appVersionChecked = true;
+        showDialog(
+            context: context,
+            barrierDismissible: !event.forceUpdate,
+            builder: (context) =>
+                _AppUpdateDialog(event.forceUpdate, event.requiredVersion));
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _checkVersionSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      bloc: BobaMapBloc(),
+      child: BobaMap(),
     );
+  }
+}
+
+class _AppUpdateDialog extends StatelessWidget {
+  final bool _forceUpdate;
+  final String _requiredVersion;
+
+  _AppUpdateDialog(this._forceUpdate, this._requiredVersion);
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> options = [
+      FlatButton(
+          onPressed: () => Navigator.of(context).pop(true), child: Text("Sure"))
+    ];
+    if (!_forceUpdate) {
+      options.insert(
+        0,
+        FlatButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text("Later"),
+        ),
+      );
+    }
+    return AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8))),
+        title: Text("Version update"),
+        content: Text(
+            "A new version $_requiredVersion is available for you. Update the app now :)"),
+        actions: options);
   }
 }
 
