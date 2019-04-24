@@ -43,7 +43,7 @@ class _MyAppState extends State<MyApp> {
                 builder: (context) =>
                     _AppUpdateDialog(event.forceUpdate, event.requiredVersion))
             .then((agreeUpdate) {
-          if (!agreeUpdate) {
+          if (agreeUpdate == null || !agreeUpdate) {
             return;
           }
           LaunchReview.launch(writeReview: false);
@@ -126,32 +126,23 @@ class _BobaMapState extends State<BobaMap> {
             height: 50,
             color: Colors.white,
             child: StreamBuilder<List<Shop>>(
-                stream: appBloc.supportedShops,
-                builder: (context, snapshot) {
-                  List<Shop> shops = snapshot.hasData ? snapshot.data : null;
-                  return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: shops == null ? 0 : shops.length,
-                      padding: EdgeInsets.all(8),
-                      itemBuilder: (context, index) {
-                        Color color = Color.fromARGB(
-                            shops[index].color.a,
-                            shops[index].color.r,
-                            shops[index].color.g,
-                            shops[index].color.b);
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: RaisedButton(
-                            color: Colors.white,
-                            textColor: color,
-                            shape: StadiumBorder(
-                                side: BorderSide(color: color, width: 1.5)),
-                            child: Text(shops[index].name),
-                            onPressed: () {},
-                          ),
-                        );
-                      });
-                }),
+              stream: appBloc.supportedShops,
+              builder: (context, snapshot) {
+                List<Shop> shops = snapshot.data ?? [];
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: shops.length,
+                  padding: const EdgeInsets.all(8),
+                  /*children: shops == null || shops.isEmpty
+                        ? []
+                        : shops.map((shop) => ShopFilterButton(shop)).toList(),*/
+                  itemBuilder: (context, index) => ShopFilterButton(
+                        shops[index],
+                        key: ValueKey(index),
+                      ),
+                );
+              },
+            ),
           ),
           Expanded(
             child: StreamBuilder<List<DocumentSnapshot>>(
@@ -172,7 +163,8 @@ class _BobaMapState extends State<BobaMap> {
                           .catchError((err) {});
                       LatLng pos = _curPosition ?? _tw101;
                       controller.animateCamera(CameraUpdate.newLatLng(pos));
-                      bobaMapBloc.seekBoba(pos.latitude, pos.longitude);
+                      bobaMapBloc.seekBoba(
+                          lat: pos.latitude, lng: pos.longitude);
                     },
                     markers:
                         _isCameraTooFar || !snapshot.hasData ? null : _markers,
@@ -197,7 +189,7 @@ class _BobaMapState extends State<BobaMap> {
               return;
             }
             LatLng latLng = _cameraPos.target;
-            bobaMapBloc.seekBoba(latLng.latitude, latLng.longitude);
+            bobaMapBloc.seekBoba(lat: latLng.latitude, lng: latLng.longitude);
           }),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
@@ -227,5 +219,44 @@ class _BobaMapState extends State<BobaMap> {
               ?.animateCamera(CameraUpdate.newLatLngZoom(pos, 16)));
     });
     return Set.from(markers);
+  }
+}
+
+class ShopFilterButton extends StatefulWidget {
+  final Shop _shop;
+
+  ShopFilterButton(this._shop, {Key key}) : super(key: key);
+
+  @override
+  _ShopFilterButtonState createState() => _ShopFilterButtonState();
+}
+
+class _ShopFilterButtonState extends State<ShopFilterButton> {
+  @override
+  Widget build(BuildContext context) {
+    BobaMapBloc bloc = BlocProvider.of<BobaMapBloc>(context);
+    Color color = Color.fromARGB(widget._shop.color.a, widget._shop.color.r,
+        widget._shop.color.g, widget._shop.color.b);
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: StreamBuilder<List<String>>(
+        stream: bloc.filterShopList,
+        builder: (context, snapshot) {
+          List<String> filteredShops = snapshot.data ?? [];
+          bool isFiltered = filteredShops.contains(widget._shop.name);
+          return RaisedButton(
+            color: isFiltered ? color : Colors.white,
+            textColor: isFiltered ? Colors.white : color,
+            shape: StadiumBorder(
+              side: isFiltered
+                  ? BorderSide.none
+                  : BorderSide(color: color, width: 1.5),
+            ),
+            child: Text(widget._shop.name),
+            onPressed: () => bloc.filterShop(widget._shop.name),
+          );
+        },
+      ),
+    );
   }
 }
