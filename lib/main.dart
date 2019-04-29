@@ -226,28 +226,23 @@ class _BobaMapState extends State<BobaMap> {
   }
 }
 
-class ShopFilterButton extends StatefulWidget {
+class ShopFilterButton extends StatelessWidget {
   final Shop _shop;
 
   ShopFilterButton(this._shop, {Key key}) : super(key: key);
 
   @override
-  _ShopFilterButtonState createState() => _ShopFilterButtonState();
-}
-
-class _ShopFilterButtonState extends State<ShopFilterButton> {
-  @override
   Widget build(BuildContext context) {
     BobaMapBloc bloc = BlocProvider.of<BobaMapBloc>(context);
-    Color color = Color.fromARGB(widget._shop.color.a, widget._shop.color.r,
-        widget._shop.color.g, widget._shop.color.b);
+    Color color = Color.fromARGB(
+        _shop.color.a, _shop.color.r, _shop.color.g, _shop.color.b);
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: StreamBuilder<List<String>>(
         stream: bloc.filterShopList,
         builder: (context, snapshot) {
           List<String> filteredShops = snapshot.data ?? [];
-          bool isFiltered = filteredShops.contains(widget._shop.name);
+          bool isFiltered = filteredShops.contains(_shop.name);
           return RaisedButton(
             color: isFiltered ? color : Colors.white,
             textColor: isFiltered ? Colors.white : color,
@@ -256,8 +251,8 @@ class _ShopFilterButtonState extends State<ShopFilterButton> {
                   ? BorderSide.none
                   : BorderSide(color: color, width: 1.5),
             ),
-            child: Text(widget._shop.name),
-            onPressed: () => bloc.filterShop(widget._shop.name),
+            child: Text(_shop.name),
+            onPressed: () => bloc.filterShop(_shop.name),
           );
         },
       ),
