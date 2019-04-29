@@ -110,7 +110,7 @@ class _BobaMapState extends State<BobaMap> {
   GoogleMapController _mapController;
   CameraPosition _cameraPos;
   Set<Marker> _markers;
-  bool _isCameraTooFar = false;
+  ValueNotifier<bool> _markerVisibilityNotifier = ValueNotifier(true);
 
   @override
   Widget build(BuildContext context) {
@@ -133,64 +133,68 @@ class _BobaMapState extends State<BobaMap> {
                   scrollDirection: Axis.horizontal,
                   itemCount: shops.length,
                   padding: const EdgeInsets.all(8),
-                  /*children: shops == null || shops.isEmpty
-                        ? []
-                        : shops.map((shop) => ShopFilterButton(shop)).toList(),*/
-                  itemBuilder: (context, index) => ShopFilterButton(
-                        shops[index],
-                        key: ValueKey(index),
-                      ),
+                  itemBuilder: (context, index) {
+                    return ShopFilterButton(shops[index]);
+                  },
                 );
               },
             ),
           ),
           Expanded(
-            child: StreamBuilder<List<DocumentSnapshot>>(
-                stream: bobaMapBloc?.bobaData,
-                builder: (ctx, snapshot) {
-                  _markers = _genMarkers(snapshot.data);
-                  return GoogleMap(
-                    compassEnabled: false,
-                    initialCameraPosition:
-                        const CameraPosition(target: _tw101, zoom: 15),
-                    onMapCreated: (controller) async {
-                      _mapController = controller;
-                      LatLng _curPosition = await Geolocator()
-                          .getCurrentPosition()
-                          .then((pos) => pos == null
-                              ? null
-                              : LatLng(pos.latitude, pos.longitude))
-                          .catchError((err) {});
-                      LatLng pos = _curPosition ?? _tw101;
-                      controller.animateCamera(CameraUpdate.newLatLng(pos));
-                      bobaMapBloc.seekBoba(
-                          lat: pos.latitude, lng: pos.longitude);
-                    },
-                    markers:
-                        _isCameraTooFar || !snapshot.hasData ? null : _markers,
-                    onCameraMove: (pos) {
-                      _cameraPos = pos;
-                      bool tooFar = pos.zoom <= 13;
-                      if (tooFar == _isCameraTooFar) {
-                        return;
-                      }
-                      setState(() => _isCameraTooFar = !_isCameraTooFar);
-                    },
-                  );
-                }),
+            child: Stack(
+              children: <Widget>[
+                StreamBuilder<List<DocumentSnapshot>>(
+                  stream: bobaMapBloc?.bobaData,
+                  builder: (ctx, snapshot) {
+                    _markers = _genMarkers(snapshot.data);
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: _markerVisibilityNotifier,
+                      builder: (context, isMarkerVisible, child) {
+                        return GoogleMap(
+                          compassEnabled: false,
+                          initialCameraPosition:
+                              const CameraPosition(target: _tw101, zoom: 15),
+                          onMapCreated: (controller) async {
+                            _mapController = controller;
+                            LatLng _curPosition = await Geolocator()
+                                .getCurrentPosition()
+                                .then((pos) => pos == null
+                                    ? null
+                                    : LatLng(pos.latitude, pos.longitude))
+                                .catchError((err) {});
+                            LatLng pos = _curPosition ?? _tw101;
+                            controller
+                                .animateCamera(CameraUpdate.newLatLng(pos));
+                            bobaMapBloc.seekBoba(
+                                lat: pos.latitude, lng: pos.longitude);
+                          },
+                          markers: isMarkerVisible ? _markers : null,
+                          onCameraMove: (pos) {
+                            _cameraPos = pos;
+                            bool isMarkerVisible = pos.zoom > 13;
+                            _markerVisibilityNotifier.value = isMarkerVisible;
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-          label: Text("Search"),
-          icon: Icon(Icons.search),
-          onPressed: () {
-            if (_cameraPos == null) {
-              return;
-            }
-            LatLng latLng = _cameraPos.target;
-            bobaMapBloc.seekBoba(lat: latLng.latitude, lng: latLng.longitude);
-          }),
+        label: Text("Search"),
+        icon: Icon(Icons.search),
+        onPressed: () {
+          if (_cameraPos == null) {
+            return;
+          }
+          LatLng latLng = _cameraPos.target;
+          bobaMapBloc.seekBoba(lat: latLng.latitude, lng: latLng.longitude);
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
