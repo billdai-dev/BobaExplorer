@@ -32,7 +32,7 @@ class BobaMapBloc implements BlocBase {
           .map((shop) => _buildQueryStream(config, shopName: shop))
           .toList();
       if (streams.length == 1) {
-        return streams[0];
+        return streams.first;
       }
 
       return Observable.combineLatest(streams, (allSnapshots) {

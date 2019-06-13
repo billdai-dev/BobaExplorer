@@ -110,7 +110,7 @@ class _BobaMapState extends State<BobaMap> {
   GoogleMapController _mapController;
   CameraPosition _cameraPos;
   Set<Marker> _markers;
-  ValueNotifier<bool> _markerVisibilityNotifier = ValueNotifier(true);
+  ValueNotifier<bool> _isCameraTooFarNotifier = ValueNotifier(true);
 
   @override
   Widget build(BuildContext context) {
@@ -148,8 +148,8 @@ class _BobaMapState extends State<BobaMap> {
                   builder: (ctx, snapshot) {
                     _markers = _genMarkers(snapshot.data);
                     return ValueListenableBuilder<bool>(
-                      valueListenable: _markerVisibilityNotifier,
-                      builder: (context, isMarkerVisible, child) {
+                      valueListenable: _isCameraTooFarNotifier,
+                      builder: (context, isCameraTooFar, child) {
                         return GoogleMap(
                           compassEnabled: false,
                           initialCameraPosition:
@@ -168,11 +168,11 @@ class _BobaMapState extends State<BobaMap> {
                             bobaMapBloc.seekBoba(
                                 lat: pos.latitude, lng: pos.longitude);
                           },
-                          markers: isMarkerVisible ? _markers : null,
+                          markers: isCameraTooFar ? null : _markers,
                           onCameraMove: (pos) {
                             _cameraPos = pos;
-                            bool isMarkerVisible = pos.zoom > 13;
-                            _markerVisibilityNotifier.value = isMarkerVisible;
+                            bool isCameraTooFar = pos.zoom <= 13;
+                            _isCameraTooFarNotifier.value = isCameraTooFar;
                           },
                         );
                       },
@@ -184,16 +184,25 @@ class _BobaMapState extends State<BobaMap> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        label: Text("Search"),
-        icon: Icon(Icons.search),
-        onPressed: () {
-          if (_cameraPos == null) {
-            return;
-          }
-          LatLng latLng = _cameraPos.target;
-          bobaMapBloc.seekBoba(lat: latLng.latitude, lng: latLng.longitude);
+      floatingActionButton: ValueListenableBuilder(
+        valueListenable: _isCameraTooFarNotifier,
+        builder: (context, isCameraTooFar, child) {
+          return Visibility(
+            visible: !isCameraTooFar,
+            child: child,
+          );
         },
+        child: FloatingActionButton.extended(
+          label: Text("Search"),
+          icon: Icon(Icons.search),
+          onPressed: () {
+            if (_cameraPos == null) {
+              return;
+            }
+            LatLng latLng = _cameraPos.target;
+            bobaMapBloc.seekBoba(lat: latLng.latitude, lng: latLng.longitude);
+          },
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
