@@ -111,6 +111,14 @@ class _BobaMapState extends State<BobaMap> {
   CameraPosition _cameraPos;
   Set<Marker> _markers;
   ValueNotifier<bool> _isCameraTooFarNotifier = ValueNotifier(true);
+  PageController pageController;
+  bool isPageSwipedByUser = false;
+
+  @override
+  void initState() {
+    super.initState();
+    pageController = PageController(viewportFraction: 0.75);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,16 +149,17 @@ class _BobaMapState extends State<BobaMap> {
             ),
           ),
           Expanded(
-            child: Stack(
-              children: <Widget>[
-                StreamBuilder<List<DocumentSnapshot>>(
-                  stream: bobaMapBloc?.bobaData,
-                  builder: (ctx, snapshot) {
-                    _markers = _genMarkers(snapshot.data);
-                    return ValueListenableBuilder<bool>(
-                      valueListenable: _isCameraTooFarNotifier,
-                      builder: (context, isCameraTooFar, child) {
-                        return GoogleMap(
+            child: StreamBuilder<List<DocumentSnapshot>>(
+              stream: bobaMapBloc?.bobaData,
+              builder: (ctx, snapshot) {
+                List<DocumentSnapshot> snapshots = snapshot.data;
+                _markers = _genMarkers(snapshots);
+                return ValueListenableBuilder<bool>(
+                  valueListenable: _isCameraTooFarNotifier,
+                  builder: (context, isCameraTooFar, child) {
+                    return Stack(
+                      children: <Widget>[
+                        GoogleMap(
                           compassEnabled: false,
                           initialCameraPosition:
                               const CameraPosition(target: _tw101, zoom: 15),
@@ -174,12 +183,45 @@ class _BobaMapState extends State<BobaMap> {
                             bool isCameraTooFar = pos.zoom <= 13;
                             _isCameraTooFarNotifier.value = isCameraTooFar;
                           },
-                        );
-                      },
+                        ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 12,
+                          height: 150,
+                          child: GestureDetector(
+                            onPanDown: (details) => isPageSwipedByUser = true,
+                            child: PageView.builder(
+                              controller: pageController,
+                              onPageChanged: (index) {
+                                if (!isPageSwipedByUser) {
+                                  return;
+                                }
+                                GeoPoint position = snapshots[index]
+                                    .data["position"]["geopoint"];
+                                _moveCamera(position);
+                              },
+                              itemCount: snapshot.data?.length ?? 0,
+                              itemBuilder: (context, index) {
+                                return _ShopItem(
+                                  shopName: snapshots[index].data["shopName"],
+                                  branchName:
+                                      snapshots[index].data["branchName"],
+                                  city: snapshots[index].data["city"],
+                                  district: snapshots[index].data["district"],
+                                  address: snapshots[index].data["address"],
+                                  phone: snapshots[index].data["phone"],
+                                  hue: snapshots[index].data["pinColor"],
+                                );
+                              },
+                            ),
+                          ),
+                        )
+                      ],
                     );
                   },
-                ),
-              ],
+                );
+              },
             ),
           ),
         ],
@@ -212,7 +254,33 @@ class _BobaMapState extends State<BobaMap> {
     if (snapshots == null) {
       return null;
     }
-    Iterable<Marker> markers = snapshots.map((data) {
+    List<Marker> markers = [];
+    for (var i = 0; i < snapshots.length; i++) {
+      var data = snapshots[i];
+      final shop = data.data["shopName"];
+      var hue = data.data["pinColor"];
+      hue = double.tryParse(hue.toString()) ?? hue;
+      GeoPoint geo = data.data["position"]["geopoint"];
+      final pos = LatLng(geo.latitude, geo.longitude);
+      markers.add(Marker(
+          markerId: MarkerId(data.documentID),
+          position: pos,
+          icon: hue == null
+              ? BitmapDescriptor.defaultMarker
+              : BitmapDescriptor.defaultMarkerWithHue(hue),
+          /*infoWindow: InfoWindow(
+              title: shop,
+              snippet:
+                  "Address: ${data.data["city"]}${data.data["district"]}${data.data["address"]}"),*/
+          onTap: () async {
+            isPageSwipedByUser = false;
+            _mapController?.animateCamera(CameraUpdate.newLatLngZoom(pos, 16));
+            //pageController?.jumpToPage(i);
+            pageController?.animateToPage(i,
+                duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+          }));
+    }
+    /*Iterable<Marker> markers = snapshots.map((data) {
       final shop = data.data["shopName"];
       var hue = data.data["pinColor"];
       hue = double.tryParse(hue.toString()) ?? hue;
@@ -224,14 +292,23 @@ class _BobaMapState extends State<BobaMap> {
           icon: hue == null
               ? BitmapDescriptor.defaultMarker
               : BitmapDescriptor.defaultMarkerWithHue(hue),
-          infoWindow: InfoWindow(
+          */ /*infoWindow: InfoWindow(
               title: shop,
               snippet:
-                  "Address: ${data.data["city"]}${data.data["district"]}${data.data["address"]}"),
-          onTap: () => _mapController
-              ?.animateCamera(CameraUpdate.newLatLngZoom(pos, 16)));
-    });
+                  "Address: ${data.data["city"]}${data.data["district"]}${data.data["address"]}"),*/ /*
+          onTap: () async {
+            await pageController?.animateToPage(pageController.page.floor(),
+                duration: Duration(milliseconds: 200), curve: Curves.easeIn);
+            return _mapController
+                ?.animateCamera(CameraUpdate.newLatLngZoom(pos, 16));
+          });
+    });*/
     return Set.from(markers);
+  }
+
+  void _moveCamera(GeoPoint position) {
+    final pos = LatLng(position.latitude, position.longitude);
+    _mapController?.animateCamera(CameraUpdate.newLatLng(pos));
   }
 }
 
@@ -264,6 +341,142 @@ class ShopFilterButton extends StatelessWidget {
             onPressed: () => bloc.filterShop(_shop.name),
           );
         },
+      ),
+    );
+  }
+}
+
+class _ShopItem extends StatelessWidget {
+  final String _shopName;
+  final String _branchName;
+  final String _city;
+  final String _district;
+  final String _address;
+  final String _phone;
+  final int _hue;
+
+  _ShopItem(
+      {@required String shopName,
+      @required String branchName,
+      @required String city,
+      @required String district,
+      @required String address,
+      @required String phone,
+      int hue})
+      : _shopName = shopName,
+        _branchName = branchName,
+        _city = city,
+        _district = district,
+        _address = address,
+        _phone = phone,
+        _hue = hue;
+
+  @override
+  Widget build(BuildContext context) {
+    Color color = _hue == null
+        ? Colors.redAccent
+        : HSVColor.fromAHSV(1, _hue.toDouble(), 1, 1).toColor();
+    String branchName =
+        _branchName.contains("店") ? _branchName : "$_branchName店";
+    branchName = branchName.replaceAll("│", "\n");
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Stack(
+        children: <Widget>[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomCenter,
+                stops: [0.45, 0.45],
+                colors: [color, Colors.transparent],
+              ),
+            ),
+            alignment: Alignment.topRight,
+            child: Text(_shopName),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.bottomRight,
+                end: Alignment.topCenter,
+                stops: [0.45, 0.45],
+                colors: [color, Colors.transparent],
+              ),
+            ),
+            alignment: Alignment.bottomRight,
+            child: Text(
+              branchName.length > 6 && !branchName.contains("\n")
+                  ? "${branchName.substring(0, 6)}\n${branchName.substring(6, branchName.length)}"
+                  : branchName,
+              textAlign: TextAlign.end,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Column(
+              children: <Widget>[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    ConstrainedBox(
+                      constraints:
+                          BoxConstraints.tightFor(width: 30, height: 30),
+                      child: RaisedButton(
+                        padding: EdgeInsets.zero,
+                        shape: CircleBorder(),
+                        color: Colors.white,
+                        elevation: 4,
+                        onPressed: () {},
+                        child: Icon(Icons.restaurant_menu),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text("地址："),
+                    Flexible(
+                      flex: 55,
+                      child: Text("$_city$_district$_address"),
+                    ),
+                    Spacer(
+                      flex: 45,
+                    )
+                  ],
+                ),
+                SizedBox(height: 8),
+                Row(
+                  children: <Widget>[
+                    Text("電話："),
+                    Text(
+                      _phone,
+                      style: TextStyle(
+                          color: Colors.blueAccent,
+                          decoration: TextDecoration.underline),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
