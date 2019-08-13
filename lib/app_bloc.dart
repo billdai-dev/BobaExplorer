@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:bloc_pattern/bloc_pattern.dart';
+import 'package:boba_explorer/data/bloc_base.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:package_info/package_info.dart';

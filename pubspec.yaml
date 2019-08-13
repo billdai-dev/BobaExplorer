@@ -14,7 +14,7 @@ description: A application for searching Taiwanese tea shops
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.2.0 <3.0.0"
+  sdk: ">=2.2.2 <3.0.0"
 
 dependencies:
   flutter:
@@ -30,10 +30,10 @@ dependencies:
   geoflutterfire: ^2.0.3+2
   rxdart: ^0.20.0
   firebase_remote_config: ^0.1.0+2
-  bloc_pattern: ^1.5.2
   package_info: ^0.4.0+3
   url_launcher: ^5.0.2
   launch_review: ^2.0.0
+  provider: ^3.0.0+1
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/boba_map_bloc.dart';
 import 'package:boba_explorer/remote_config_model.dart';
@@ -9,14 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:launch_review/launch_review.dart';
+import 'package:provider/provider.dart';
 
-void main() => runApp(BlocProviderList(
-      listBloc: [Bloc(AppBloc())],
-      child: MaterialApp(
-        theme: ThemeData(primarySwatch: Colors.blue),
-        home: MyApp(),
+void main() => runApp(
+      Provider<AppBloc>(
+        builder: (_) => AppBloc(),
+        dispose: (_, appBloc) => appBloc.dispose(),
+        child: MaterialApp(
+          theme: ThemeData(primarySwatch: Colors.blue),
+          home: MyApp(),
+        ),
       ),
-    ));
+    );
 
 class MyApp extends StatefulWidget {
   @override
@@ -31,7 +34,10 @@ class _MyAppState extends State<MyApp> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_appVersionChecked) {
-      AppBloc appBloc = BlocProviderList.of<AppBloc>(context);
+      AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
+      if (_checkVersionSub != null) {
+        return;
+      }
       _checkVersionSub = appBloc.appVersion.listen((event) {
         if (!event.shouldUpdate) {
           return;
@@ -60,8 +66,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      bloc: BobaMapBloc(),
+    return Provider<BobaMapBloc>(
+      builder: (_) => BobaMapBloc(),
+      dispose: (_, bloc) => bloc.dispose(),
       child: BobaMap(),
     );
   }
@@ -122,8 +129,8 @@ class _BobaMapState extends State<BobaMap> {
 
   @override
   Widget build(BuildContext context) {
-    BobaMapBloc bobaMapBloc = BlocProvider.of<BobaMapBloc>(context);
-    AppBloc appBloc = BlocProviderList.of<AppBloc>(context);
+    AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
+    BobaMapBloc bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text('BobaExplorer'),
@@ -319,7 +326,7 @@ class ShopFilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    BobaMapBloc bloc = BlocProvider.of<BobaMapBloc>(context);
+    BobaMapBloc bloc = Provider.of<BobaMapBloc>(context, listen: false);
     Color color = Color.fromARGB(
         _shop.color.a, _shop.color.r, _shop.color.g, _shop.color.b);
     return Padding(
