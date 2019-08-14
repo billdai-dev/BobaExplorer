@@ -15,7 +15,6 @@ void main() => runApp(
         builder: (_) => AppBloc(),
         dispose: (_, appBloc) => appBloc.dispose(),
         child: MaterialApp(
-          theme: ThemeData(primarySwatch: Colors.blue),
           home: MyApp(),
         ),
       ),
@@ -132,9 +131,7 @@ class _BobaMapState extends State<BobaMap> {
     AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
     BobaMapBloc bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
     return Scaffold(
-      appBar: AppBar(
-        title: Text('BobaExplorer'),
-      ),
+      appBar: _buildAppBar(),
       body: Column(
         children: <Widget>[
           Container(
@@ -257,6 +254,41 @@ class _BobaMapState extends State<BobaMap> {
     );
   }
 
+  Widget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      title: Container(
+        width: double.infinity,
+        height: 50,
+        child: Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          elevation: 4,
+          child: Row(
+            children: <Widget>[
+              SizedBox(width: 12),
+              CircleAvatar(radius: 15, child: Text("戴")),
+              //TODO: Add 3rd party login
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "搜尋飲料店",
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.favorite, color: Colors.redAccent),
+                onPressed: () {
+                  //TODO: Go to favorite page
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Set<Marker> _genMarkers(List<DocumentSnapshot> snapshots) {
     if (snapshots == null) {
       return null;
@@ -264,7 +296,7 @@ class _BobaMapState extends State<BobaMap> {
     List<Marker> markers = [];
     for (var i = 0; i < snapshots.length; i++) {
       var data = snapshots[i];
-      final shop = data.data["shopName"];
+      //final shop = data.data["shopName"];
       var hue = data.data["pinColor"];
       hue = double.tryParse(hue.toString()) ?? hue;
       GeoPoint geo = data.data["position"]["geopoint"];
