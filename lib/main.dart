@@ -119,17 +119,19 @@ class _BobaMapState extends State<BobaMap> {
   ValueNotifier<bool> _isCameraTooFarNotifier = ValueNotifier(true);
   PageController pageController;
   bool isPageSwipedByUser = false;
+  BobaMapBloc bobaMapBloc;
 
   @override
   void initState() {
     super.initState();
     pageController = PageController(viewportFraction: 0.75);
+    bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
   }
 
   @override
   Widget build(BuildContext context) {
     //AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
-    BobaMapBloc bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
+    //BobaMapBloc bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
     return Scaffold(
       appBar: _buildAppBar(),
       body: Column(
@@ -141,101 +143,36 @@ class _BobaMapState extends State<BobaMap> {
               builder: (ctx, snapshot) {
                 List<DocumentSnapshot> snapshots = snapshot.data;
                 _markers = _genMarkers(snapshots);
-                return ValueListenableBuilder<bool>(
-                  valueListenable: _isCameraTooFarNotifier,
-                  builder: (context, isCameraTooFar, child) {
-                    return Stack(
-                      children: <Widget>[
-                        GoogleMap(
-                          compassEnabled: false,
-                          initialCameraPosition:
-                              const CameraPosition(target: _tw101, zoom: 15),
-                          myLocationEnabled: true,
-                          myLocationButtonEnabled: false,
-                          onMapCreated: (controller) async {
-                            _mapController = controller;
-                            LatLng _curPosition = await Geolocator()
-                                .getCurrentPosition()
-                                .then((pos) => pos == null
-                                    ? null
-                                    : LatLng(pos.latitude, pos.longitude))
-                                .catchError((err) {});
-                            LatLng pos = _curPosition ?? _tw101;
-                            controller
-                                .animateCamera(CameraUpdate.newLatLng(pos));
-                            bobaMapBloc.seekBoba(
-                                lat: pos.latitude, lng: pos.longitude);
-                          },
-                          markers: isCameraTooFar ? null : _markers,
-                          onCameraMove: (pos) {
-                            _cameraPos = pos;
-                            bool isCameraTooFar = pos.zoom <= 13;
-                            _isCameraTooFarNotifier.value = isCameraTooFar;
-                          },
+                return Stack(
+                  children: <Widget>[
+                    _buildMap(_markers),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 15,
+                      height: 50,
+                      child: FractionallySizedBox(
+                        widthFactor: 0.6,
+                        child: FittedBox(
+                          fit: BoxFit.fitHeight,
+                          child: _buildSearchButton(),
                         ),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 12,
-                          height: 150,
-                          child: GestureDetector(
-                            onPanDown: (details) => isPageSwipedByUser = true,
-                            child: PageView.builder(
-                              controller: pageController,
-                              onPageChanged: (index) {
-                                if (!isPageSwipedByUser) {
-                                  return;
-                                }
-                                GeoPoint position = snapshots[index]
-                                    .data["position"]["geopoint"];
-                                _moveCamera(position);
-                              },
-                              itemCount: snapshot.data?.length ?? 0,
-                              itemBuilder: (context, index) {
-                                return _ShopItem(
-                                  shopName: snapshots[index].data["shopName"],
-                                  branchName:
-                                      snapshots[index].data["branchName"],
-                                  city: snapshots[index].data["city"],
-                                  district: snapshots[index].data["district"],
-                                  address: snapshots[index].data["address"],
-                                  phone: snapshots[index].data["phone"],
-                                  hue: snapshots[index].data["pinColor"],
-                                );
-                              },
-                            ),
-                          ),
-                        )
-                      ],
-                    );
-                  },
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 12,
+                      height: 150,
+                      child: _buildShopCards(snapshots),
+                    ),
+                  ],
                 );
               },
             ),
           ),
         ],
       ),
-      floatingActionButton: ValueListenableBuilder(
-        valueListenable: _isCameraTooFarNotifier,
-        builder: (context, isCameraTooFar, child) {
-          return Visibility(
-            visible: !isCameraTooFar,
-            child: child,
-          );
-        },
-        child: FloatingActionButton.extended(
-          label: Text("Search"),
-          icon: Icon(Icons.search),
-          onPressed: () {
-            if (_cameraPos == null) {
-              return;
-            }
-            LatLng latLng = _cameraPos.target;
-            bobaMapBloc.seekBoba(lat: latLng.latitude, lng: latLng.longitude);
-          },
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -325,6 +262,66 @@ class _BobaMapState extends State<BobaMap> {
     );
   }
 
+  Widget _buildSearchButton() {
+    return ValueListenableBuilder(
+      valueListenable: _isCameraTooFarNotifier,
+      builder: (context, isCameraTooFar, child) {
+        var onTap;
+        if (!isCameraTooFar) {
+          onTap = () {
+            if (_cameraPos == null) {
+              return;
+            }
+            LatLng latLng = _cameraPos.target;
+            bobaMapBloc?.seekBoba(lat: latLng.latitude, lng: latLng.longitude);
+          };
+        }
+        return Container(
+          child: RaisedButton.icon(
+            elevation: 8,
+            color: Colors.white,
+            disabledColor: Colors.blueGrey,
+            disabledTextColor: Colors.white,
+            textColor: Colors.black54,
+            shape: StadiumBorder(),
+            onPressed: onTap,
+            icon: Icon(
+              isCameraTooFar ? Icons.error : Icons.search,
+              color: isCameraTooFar ? Colors.white : Colors.black54,
+            ),
+            label: Text(isCameraTooFar ? "請放大後再進行搜尋哦" : "搜尋此區域"),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMap(Set<Marker> markers) {
+    return GoogleMap(
+      compassEnabled: false,
+      initialCameraPosition: const CameraPosition(target: _tw101, zoom: 15),
+      myLocationEnabled: true,
+      myLocationButtonEnabled: false,
+      onMapCreated: (controller) async {
+        _mapController = controller;
+        LatLng _curPosition = await Geolocator()
+            .getCurrentPosition()
+            .then((pos) =>
+                pos == null ? null : LatLng(pos.latitude, pos.longitude))
+            .catchError((err) {});
+        LatLng pos = _curPosition ?? _tw101;
+        controller.animateCamera(CameraUpdate.newLatLng(pos));
+        bobaMapBloc.seekBoba(lat: pos.latitude, lng: pos.longitude);
+      },
+      markers: markers,
+      onCameraMove: (pos) {
+        _cameraPos = pos;
+        bool isCameraTooFar = pos.zoom <= 13;
+        _isCameraTooFarNotifier.value = isCameraTooFar;
+      },
+    );
+  }
+
   Set<Marker> _genMarkers(List<DocumentSnapshot> snapshots) {
     if (snapshots == null) {
       return null;
@@ -343,10 +340,6 @@ class _BobaMapState extends State<BobaMap> {
           icon: hue == null
               ? BitmapDescriptor.defaultMarker
               : BitmapDescriptor.defaultMarkerWithHue(hue),
-          /*infoWindow: InfoWindow(
-              title: shop,
-              snippet:
-                  "Address: ${data.data["city"]}${data.data["district"]}${data.data["address"]}"),*/
           onTap: () async {
             isPageSwipedByUser = false;
             _mapController?.animateCamera(CameraUpdate.newLatLngZoom(pos, 16));
@@ -379,6 +372,34 @@ class _BobaMapState extends State<BobaMap> {
           });
     });*/
     return Set.from(markers);
+  }
+
+  Widget _buildShopCards(List<DocumentSnapshot> shops) {
+    return GestureDetector(
+      onPanDown: (details) => isPageSwipedByUser = true,
+      child: PageView.builder(
+        controller: pageController,
+        onPageChanged: (index) {
+          if (!isPageSwipedByUser) {
+            return;
+          }
+          GeoPoint position = shops[index].data["position"]["geopoint"];
+          _moveCamera(position);
+        },
+        itemCount: shops?.length ?? 0,
+        itemBuilder: (context, index) {
+          return _ShopItem(
+            shopName: shops[index].data["shopName"],
+            branchName: shops[index].data["branchName"],
+            city: shops[index].data["city"],
+            district: shops[index].data["district"],
+            address: shops[index].data["address"],
+            phone: shops[index].data["phone"],
+            hue: shops[index].data["pinColor"],
+          );
+        },
+      ),
+    );
   }
 
   void _moveCamera(GeoPoint position) {
