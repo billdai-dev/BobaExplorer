@@ -128,30 +128,13 @@ class _BobaMapState extends State<BobaMap> {
 
   @override
   Widget build(BuildContext context) {
-    AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
+    //AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
     BobaMapBloc bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
     return Scaffold(
       appBar: _buildAppBar(),
       body: Column(
         children: <Widget>[
-          Container(
-            height: 50,
-            color: Colors.white,
-            child: StreamBuilder<List<Shop>>(
-              stream: appBloc.supportedShops,
-              builder: (context, snapshot) {
-                List<Shop> shops = snapshot.data ?? [];
-                return ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: shops.length,
-                  padding: const EdgeInsets.all(8),
-                  itemBuilder: (context, index) {
-                    return ShopFilterButton(shops[index]);
-                  },
-                );
-              },
-            ),
-          ),
+          _buildShopFilterBar(),
           Expanded(
             child: StreamBuilder<List<DocumentSnapshot>>(
               stream: bobaMapBloc?.bobaData,
@@ -167,6 +150,8 @@ class _BobaMapState extends State<BobaMap> {
                           compassEnabled: false,
                           initialCameraPosition:
                               const CameraPosition(target: _tw101, zoom: 15),
+                          myLocationEnabled: true,
+                          myLocationButtonEnabled: false,
                           onMapCreated: (controller) async {
                             _mapController = controller;
                             LatLng _curPosition = await Geolocator()
@@ -289,6 +274,57 @@ class _BobaMapState extends State<BobaMap> {
     );
   }
 
+  Widget _buildShopFilterBar() {
+    return Container(
+      height: 50,
+      color: Colors.white,
+      child: Row(
+        children: <Widget>[
+          Visibility(
+            visible: false, //TODO: Change visibility according to filter status
+            replacement: SizedBox(width: 20),
+            child: InkWell(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8, right: 4),
+                child: Icon(Icons.cancel, color: Colors.grey),
+              ),
+              onTap: () {},
+            ),
+          ),
+          Expanded(
+            child: Consumer<AppBloc>(
+              builder: (_, appBloc, child) {
+                return StreamBuilder<List<Shop>>(
+                  stream: appBloc.supportedShops,
+                  builder: (context, snapshot) {
+                    List<Shop> shops = snapshot.data ?? [];
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: shops.length,
+                      padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
+                      itemBuilder: (context, index) {
+                        return ShopFilterButton(shops[index]);
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          InkWell(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4, right: 8),
+              child: Icon(Icons.filter_list),
+            ),
+            onTap: () {
+              //TODO: Show shop list dialog for filtering
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Set<Marker> _genMarkers(List<DocumentSnapshot> snapshots) {
     if (snapshots == null) {
       return null;
@@ -361,21 +397,20 @@ class ShopFilterButton extends StatelessWidget {
     BobaMapBloc bloc = Provider.of<BobaMapBloc>(context, listen: false);
     Color color = Color.fromARGB(
         _shop.color.a, _shop.color.r, _shop.color.g, _shop.color.b);
+    double brightness = color.computeLuminance();
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: StreamBuilder<List<String>>(
         stream: bloc.filterShopList,
         builder: (context, snapshot) {
           List<String> filteredShops = snapshot.data ?? [];
-          bool isFiltered = filteredShops.contains(_shop.name);
-          return RaisedButton(
-            color: isFiltered ? color : Colors.white,
-            textColor: isFiltered ? Colors.white : color,
-            shape: StadiumBorder(
-              side: isFiltered
-                  ? BorderSide.none
-                  : BorderSide(color: color, width: 1.5),
-            ),
+          bool isSelected = filteredShops.contains(_shop.name);
+          return FlatButton(
+            color: isSelected ? color.withOpacity(0.5) : Colors.white,
+            textColor: isSelected
+                ? brightness < 0.1791 ? color : Colors.grey.shade700
+                : Colors.grey,
+            shape: StadiumBorder(),
             child: Text(_shop.name),
             onPressed: () => bloc.filterShop(_shop.name),
           );
