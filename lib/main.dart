@@ -4,6 +4,8 @@ import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/boba_map_bloc.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -111,27 +113,46 @@ class BobaMap extends StatefulWidget {
   _BobaMapState createState() => _BobaMapState();
 }
 
-class _BobaMapState extends State<BobaMap> {
+class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   static const _tw101 = const LatLng(25.0339639, 121.5622835);
+  BobaMapBloc _bobaMapBloc;
   GoogleMapController _mapController;
   CameraPosition _cameraPos;
   Set<Marker> _markers;
   ValueNotifier<bool> _isCameraTooFarNotifier = ValueNotifier(true);
-  PageController pageController;
-  bool isPageSwipedByUser = false;
-  BobaMapBloc bobaMapBloc;
+  ValueNotifier<bool> _searchBtnVisibilityNotifier = ValueNotifier(false);
+  PageController _shopInfoPageController;
+  bool _isPageSwipedByUser = false;
+  bool _isTriggeredByMarker = false;
+
+  AnimationController _animController;
+  Animation<double> _fadeAnim;
+  Animation<Offset> _shopCardSlideAnim;
 
   @override
   void initState() {
     super.initState();
-    pageController = PageController(viewportFraction: 0.75);
-    bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
+    _bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
+    _shopInfoPageController = PageController(viewportFraction: 0.75);
+    _animController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+    _fadeAnim = Tween(begin: 1.0, end: 0.0).animate(
+        CurvedAnimation(parent: _animController, curve: Curves.fastOutSlowIn));
+    _shopCardSlideAnim = Tween(begin: Offset(0, 0), end: Offset(0, 1)).animate(
+        CurvedAnimation(parent: _animController, curve: Curves.fastOutSlowIn));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _shopInfoPageController?.dispose();
+    _animController?.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    //AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
-    //BobaMapBloc bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
     return Scaffold(
       appBar: _buildAppBar(),
       body: Column(
@@ -139,7 +160,7 @@ class _BobaMapState extends State<BobaMap> {
           _buildShopFilterBar(),
           Expanded(
             child: StreamBuilder<List<DocumentSnapshot>>(
-              stream: bobaMapBloc?.bobaData,
+              stream: _bobaMapBloc?.bobaData,
               builder: (ctx, snapshot) {
                 List<DocumentSnapshot> snapshots = snapshot.data;
                 _markers = _genMarkers(snapshots);
@@ -264,32 +285,43 @@ class _BobaMapState extends State<BobaMap> {
 
   Widget _buildSearchButton() {
     return ValueListenableBuilder(
-      valueListenable: _isCameraTooFarNotifier,
-      builder: (context, isCameraTooFar, child) {
-        var onTap;
-        if (!isCameraTooFar) {
-          onTap = () {
-            if (_cameraPos == null) {
-              return;
-            }
-            LatLng latLng = _cameraPos.target;
-            bobaMapBloc?.seekBoba(lat: latLng.latitude, lng: latLng.longitude);
-          };
-        }
-        return Container(
-          child: RaisedButton.icon(
-            elevation: 8,
-            color: Colors.white,
-            disabledColor: Colors.blueGrey,
-            disabledTextColor: Colors.white,
-            textColor: Colors.black54,
-            shape: StadiumBorder(),
-            onPressed: onTap,
-            icon: Icon(
-              isCameraTooFar ? Icons.error : Icons.search,
-              color: isCameraTooFar ? Colors.white : Colors.black54,
-            ),
-            label: Text(isCameraTooFar ? "請放大後再進行搜尋哦" : "搜尋此區域"),
+      valueListenable: _searchBtnVisibilityNotifier,
+      builder: (context, isVisible, child) {
+        return Visibility(
+          visible: isVisible,
+          child: ValueListenableBuilder(
+            valueListenable: _isCameraTooFarNotifier,
+            builder: (context, isCameraTooFar, child) {
+              var onTap;
+              if (!isCameraTooFar) {
+                onTap = () {
+                  if (_cameraPos == null) {
+                    return;
+                  }
+                  _searchBtnVisibilityNotifier.value = false;
+                  LatLng latLng = _cameraPos.target;
+                  _bobaMapBloc?.seekBoba(
+                      lat: latLng.latitude, lng: latLng.longitude);
+                };
+              }
+              return FadeTransition(
+                opacity: _fadeAnim,
+                child: RaisedButton.icon(
+                  elevation: 8,
+                  color: Colors.white,
+                  disabledColor: Colors.blueGrey,
+                  disabledTextColor: Colors.white,
+                  textColor: Colors.black54,
+                  shape: StadiumBorder(),
+                  onPressed: onTap,
+                  icon: Icon(
+                    isCameraTooFar ? Icons.error : Icons.search,
+                    color: isCameraTooFar ? Colors.white : Colors.black54,
+                  ),
+                  label: Text(isCameraTooFar ? "請放大後再進行搜尋哦" : "搜尋此區域"),
+                ),
+              );
+            },
           ),
         );
       },
@@ -311,13 +343,32 @@ class _BobaMapState extends State<BobaMap> {
             .catchError((err) {});
         LatLng pos = _curPosition ?? _tw101;
         controller.animateCamera(CameraUpdate.newLatLng(pos));
-        bobaMapBloc.seekBoba(lat: pos.latitude, lng: pos.longitude);
+        _bobaMapBloc.seekBoba(lat: pos.latitude, lng: pos.longitude);
       },
       markers: markers,
+      onCameraMoveStarted: () {
+        if (_isTriggeredByMarker) {
+          _isTriggeredByMarker = false;
+          return;
+        }
+        if (_isPageSwipedByUser) {
+          _isPageSwipedByUser = false;
+          return;
+        }
+        if (_animController.status != AnimationStatus.completed) {
+          _animController.forward();
+        }
+      },
       onCameraMove: (pos) {
         _cameraPos = pos;
         bool isCameraTooFar = pos.zoom <= 13;
         _isCameraTooFarNotifier.value = isCameraTooFar;
+      },
+      onCameraIdle: () {
+        _searchBtnVisibilityNotifier.value = true;
+        if (_animController.status != AnimationStatus.dismissed) {
+          _animController.reverse();
+        }
       },
     );
   }
@@ -329,7 +380,6 @@ class _BobaMapState extends State<BobaMap> {
     List<Marker> markers = [];
     for (var i = 0; i < snapshots.length; i++) {
       var data = snapshots[i];
-      //final shop = data.data["shopName"];
       var hue = data.data["pinColor"];
       hue = double.tryParse(hue.toString()) ?? hue;
       GeoPoint geo = data.data["position"]["geopoint"];
@@ -340,64 +390,42 @@ class _BobaMapState extends State<BobaMap> {
           icon: hue == null
               ? BitmapDescriptor.defaultMarker
               : BitmapDescriptor.defaultMarkerWithHue(hue),
+          consumeTapEvents: true,
           onTap: () async {
-            isPageSwipedByUser = false;
-            _mapController?.animateCamera(CameraUpdate.newLatLngZoom(pos, 16));
-            //pageController?.jumpToPage(i);
-            pageController?.animateToPage(i,
-                duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+            _isTriggeredByMarker = true;
+            _shopInfoPageController?.jumpToPage(i);
           }));
     }
-    /*Iterable<Marker> markers = snapshots.map((data) {
-      final shop = data.data["shopName"];
-      var hue = data.data["pinColor"];
-      hue = double.tryParse(hue.toString()) ?? hue;
-      GeoPoint geo = data.data["position"]["geopoint"];
-      final pos = LatLng(geo.latitude, geo.longitude);
-      return Marker(
-          markerId: MarkerId(data.documentID),
-          position: pos,
-          icon: hue == null
-              ? BitmapDescriptor.defaultMarker
-              : BitmapDescriptor.defaultMarkerWithHue(hue),
-          */ /*infoWindow: InfoWindow(
-              title: shop,
-              snippet:
-                  "Address: ${data.data["city"]}${data.data["district"]}${data.data["address"]}"),*/ /*
-          onTap: () async {
-            await pageController?.animateToPage(pageController.page.floor(),
-                duration: Duration(milliseconds: 200), curve: Curves.easeIn);
-            return _mapController
-                ?.animateCamera(CameraUpdate.newLatLngZoom(pos, 16));
-          });
-    });*/
     return Set.from(markers);
   }
 
   Widget _buildShopCards(List<DocumentSnapshot> shops) {
-    return GestureDetector(
-      onPanDown: (details) => isPageSwipedByUser = true,
-      child: PageView.builder(
-        controller: pageController,
-        onPageChanged: (index) {
-          if (!isPageSwipedByUser) {
-            return;
-          }
-          GeoPoint position = shops[index].data["position"]["geopoint"];
-          _moveCamera(position);
-        },
-        itemCount: shops?.length ?? 0,
-        itemBuilder: (context, index) {
-          return _ShopItem(
-            shopName: shops[index].data["shopName"],
-            branchName: shops[index].data["branchName"],
-            city: shops[index].data["city"],
-            district: shops[index].data["district"],
-            address: shops[index].data["address"],
-            phone: shops[index].data["phone"],
-            hue: shops[index].data["pinColor"],
-          );
-        },
+    return SlideTransition(
+      position: _shopCardSlideAnim,
+      child: FadeTransition(
+        opacity: _fadeAnim,
+        child: GestureDetector(
+          onPanDown: (details) => _isPageSwipedByUser = true,
+          child: PageView.builder(
+            controller: _shopInfoPageController,
+            onPageChanged: (index) {
+              GeoPoint position = shops[index].data["position"]["geopoint"];
+              _moveCamera(position);
+            },
+            itemCount: shops?.length ?? 0,
+            itemBuilder: (context, index) {
+              return _ShopItem(
+                shopName: shops[index].data["shopName"],
+                branchName: shops[index].data["branchName"],
+                city: shops[index].data["city"],
+                district: shops[index].data["district"],
+                address: shops[index].data["address"],
+                phone: shops[index].data["phone"],
+                hue: shops[index].data["pinColor"],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
