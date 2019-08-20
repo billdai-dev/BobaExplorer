@@ -7,9 +7,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:launch_review/launch_review.dart';
+import 'package:path_drawing/path_drawing.dart';
 import 'package:provider/provider.dart';
 
 void main() => runApp(
@@ -133,7 +135,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
-    _shopInfoPageController = PageController(viewportFraction: 0.75);
+    _shopInfoPageController = PageController(viewportFraction: 0.85);
     _animController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 300),
@@ -496,111 +498,172 @@ class _ShopItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color color = _hue == null
+    /*Color color = _hue == null
         ? Colors.redAccent
-        : HSVColor.fromAHSV(1, _hue.toDouble(), 1, 1).toColor();
-    String branchName =
-        _branchName.contains("店") ? _branchName : "$_branchName店";
-    branchName = branchName.replaceAll("│", "\n");
+        : HSVColor.fromAHSV(1, _hue.toDouble(), 1, 1).toColor();*/
+    String branchName = _branchName.endsWith("店") && !_branchName.endsWith("新店")
+        ? _branchName
+        : "$_branchName店";
     return Card(
       clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Stack(
-        children: <Widget>[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomCenter,
-                stops: [0.45, 0.45],
-                colors: [color, Colors.transparent],
-              ),
-            ),
-            alignment: Alignment.topRight,
-            child: Text(_shopName),
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromARGB(255, 52, 146, 210),
+              Color.fromARGB(255, 242, 252, 254),
+            ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.bottomRight,
-                end: Alignment.topCenter,
-                stops: [0.45, 0.45],
-                colors: [color, Colors.transparent],
-              ),
-            ),
-            alignment: Alignment.bottomRight,
-            child: Text(
-              branchName.length > 6 && !branchName.contains("\n")
-                  ? "${branchName.substring(0, 6)}\n${branchName.substring(6, branchName.length)}"
-                  : branchName,
-              textAlign: TextAlign.end,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Column(
-              children: <Widget>[
-                Row(
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    ConstrainedBox(
-                      constraints:
-                          BoxConstraints.tightFor(width: 30, height: 30),
-                      child: RaisedButton(
-                        padding: EdgeInsets.zero,
-                        shape: CircleBorder(),
-                        color: Colors.white,
-                        elevation: 4,
-                        onPressed: () {},
-                        child: Icon(Icons.restaurant_menu),
+                    SizedBox(height: 4),
+                    Row(
+                      children: <Widget>[
+                        Text(
+                          _shopName,
+                          style: Theme.of(context).textTheme.title,
+                        ),
+                        Spacer(),
+                        _buildBranchTag(branchName),
+                        SizedBox(width: 4),
+                        PopupMenuButton(
+                          offset: Offset(0, -20),
+                          child: Icon(Icons.more_vert),
+                          onSelected: (number) {},
+                          itemBuilder: (context) {
+                            return <PopupMenuEntry<int>>[
+                              PopupMenuItem(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Icon(Icons.share),
+                                    SizedBox(width: 8),
+                                    Text("分享"),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Icon(Icons.report_problem),
+                                    SizedBox(width: 8),
+                                    Text("回報"),
+                                  ],
+                                ),
+                              ),
+                            ];
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text("地址"),
+                      ],
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      "$_city$_district$_address",
+                      style: TextStyle(),
+                    ),
+                    SizedBox(height: 4),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              height: 45,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Expanded(
+                    child: FlatButton.icon(
+                      padding: EdgeInsets.zero,
+                      onPressed: () {},
+                      icon: Icon(Icons.phone),
+                      label: Text("撥號至店家"),
+                    ),
+                  ),
+                  Expanded(
+                    child: FlatButton.icon(
+                      padding: EdgeInsets.zero,
+                      onPressed: () {},
+                      icon: Icon(
+                        FontAwesomeIcons.locationArrow,
+                        size: 18,
+                      ),
+                      label: Text("開始導航"),
+                    ),
+                  ),
+                  Container(
+                    width: 54,
+                    child: CustomPaint(
+                      painter: _FavoriteStampCustomPainter(),
+                      child: Container(
+                        alignment: Alignment.bottomRight,
+                        child: GestureDetector(
+                          onTap: () {},
+                          child: Icon(
+                            Icons.favorite_border,
+                            color: Colors.redAccent.shade200,
+                          ),
+                        ),
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text("地址："),
-                    Flexible(
-                      flex: 55,
-                      child: Text("$_city$_district$_address"),
-                    ),
-                    Spacer(
-                      flex: 45,
-                    )
-                  ],
-                ),
-                SizedBox(height: 8),
-                Row(
-                  children: <Widget>[
-                    Text("電話："),
-                    Text(
-                      _phone,
-                      style: TextStyle(
-                          color: Colors.blueAccent,
-                          decoration: TextDecoration.underline),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  Widget _buildBranchTag(String branchName) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
+      decoration: ShapeDecoration(
+        shape: StadiumBorder(),
+        color: Color.fromARGB(255, 28, 210, 183),
+      ),
+      child: Text(branchName),
+    );
+  }
+}
+
+class _FavoriteStampCustomPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint();
+    paint.color = Colors.grey;
+    paint.strokeWidth = 1.2;
+    paint.style = PaintingStyle.stroke;
+
+    var dash = Path()
+      ..moveTo(size.width, 0)
+      ..lineTo(0, size.height);
+    canvas.drawPath(
+        dashPath(dash, dashArray: CircularIntervalList([4, 6])), paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return false;
   }
 }
