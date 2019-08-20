@@ -25,7 +25,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   firebase_core: ^0.3.1
   cloud_firestore: ^0.9.7
-  google_maps_flutter: ^0.5.7
+  google_maps_flutter: ^0.5.20+3
   geolocator: ^3.0.1
   geoflutterfire: ^2.0.3+2
   rxdart: ^0.20.0

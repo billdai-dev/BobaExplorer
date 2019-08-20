@@ -127,6 +127,9 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   bool _isPageSwipedByUser = false;
   bool _isTriggeredByMarker = false;
 
+  Completer<BitmapDescriptor> _markerIconCompleter;
+  BitmapDescriptor _markerIcon;
+
   AnimationController _animController;
   Animation<double> _fadeAnim;
   Animation<Offset> _shopCardSlideAnim;
@@ -136,6 +139,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
     super.initState();
     _bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
     _shopInfoPageController = PageController(viewportFraction: 0.85);
+
     _animController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 300),
@@ -144,6 +148,13 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
         CurvedAnimation(parent: _animController, curve: Curves.fastOutSlowIn));
     _shopCardSlideAnim = Tween(begin: Offset(0, 0), end: Offset(0, 1)).animate(
         CurvedAnimation(parent: _animController, curve: Curves.fastOutSlowIn));
+    _markerIconCompleter = Completer();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      BitmapDescriptor.fromAssetImage(
+              createLocalImageConfiguration(context, size: Size(96, 164)),
+              "assets/images/bubble_tea.png")
+          .then((icon) => _markerIconCompleter.complete(icon));
+    });
   }
 
   @override
@@ -338,6 +349,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
       myLocationButtonEnabled: false,
       onMapCreated: (controller) async {
         _mapController = controller;
+        _markerIcon = await _markerIconCompleter.future;
         LatLng _curPosition = await Geolocator()
             .getCurrentPosition()
             .then((pos) =>
@@ -376,7 +388,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   }
 
   Set<Marker> _genMarkers(List<DocumentSnapshot> snapshots) {
-    if (snapshots == null) {
+    if (snapshots == null || _markerIcon == null) {
       return null;
     }
     List<Marker> markers = [];
@@ -389,11 +401,9 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
       markers.add(Marker(
           markerId: MarkerId(data.documentID),
           position: pos,
-          icon: hue == null
-              ? BitmapDescriptor.defaultMarker
-              : BitmapDescriptor.defaultMarkerWithHue(hue),
+          icon: _markerIcon,
           consumeTapEvents: true,
-          onTap: () async {
+          onTap: () {
             _isTriggeredByMarker = true;
             _shopInfoPageController?.jumpToPage(i);
           }));
