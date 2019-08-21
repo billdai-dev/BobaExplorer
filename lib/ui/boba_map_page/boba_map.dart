@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
+import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -192,8 +193,14 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
               padding: const EdgeInsets.only(left: 4, right: 8),
               child: Icon(Icons.filter_list),
             ),
-            onTap: () {
-              //TODO: Show shop list dialog for filtering
+            onTap: () async {
+              var filteredShops = await _bobaMapBloc.filterShopList.first;
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return ShopFilterDialog(filteredShops);
+                },
+              );
             },
           ),
         ],

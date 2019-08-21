@@ -12,6 +12,7 @@ void main() => runApp(
         builder: (_) => AppBloc(),
         dispose: (_, appBloc) => appBloc.dispose(),
         child: MaterialApp(
+          debugShowCheckedModeBanner: false,
           home: MyApp(),
         ),
       ),
