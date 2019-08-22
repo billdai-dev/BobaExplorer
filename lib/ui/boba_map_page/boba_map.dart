@@ -194,13 +194,15 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
               child: Icon(Icons.filter_list),
             ),
             onTap: () async {
-              var filteredShops = await _bobaMapBloc.filterShopList.first;
-              showDialog(
+              var filteredShops = await _bobaMapBloc.filterList.first;
+              var newFilteredShops = await showDialog(
                 context: context,
-                builder: (context) {
-                  return ShopFilterDialog(filteredShops);
-                },
+                builder: (context) => ShopFilterDialog(filteredShops),
               );
+              if (newFilteredShops == null) {
+                return;
+              }
+              _bobaMapBloc.filter(shops: newFilteredShops);
             },
           ),
         ],
@@ -373,10 +375,10 @@ class ShopFilterButton extends StatelessWidget {
     double brightness = color.computeLuminance();
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: StreamBuilder<List<String>>(
-        stream: bloc.filterShopList,
+      child: StreamBuilder<Set<String>>(
+        stream: bloc.filterList,
         builder: (context, snapshot) {
-          List<String> filteredShops = snapshot.data ?? [];
+          Set<String> filteredShops = snapshot.data ?? {};
           bool isSelected = filteredShops.contains(_shop.name);
           return FlatButton(
             color: isSelected ? color.withOpacity(0.5) : Colors.white,
@@ -385,7 +387,7 @@ class ShopFilterButton extends StatelessWidget {
                 : Colors.grey,
             shape: StadiumBorder(),
             child: Text(_shop.name),
-            onPressed: () => bloc.filterShop(_shop.name),
+            onPressed: () => bloc.filter(shop: _shop.name),
           );
         },
       ),

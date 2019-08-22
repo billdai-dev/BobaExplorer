@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ShopFilterDialog extends StatefulWidget {
-  final List<String> _filteredShops;
+  final Set<String> _filteredShops;
 
   ShopFilterDialog(this._filteredShops, {Key key}) : super(key: key);
 
@@ -13,13 +13,13 @@ class ShopFilterDialog extends StatefulWidget {
 
 class _ShopFilterDialogState extends State<ShopFilterDialog> {
   AppBloc appBloc;
-  ValueNotifier<List<String>> filteredShopsNotifier;
+  ValueNotifier<Set<String>> filteredShopsNotifier;
 
   @override
   void initState() {
     super.initState();
     appBloc = Provider.of<AppBloc>(context, listen: false);
-    filteredShopsNotifier = ValueNotifier(List.of(widget._filteredShops ?? []));
+    filteredShopsNotifier = ValueNotifier(Set.of(widget._filteredShops ?? {}));
   }
 
   @override
@@ -41,8 +41,9 @@ class _ShopFilterDialogState extends State<ShopFilterDialog> {
             stream: appBloc.supportedShops
                 .map((shops) => shops.map((shop) => shop.name).toList()),
             builder: (context, supportedShopsData) {
-              var supportedShops =
-                  supportedShopsData.hasData ? supportedShopsData.data : [];
+              List<String> supportedShops = supportedShopsData.hasData
+                  ? supportedShopsData.data.toList()
+                  : [];
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
@@ -51,7 +52,7 @@ class _ShopFilterDialogState extends State<ShopFilterDialog> {
                     style: Theme.of(context).textTheme.title,
                   ),
                   SizedBox(height: 4),
-                  ValueListenableBuilder(
+                  ValueListenableBuilder<Set<String>>(
                     valueListenable: filteredShopsNotifier,
                     builder: (context, filteredShops, child) {
                       bool isAllChecked = true;
@@ -62,10 +63,10 @@ class _ShopFilterDialogState extends State<ShopFilterDialog> {
                       }
                       return _buildCheckbox(isAllChecked, "全選", (isChecked) {
                         if (isChecked) {
-                          filteredShopsNotifier?.value = [];
+                          filteredShopsNotifier?.value = {};
                         } else {
                           //Add a fake item to deselect all
-                          filteredShopsNotifier?.value = [""];
+                          filteredShopsNotifier?.value = {""};
                         }
                       });
                     },
@@ -140,7 +141,7 @@ class _ShopFilterDialogState extends State<ShopFilterDialog> {
                       filteredShops.isEmpty || filteredShops.contains(shopName);
 
                   var onCheckChanged = (isChecked) {
-                    final newFilterList = List.of(filteredShopsNotifier.value);
+                    final newFilterList = Set.of(filteredShopsNotifier.value);
                     if (isChecked) {
                       //Remove fake item added by "Select all" checkbox if exists
                       newFilterList.remove("");
