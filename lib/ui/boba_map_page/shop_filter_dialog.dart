@@ -13,12 +13,14 @@ class ShopFilterDialog extends StatefulWidget {
 
 class _ShopFilterDialogState extends State<ShopFilterDialog> {
   AppBloc appBloc;
+  ValueNotifier<bool> isAllCheckedNotifier;
   ValueNotifier<Set<String>> filteredShopsNotifier;
 
   @override
   void initState() {
     super.initState();
     appBloc = Provider.of<AppBloc>(context, listen: false);
+    isAllCheckedNotifier = ValueNotifier(widget._filteredShops.isEmpty);
     filteredShopsNotifier = ValueNotifier(Set.of(widget._filteredShops ?? {}));
   }
 
@@ -47,20 +49,23 @@ class _ShopFilterDialogState extends State<ShopFilterDialog> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  Text(
-                    "選擇你想找的飲料店",
-                    style: Theme.of(context).textTheme.title,
+                  Container(
+                    child: Text(
+                      "選擇你想找的飲料店",
+                      style: Theme.of(context).textTheme.title,
+                    ),
                   ),
-                  SizedBox(height: 4),
+                  Divider(height: 16),
                   ValueListenableBuilder<Set<String>>(
                     valueListenable: filteredShopsNotifier,
                     builder: (context, filteredShops, child) {
-                      bool isAllChecked = true;
+                      bool isAllChecked = isAllCheckedNotifier.value;
                       if (filteredShops.isNotEmpty) {
                         for (var shop in supportedShops) {
                           isAllChecked &= filteredShops.contains(shop);
                         }
                       }
+                      isAllCheckedNotifier.value = isAllChecked;
                       return _buildCheckbox(isAllChecked, "全選", (isChecked) {
                         if (isChecked) {
                           filteredShopsNotifier?.value = {};
@@ -68,10 +73,10 @@ class _ShopFilterDialogState extends State<ShopFilterDialog> {
                           //Add a fake item to deselect all
                           filteredShopsNotifier?.value = {""};
                         }
+                        isAllCheckedNotifier.value = isChecked;
                       });
                     },
                   ),
-                  SizedBox(height: 4),
                   Expanded(
                     child: _buildSupportedShopGrid(supportedShops),
                   ),
@@ -80,14 +85,42 @@ class _ShopFilterDialogState extends State<ShopFilterDialog> {
                       Expanded(
                         child: FlatButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text("取消"),
+                          child:
+                              Text("取消", style: TextStyle(color: Colors.grey)),
                         ),
                       ),
                       Expanded(
-                        child: FlatButton(
-                          onPressed: () => Navigator.pop(
-                              context, filteredShopsNotifier.value),
-                          child: Text("確定"),
+                        child: ValueListenableBuilder<Set<String>>(
+                          valueListenable: filteredShopsNotifier,
+                          builder: (context, filters, child) {
+                            return ValueListenableBuilder<bool>(
+                              valueListenable: isAllCheckedNotifier,
+                              builder: (context, isAllChecked, child) {
+                                final filters = filteredShopsNotifier.value;
+                                bool isDisabled = !isAllChecked &&
+                                    (filters.isEmpty ||
+                                        filters.length == 1 &&
+                                            filters.contains(""));
+                                return FlatButton(
+                                  textColor: Colors.blueAccent,
+                                  disabledTextColor: Colors.grey.shade700,
+                                  onPressed: isDisabled
+                                      ? null
+                                      : () {
+                                          final filters =
+                                              filteredShopsNotifier.value;
+                                          if (filters.isEmpty) {}
+                                          return Navigator.pop(context,
+                                              filteredShopsNotifier.value);
+                                        },
+                                  child: child,
+                                );
+                              },
+                              child: Text(
+                                "確定",
+                              ),
+                            );
+                          },
                         ),
                       )
                     ],
@@ -133,31 +166,36 @@ class _ShopFilterDialogState extends State<ShopFilterDialog> {
               childAspectRatio: 2,
             ),
             itemBuilder: (context, index) {
-              return ValueListenableBuilder(
-                valueListenable: filteredShopsNotifier,
-                builder: (context, filteredShops, child) {
-                  final shopName = supportedShops[index];
-                  bool isChecked =
-                      filteredShops.isEmpty || filteredShops.contains(shopName);
+              return ValueListenableBuilder<bool>(
+                valueListenable: isAllCheckedNotifier,
+                builder: (context, isAllChecked, child) {
+                  return ValueListenableBuilder(
+                    valueListenable: filteredShopsNotifier,
+                    builder: (context, filteredShops, child) {
+                      final shopName = supportedShops[index];
+                      bool isChecked =
+                          isAllChecked || filteredShops.contains(shopName);
 
-                  var onCheckChanged = (isChecked) {
-                    final newFilterList = Set.of(filteredShopsNotifier.value);
-                    if (isChecked) {
-                      //Remove fake item added by "Select all" checkbox if exists
-                      newFilterList.remove("");
-                      newFilterList.add(shopName);
-                    } else {
-                      if (newFilterList.isEmpty) {
-                        newFilterList.addAll(supportedShops);
-                      } else if (newFilterList.length == 1) {
-                        return;
-                      } else {
-                        newFilterList.remove(shopName);
-                      }
-                    }
-                    filteredShopsNotifier?.value = newFilterList;
-                  };
-                  return _buildCheckbox(isChecked, shopName, onCheckChanged);
+                      var onCheckChanged = (isChecked) {
+                        final newFilterList =
+                            Set.of(filteredShopsNotifier.value);
+                        if (isChecked) {
+                          //Remove fake item added by "Select all" checkbox if exists
+                          newFilterList.remove("");
+                          newFilterList.add(shopName);
+                        } else {
+                          if (isAllChecked) {
+                            newFilterList.addAll(supportedShops);
+                          }
+                          newFilterList.remove(shopName);
+                          isAllCheckedNotifier.value = false;
+                        }
+                        filteredShopsNotifier?.value = newFilterList;
+                      };
+                      return _buildCheckbox(
+                          isChecked, shopName, onCheckChanged);
+                    },
+                  );
                 },
               );
             },
