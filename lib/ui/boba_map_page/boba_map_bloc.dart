@@ -23,11 +23,6 @@ class BobaMapBloc implements BlocBase {
 
   Stream<Set<String>> get filterList => _filterListController.stream;
 
-  final PublishSubject<String> _appendSingleFilterController = PublishSubject();
-
-  final PublishSubject<Set<String>> _appendFilterListController =
-      PublishSubject();
-
   final BehaviorSubject<Tuple2<Set<String>, Set<String>>> _prevCurFilters =
       BehaviorSubject();
 
@@ -37,29 +32,6 @@ class BobaMapBloc implements BlocBase {
       return _genQueryObservable(filteredShops);
     }).listen((docs) {
       _bobaController.add(docs);
-    });
-
-    _appendSingleFilterController.flatMap((filteredShop) {
-      final curFilterList = _filterListController.value;
-      bool isOnlyFilter =
-          curFilterList.contains(filteredShop) && curFilterList.length == 1;
-      return _genQueryObservable({filteredShop}).map(
-          (docs) => Tuple2<bool, List<DocumentSnapshot>>(isOnlyFilter, docs));
-    }).listen((result) {
-      bool isTheOnlyFilter = result.item1;
-      List<DocumentSnapshot> docs = result.item2;
-      if (isTheOnlyFilter) {
-        _bobaController.add(result.item2);
-      } else {
-        _bobaController.add(List.of(_bobaController.value)..addAll(docs));
-      }
-    });
-
-    _appendFilterListController.switchMap((newFilterList) {
-      return _genQueryObservable(newFilterList);
-    }).listen((docs) {
-      _bobaController.add(List.of(_bobaController.value)..addAll(docs));
-      //_bobaController.add(docs);
     });
 
     _prevCurFilters.doOnData((filtersTuple) {
@@ -131,9 +103,6 @@ class BobaMapBloc implements BlocBase {
       newFilter = shops;
     }
     final oldFiltersTuple = _prevCurFilters.value ?? Tuple2({}, {});
-    /*if (oldFiltersTuple.item2.isEmpty && newFilter.isEmpty) {
-      return;
-    }*/
     _prevCurFilters.add(Tuple2(oldFiltersTuple.item2, newFilter));
   }
 
@@ -142,8 +111,6 @@ class BobaMapBloc implements BlocBase {
     _bobaController?.close();
     _queryConfigController?.close();
     _filterListController?.close();
-    _appendSingleFilterController?.close();
-    _appendFilterListController?.close();
   }
 
   Observable<List<DocumentSnapshot>> _genQueryObservable(Set<String> shops) {
