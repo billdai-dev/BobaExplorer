@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/remote_config_model.dart';
@@ -13,6 +14,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:path_drawing/path_drawing.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BobaMap extends StatefulWidget {
   BobaMap({Key key}) : super(key: key);
@@ -543,12 +545,12 @@ class _ShopItem extends StatelessWidget {
                   Expanded(
                     child: FlatButton.icon(
                       padding: EdgeInsets.zero,
-                      onPressed: () {},
+                      onPressed: () => _launchMaps("$_city$_district$_address"),
                       icon: Icon(
                         FontAwesomeIcons.locationArrow,
                         size: 18,
                       ),
-                      label: Text("開始導航"),
+                      label: Text("在地圖上查看"),
                     ),
                   ),
                   Container(
@@ -585,6 +587,23 @@ class _ShopItem extends StatelessWidget {
       ),
       child: Text(branchName),
     );
+  }
+
+  Future<void> _launchMaps(String address) async {
+    String googleMapUrl =
+        "https://www.google.com/maps/search/?api=1&query=$address";
+    googleMapUrl = Uri.encodeFull(googleMapUrl);
+    if (Platform.isIOS) {
+      if (!await canLaunch("googlemaps://")) {
+        var iosMapUrl = "http://maps.apple.com/?q=$address";
+        iosMapUrl = Uri.encodeFull(iosMapUrl);
+        await launch(iosMapUrl);
+        return;
+      }
+    }
+    if (await canLaunch(googleMapUrl)) {
+      await launch(googleMapUrl);
+    }
   }
 }
 
