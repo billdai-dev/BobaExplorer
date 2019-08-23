@@ -537,7 +537,7 @@ class _ShopItem extends StatelessWidget {
                   Expanded(
                     child: FlatButton.icon(
                       padding: EdgeInsets.zero,
-                      onPressed: () {},
+                      onPressed: () => _launchDial(_phone),
                       icon: Icon(Icons.phone),
                       label: Text("撥號至店家"),
                     ),
@@ -587,6 +587,13 @@ class _ShopItem extends StatelessWidget {
       ),
       child: Text(branchName),
     );
+  }
+
+  Future<void> _launchDial(String phoneNumber) async {
+    String dialUri = "tel:$phoneNumber";
+    if (await canLaunch(dialUri)) {
+      await launch(dialUri);
+    }
   }
 
   Future<void> _launchMaps(String address) async {
