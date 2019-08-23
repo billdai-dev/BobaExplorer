@@ -30,8 +30,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   ValueNotifier<bool> _isCameraTooFarNotifier = ValueNotifier(true);
   ValueNotifier<bool> _searchBtnVisibilityNotifier = ValueNotifier(false);
   PageController _shopInfoPageController;
-  bool _isPageSwipedByUser = false;
-  bool _isTriggeredByMarker = false;
+  bool _shouldBlockNextMove = false;
 
   Completer<BitmapDescriptor> _markerIconCompleter;
   BitmapDescriptor _markerIcon;
@@ -81,6 +80,13 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
             child: StreamBuilder<List<DocumentSnapshot>>(
               stream: _bobaMapBloc?.bobaData,
               builder: (ctx, snapshot) {
+                Future(() {
+                  if (snapshot.hasData) {
+                    _shouldBlockNextMove = true;
+                    _shopInfoPageController?.jumpToPage(0);
+                  }
+                });
+
                 List<DocumentSnapshot> snapshots = snapshot.data;
                 _markers = _genMarkers(snapshots);
                 return Stack(
@@ -157,17 +163,22 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
       color: Colors.white,
       child: Row(
         children: <Widget>[
-          Visibility(
-            visible: false, //TODO: Change visibility according to filter status
-            replacement: SizedBox(width: 20),
-            child: InkWell(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8, right: 4),
-                child: Icon(Icons.cancel, color: Colors.grey),
-              ),
-              onTap: () {},
-            ),
-          ),
+          StreamBuilder<Set<String>>(
+              stream: _bobaMapBloc.filterList,
+              builder: (context, snapshot) {
+                bool isFiltering = snapshot.data?.isNotEmpty == true;
+                return Visibility(
+                  visible: isFiltering,
+                  replacement: SizedBox(width: 20),
+                  child: InkWell(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8, right: 4),
+                      child: Icon(Icons.cancel, color: Colors.grey),
+                    ),
+                    onTap: () => _bobaMapBloc?.filter(shops: {}),
+                  ),
+                );
+              }),
           Expanded(
             child: Consumer<AppBloc>(
               builder: (_, appBloc, child) {
@@ -275,14 +286,18 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
       },
       markers: markers,
       onCameraMoveStarted: () {
-        if (_isTriggeredByMarker) {
+        if (_shouldBlockNextMove) {
+          _shouldBlockNextMove = false;
+          return;
+        }
+        /*if (_isTriggeredByMarker) {
           _isTriggeredByMarker = false;
           return;
         }
         if (_isPageSwipedByUser) {
           _isPageSwipedByUser = false;
           return;
-        }
+        }*/
         if (_animController.status != AnimationStatus.completed) {
           _animController.forward();
         }
@@ -318,7 +333,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
           icon: _markerIcon,
           consumeTapEvents: true,
           onTap: () {
-            _isTriggeredByMarker = true;
+            _shouldBlockNextMove = true;
             _shopInfoPageController?.jumpToPage(i);
           }));
     }
@@ -331,7 +346,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
       child: FadeTransition(
         opacity: _fadeAnim,
         child: GestureDetector(
-          onPanDown: (details) => _isPageSwipedByUser = true,
+          onPanDown: (details) => _shouldBlockNextMove = true,
           child: PageView.builder(
             controller: _shopInfoPageController,
             onPageChanged: (index) {
