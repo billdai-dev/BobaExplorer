@@ -448,11 +448,11 @@ class _ShopItem extends StatelessWidget {
           children: <Widget>[
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    SizedBox(height: 4),
+                    SizedBox(height: 8),
                     Row(
                       children: <Widget>[
                         Text(
@@ -494,16 +494,18 @@ class _ShopItem extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: 4),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text("地址"),
-                      ],
-                    ),
+                    Text("地址"),
                     SizedBox(height: 2),
-                    Text(
-                      "$_city$_district$_address",
-                      style: TextStyle(),
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: <Widget>[
+                          Text(
+                            "$_city$_district$_address",
+                            style: TextStyle(),
+                          ),
+                        ],
+                      ),
                     ),
                     SizedBox(height: 4),
                   ],

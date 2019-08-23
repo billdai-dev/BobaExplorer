@@ -78,6 +78,13 @@ class BobaMapBloc implements BlocBase {
     });
   }
 
+  @override
+  void dispose() {
+    _bobaController?.close();
+    _queryConfigController?.close();
+    _filterListController?.close();
+  }
+
   void seekBoba({double lat, double lng, double radius}) {
     _QueryConfig config = _QueryConfig.copy(_queryConfigController.value);
     if (lat != null && lng != null) {
@@ -104,13 +111,6 @@ class BobaMapBloc implements BlocBase {
     }
     final oldFiltersTuple = _prevCurFilters.value ?? Tuple2({}, {});
     _prevCurFilters.add(Tuple2(oldFiltersTuple.item2, newFilter));
-  }
-
-  @override
-  void dispose() {
-    _bobaController?.close();
-    _queryConfigController?.close();
-    _filterListController?.close();
   }
 
   Observable<List<DocumentSnapshot>> _genQueryObservable(Set<String> shops) {
