@@ -14,6 +14,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:path_drawing/path_drawing.dart';
 import 'package:provider/provider.dart';
+import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BobaMap extends StatefulWidget {
@@ -479,30 +480,29 @@ class _ShopItem extends StatelessWidget {
                         Spacer(),
                         _buildBranchTag(branchName),
                         SizedBox(width: 4),
-                        PopupMenuButton(
+                        PopupMenuButton<_ShopOverflowOption>(
                           offset: Offset(0, -20),
                           child: Icon(Icons.more_vert),
-                          onSelected: (number) {},
+                          onSelected: (option) => _handleOverflowAction(
+                            option,
+                            shopName: _shopName,
+                            branchName: branchName,
+                            address: "$_city$_district$_address",
+                          ),
                           itemBuilder: (context) {
-                            return <PopupMenuEntry<int>>[
+                            return <PopupMenuEntry<_ShopOverflowOption>>[
                               PopupMenuItem(
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    Icon(Icons.share),
-                                    SizedBox(width: 8),
-                                    Text("分享"),
-                                  ],
+                                value: _ShopOverflowOption.share,
+                                child: buildPopupMenuButton(
+                                  "分享",
+                                  icon: Icons.share,
                                 ),
                               ),
                               PopupMenuItem(
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    Icon(Icons.report_problem),
-                                    SizedBox(width: 8),
-                                    Text("回報"),
-                                  ],
+                                value: _ShopOverflowOption.report,
+                                child: buildPopupMenuButton(
+                                  "回報",
+                                  icon: Icons.report_problem,
                                 ),
                               ),
                             ];
@@ -612,7 +612,42 @@ class _ShopItem extends StatelessWidget {
       await launch(googleMapUrl);
     }
   }
+
+  Widget buildPopupMenuButton(String text, {IconData icon}) {
+    return Column(
+      children: <Widget>[
+        if (icon != null)
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(icon),
+                SizedBox(width: 8),
+                Text(text),
+              ],
+            ),
+          )
+        else
+          Flexible(child: Text(text)),
+        Divider(height: 12),
+      ],
+    );
+  }
+
+  Future<void> _handleOverflowAction(_ShopOverflowOption option,
+      {String shopName = "",
+      String branchName = "",
+      String address = ""}) async {
+    if (option == _ShopOverflowOption.share) {
+      String googleMapUrl =
+          "https://www.google.com/maps/search/?api=1&query=$address";
+      googleMapUrl = Uri.encodeFull(googleMapUrl);
+      await Share.share("$shopName, $branchName\n$googleMapUrl");
+    } else if (option == _ShopOverflowOption.report) {}
+  }
 }
+
+enum _ShopOverflowOption { share, report }
 
 class _FavoriteStampCustomPainter extends CustomPainter {
   @override
