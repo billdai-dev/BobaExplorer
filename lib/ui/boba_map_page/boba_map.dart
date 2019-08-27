@@ -5,6 +5,7 @@ import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';
+import 'package:boba_explorer/ui/search_boba_page/search_boba_delegate.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -142,9 +143,18 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
               //TODO: Add 3rd party login
               SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  "搜尋飲料店",
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                child: GestureDetector(
+                  onTap: () async {
+                    String query = await showSearch<String>(
+                      context: context,
+                      delegate: SearchBobaDelegate(),
+                    );
+                    _bobaMapBloc?.filter(shops: {query});
+                  },
+                  child: Text(
+                    "搜尋飲料店",
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
                 ),
               ),
               IconButton(
