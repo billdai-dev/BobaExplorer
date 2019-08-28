@@ -76,6 +76,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: _buildAppBar(),
       body: Column(
         children: <Widget>[
@@ -149,6 +150,9 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                       context: context,
                       delegate: SearchBobaDelegate(),
                     );
+                    if (query == null || query.isEmpty) {
+                      return;
+                    }
                     _bobaMapBloc?.filter(shops: {query});
                   },
                   child: Text(

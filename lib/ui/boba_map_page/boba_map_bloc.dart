@@ -48,10 +48,11 @@ class BobaMapBloc implements BlocBase {
         //Select all
         if (newFilters.isEmpty) {
           result = null;
-        } else {
-          Set<String> newAdded = newFilters.difference(oldFilters);
-          result = newAdded;
+          return Observable.error(
+              ArgumentError.notNull("Old and new filters can't be both null"));
         }
+        Set<String> newAdded = newFilters.difference(oldFilters);
+        result = newAdded;
       } else {
         if (newFilters.isEmpty) {
           result = {};
