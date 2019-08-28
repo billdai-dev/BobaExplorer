@@ -1,21 +1,19 @@
 import 'dart:async';
 
 import 'package:boba_explorer/data/bloc_base.dart';
-import 'package:boba_explorer/data/model/tea_shop.dart';
+import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
+import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:tuple/tuple.dart';
 
 class BobaMapBloc implements BlocBase {
-  static const String path = "tea_shops";
-  static const String fieldName = "position";
+  TeaShopRepo _teaShopRepo;
 
-  final BehaviorSubject<List<DocumentSnapshot>> _teaShopsController =
+  final BehaviorSubject<List<TeaShop>> _teaShopsController =
       BehaviorSubject(seedValue: []);
 
-  Stream<List<TeaShop>> get teaShops => _teaShopsController.stream
-      .map((docs) => docs.map((doc) => TeaShop.fromJson(doc.data)).toList());
+  Stream<List<TeaShop>> get teaShops => _teaShopsController.stream;
 
   final BehaviorSubject<_QueryConfig> _queryConfigController =
       BehaviorSubject();
@@ -28,13 +26,17 @@ class BobaMapBloc implements BlocBase {
   final BehaviorSubject<Tuple2<Set<String>, Set<String>>> _prevCurFilters =
       BehaviorSubject();
 
-  BobaMapBloc() {
-    _queryConfigController.switchMap((config) {
-      Set<String> filteredShops = _filterListController.value;
-      return _genQueryObservable(filteredShops);
-    }).listen((docs) {
-      _teaShopsController.add(docs);
-    });
+  BobaMapBloc(this._teaShopRepo) {
+    _queryConfigController
+        .switchMap((config) {
+          Set<String> filteredShops = _filterListController.value;
+          return _teaShopRepo.getTeaShops(config.lat, config.lng, config.radius,
+              shopNames: filteredShops);
+        })
+        .map(_teaShopConverter)
+        .listen((shops) {
+          _teaShopsController.add(shops);
+        });
 
     _prevCurFilters.doOnData((filtersTuple) {
       _filterListController.add(filtersTuple.item2);
@@ -44,41 +46,50 @@ class BobaMapBloc implements BlocBase {
       Set<String> newFilters = filtersTuple.item2;
       final curBobaShop = List.of(_teaShopsController.value);
       final intersection = newFilters.intersection(oldFilters);
-      List<DocumentSnapshot> intersectionData = [];
+      List<TeaShop> intersectionData = [];
 
       if (oldFilters.isEmpty) {
-        //Select all
+        //Both filter lists are empty => Search all shops
         if (newFilters.isEmpty) {
           result = null;
-          return Observable.error(
-              ArgumentError.notNull("Old and new filters can't be both null"));
         }
+        //Find the new added filters
         Set<String> newAdded = newFilters.difference(oldFilters);
         result = newAdded;
       } else {
+        //New filter list is empty => Search all shops
         if (newFilters.isEmpty) {
           result = {};
-        } else {
+        }
+        //Find the removed filters and remove data from the current tea shop list
+        else {
           Set<String> removedShops = oldFilters.difference(newFilters);
-          removedShops.forEach((removedShop) => curBobaShop
-              .removeWhere((doc) => doc.data["shopName"] == removedShop));
+          removedShops.forEach((removedShop) =>
+              curBobaShop.removeWhere((shop) => shop.shopName == removedShop));
           _teaShopsController.add(curBobaShop);
 
           Set<String> addedShops = newFilters.difference(oldFilters);
           result = addedShops.isEmpty ? null : addedShops;
 
           intersectionData.addAll(curBobaShop);
-          intersectionData.retainWhere(
-              (doc) => intersection.contains(doc.data["shopName"]));
+          intersectionData
+              .retainWhere((shop) => intersection.contains(shop.shopName));
         }
       }
-      return _genQueryObservable(result)
-          .map((docs) => docs..addAll(intersectionData));
-    }).listen((docs) {
-      _teaShopsController.add(docs);
-    }, onError: (e) {
-      print(e);
-    });
+      //Result is null => No need to search more shops
+      if (result == null) {
+        return Observable.error(
+            ArgumentError.notNull("Old and new filters can't be both null"));
+      }
+      //Do query/queries for those new added filters
+      final config = _queryConfigController.value;
+      return _teaShopRepo
+          .getTeaShops(config?.lat, config?.lng, config?.radius,
+              shopNames: result)
+          .map(_teaShopConverter)
+          .doOnData((shops) => shops..addAll(intersectionData));
+    }).listen((shops) => _teaShopsController.add(shops),
+        onError: (e) => print(e));
   }
 
   @override
@@ -91,7 +102,8 @@ class BobaMapBloc implements BlocBase {
   void seekBoba({double lat, double lng, double radius}) {
     _QueryConfig config = _QueryConfig.copy(_queryConfigController.value);
     if (lat != null && lng != null) {
-      config.pos = GeoFirePoint(lat, lng);
+      config?.lat = lat;
+      config?.lng = lng;
     }
     config.radius = radius ?? config.radius ?? 1.0;
     _queryConfigController.add(config);
@@ -116,40 +128,18 @@ class BobaMapBloc implements BlocBase {
     _prevCurFilters.add(Tuple2(oldFiltersTuple.item2, newFilter));
   }
 
-  Observable<List<DocumentSnapshot>> _genQueryObservable(Set<String> shops) {
-    assert(shops != null);
-    if (shops.isEmpty) {
-      return _buildGeoQueryStream();
-    }
-    List<Stream<List<DocumentSnapshot>>> queryStreams =
-        shops.map((shop) => _buildGeoQueryStream(shopName: shop)).toList();
-    if (queryStreams.length == 1) {
-      return queryStreams.first;
-    }
-    return Observable.zip<List<DocumentSnapshot>, List<DocumentSnapshot>>(
-      queryStreams,
-      (results) => results.reduce((value, next) => value..addAll(next)),
-    );
-  }
-
-  Stream<List<DocumentSnapshot>> _buildGeoQueryStream(
-      {_QueryConfig config, String shopName}) {
-    config ??= _queryConfigController.value;
-    Query query = Firestore.instance.collection(path);
-    if (shopName != null) {
-      query = query.where("shopName", isEqualTo: shopName);
-    }
-    return Geoflutterfire()
-        .collection(collectionRef: query)
-        .within(center: config.pos, radius: config.radius, field: fieldName);
+  List<TeaShop> _teaShopConverter(List<DocumentSnapshot> docs) {
+    return docs.map((doc) => TeaShop.fromJson(doc.data)).toList();
   }
 }
 
 class _QueryConfig {
-  GeoFirePoint pos;
+  double lat;
+  double lng;
   double radius;
 
-  _QueryConfig(this.pos, this.radius);
+  _QueryConfig(this.lat, this.lng, this.radius);
 
-  _QueryConfig.copy(_QueryConfig config) : this(config?.pos, config?.radius);
+  _QueryConfig.copy(_QueryConfig config)
+      : this(config?.lat, config?.lng, config?.radius);
 }

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:boba_explorer/app_bloc.dart';
-import 'package:boba_explorer/data/model/tea_shop.dart';
+import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';

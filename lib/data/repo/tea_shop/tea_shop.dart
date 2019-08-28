@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'tea_shop.g.dart';
+part 'package:boba_explorer/data/repo/tea_shop/tea_shop.g.dart';
 
 Position positionConverter(Map<dynamic, dynamic> json) {
   GeoPoint point = json['geopoint'] as GeoPoint;
