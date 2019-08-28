@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:boba_explorer/app_bloc.dart';
+import 'package:boba_explorer/data/model/tea_shop.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_delegate.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -82,8 +82,8 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
         children: <Widget>[
           _buildShopFilterBar(),
           Expanded(
-            child: StreamBuilder<List<DocumentSnapshot>>(
-              stream: _bobaMapBloc?.bobaData,
+            child: StreamBuilder<List<TeaShop>>(
+              stream: _bobaMapBloc?.teaShops,
               builder: (ctx, snapshot) {
                 Future(() {
                   if (snapshot.hasData) {
@@ -92,8 +92,8 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                   }
                 });
 
-                List<DocumentSnapshot> snapshots = snapshot.data;
-                _markers = _genMarkers(snapshots);
+                List<TeaShop> teaShops = snapshot.data;
+                _markers = _genMarkers(teaShops);
                 return Stack(
                   children: <Widget>[
                     _buildMap(_markers),
@@ -115,7 +115,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                       right: 0,
                       bottom: 12,
                       height: 150,
-                      child: _buildShopCards(snapshots),
+                      child: _buildShopCards(teaShops),
                     ),
                   ],
                 );
@@ -333,19 +333,21 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
     );
   }
 
-  Set<Marker> _genMarkers(List<DocumentSnapshot> snapshots) {
-    if (snapshots == null || _markerIcon == null) {
+  Set<Marker> _genMarkers(List<TeaShop> shops) {
+    if (shops == null || _markerIcon == null) {
       return null;
     }
     List<Marker> markers = [];
-    for (var i = 0; i < snapshots.length; i++) {
-      var data = snapshots[i];
-      var hue = data.data["pinColor"];
-      hue = double.tryParse(hue.toString()) ?? hue;
-      GeoPoint geo = data.data["position"]["geopoint"];
-      final pos = LatLng(geo.latitude, geo.longitude);
+    for (var i = 0; i < shops.length; i++) {
+      var shop = shops[i];
+      /*var hue = shop.pinColor;
+      hue = double.tryParse(hue.toString()) ?? hue;*/
+      double lat = shop.position.latitude;
+      double lng = shop.position.longitude;
+
+      final pos = LatLng(lat, lng);
       markers.add(Marker(
-          markerId: MarkerId(data.documentID),
+          markerId: MarkerId('$lat,$lng'),
           position: pos,
           icon: _markerIcon,
           consumeTapEvents: true,
@@ -357,7 +359,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
     return Set.from(markers);
   }
 
-  Widget _buildShopCards(List<DocumentSnapshot> shops) {
+  Widget _buildShopCards(List<TeaShop> shops) {
     return SlideTransition(
       position: _shopCardSlideAnim,
       child: FadeTransition(
@@ -367,20 +369,14 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
           child: PageView.builder(
             controller: _shopInfoPageController,
             onPageChanged: (index) {
-              GeoPoint position = shops[index].data["position"]["geopoint"];
-              _moveCamera(position);
+              TeaShop shop = shops[index];
+              //GeoPoint position = shops[index].data["position"]["geopoint"];
+              _moveCamera(shop.position.latitude, shop.position.longitude);
             },
             itemCount: shops?.length ?? 0,
             itemBuilder: (context, index) {
-              return _ShopItem(
-                shopName: shops[index].data["shopName"],
-                branchName: shops[index].data["branchName"],
-                city: shops[index].data["city"],
-                district: shops[index].data["district"],
-                address: shops[index].data["address"],
-                phone: shops[index].data["phone"],
-                hue: shops[index].data["pinColor"],
-              );
+              TeaShop shop = shops[index];
+              return _ShopItem(shop);
             },
           ),
         ),
@@ -388,8 +384,8 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
     );
   }
 
-  void _moveCamera(GeoPoint position) {
-    final pos = LatLng(position.latitude, position.longitude);
+  void _moveCamera(double lat, double lng) {
+    final pos = LatLng(lat, lng);
     _mapController?.animateCamera(CameraUpdate.newLatLng(pos));
   }
 }
@@ -428,38 +424,25 @@ class ShopFilterButton extends StatelessWidget {
 }
 
 class _ShopItem extends StatelessWidget {
-  final String _shopName;
-  final String _branchName;
-  final String _city;
-  final String _district;
-  final String _address;
-  final String _phone;
-  final int _hue;
+  final TeaShop _shop;
 
-  _ShopItem(
-      {@required String shopName,
-      @required String branchName,
-      @required String city,
-      @required String district,
-      @required String address,
-      @required String phone,
-      int hue})
-      : _shopName = shopName,
-        _branchName = branchName,
-        _city = city,
-        _district = district,
-        _address = address,
-        _phone = phone,
-        _hue = hue;
+  _ShopItem(this._shop);
 
   @override
   Widget build(BuildContext context) {
     /*Color color = _hue == null
         ? Colors.redAccent
         : HSVColor.fromAHSV(1, _hue.toDouble(), 1, 1).toColor();*/
-    String branchName = _branchName.endsWith("店") && !_branchName.endsWith("新店")
-        ? _branchName
-        : "$_branchName店";
+    String shopName = _shop.shopName;
+    String branchName = _shop.branchName;
+    branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
+        ? branchName
+        : "$branchName店";
+    String city = _shop.city;
+    String district = _shop.district;
+    String address = _shop.address;
+    String phone = _shop.phone;
+
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.fromLTRB(8, 0, 8, 2),
@@ -488,7 +471,7 @@ class _ShopItem extends StatelessWidget {
                     Row(
                       children: <Widget>[
                         Text(
-                          _shopName,
+                          shopName,
                           style: Theme.of(context).textTheme.title,
                         ),
                         Spacer(),
@@ -499,9 +482,9 @@ class _ShopItem extends StatelessWidget {
                           child: Icon(Icons.more_vert),
                           onSelected: (option) => _handleOverflowAction(
                             option,
-                            shopName: _shopName,
+                            shopName: shopName,
                             branchName: branchName,
-                            address: "$_city$_district$_address",
+                            address: "$city$district$address",
                           ),
                           itemBuilder: (context) {
                             return <PopupMenuEntry<_ShopOverflowOption>>[
@@ -532,7 +515,7 @@ class _ShopItem extends StatelessWidget {
                         shrinkWrap: true,
                         children: <Widget>[
                           Text(
-                            "$_city$_district$_address",
+                            "$city$district$address",
                             style: TextStyle(),
                           ),
                         ],
@@ -551,7 +534,7 @@ class _ShopItem extends StatelessWidget {
                   Expanded(
                     child: FlatButton.icon(
                       padding: EdgeInsets.zero,
-                      onPressed: () => _launchDial(_phone),
+                      onPressed: () => _launchDial(phone),
                       icon: Icon(Icons.phone),
                       label: Text("撥號至店家"),
                     ),
@@ -559,7 +542,7 @@ class _ShopItem extends StatelessWidget {
                   Expanded(
                     child: FlatButton.icon(
                       padding: EdgeInsets.zero,
-                      onPressed: () => _launchMaps("$_city$_district$_address"),
+                      onPressed: () => _launchMaps("$city$district$address"),
                       icon: Icon(
                         FontAwesomeIcons.locationArrow,
                         size: 18,

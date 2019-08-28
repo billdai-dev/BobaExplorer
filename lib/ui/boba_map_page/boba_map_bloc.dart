@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:boba_explorer/data/bloc_base.dart';
+import 'package:boba_explorer/data/model/tea_shop.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:rxdart/rxdart.dart';
@@ -10,10 +11,11 @@ class BobaMapBloc implements BlocBase {
   static const String path = "tea_shops";
   static const String fieldName = "position";
 
-  final BehaviorSubject<List<DocumentSnapshot>> _bobaController =
+  final BehaviorSubject<List<DocumentSnapshot>> _teaShopsController =
       BehaviorSubject(seedValue: []);
 
-  Stream<List<DocumentSnapshot>> get bobaData => _bobaController.stream;
+  Stream<List<TeaShop>> get teaShops => _teaShopsController.stream
+      .map((docs) => docs.map((doc) => TeaShop.fromJson(doc.data)).toList());
 
   final BehaviorSubject<_QueryConfig> _queryConfigController =
       BehaviorSubject();
@@ -31,7 +33,7 @@ class BobaMapBloc implements BlocBase {
       Set<String> filteredShops = _filterListController.value;
       return _genQueryObservable(filteredShops);
     }).listen((docs) {
-      _bobaController.add(docs);
+      _teaShopsController.add(docs);
     });
 
     _prevCurFilters.doOnData((filtersTuple) {
@@ -40,7 +42,7 @@ class BobaMapBloc implements BlocBase {
       Set<String> result;
       Set<String> oldFilters = filtersTuple.item1;
       Set<String> newFilters = filtersTuple.item2;
-      final curBobaShop = List.of(_bobaController.value);
+      final curBobaShop = List.of(_teaShopsController.value);
       final intersection = newFilters.intersection(oldFilters);
       List<DocumentSnapshot> intersectionData = [];
 
@@ -60,7 +62,7 @@ class BobaMapBloc implements BlocBase {
           Set<String> removedShops = oldFilters.difference(newFilters);
           removedShops.forEach((removedShop) => curBobaShop
               .removeWhere((doc) => doc.data["shopName"] == removedShop));
-          _bobaController.add(curBobaShop);
+          _teaShopsController.add(curBobaShop);
 
           Set<String> addedShops = newFilters.difference(oldFilters);
           result = addedShops.isEmpty ? null : addedShops;
@@ -73,7 +75,7 @@ class BobaMapBloc implements BlocBase {
       return _genQueryObservable(result)
           .map((docs) => docs..addAll(intersectionData));
     }).listen((docs) {
-      _bobaController.add(docs);
+      _teaShopsController.add(docs);
     }, onError: (e) {
       print(e);
     });
@@ -81,7 +83,7 @@ class BobaMapBloc implements BlocBase {
 
   @override
   void dispose() {
-    _bobaController?.close();
+    _teaShopsController?.close();
     _queryConfigController?.close();
     _filterListController?.close();
   }
