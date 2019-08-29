@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:boba_explorer/app_bloc.dart';
+import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
@@ -65,7 +66,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Provider<BobaMapBloc>(
-      builder: (_) => BobaMapBloc(TeaShopRepo()),
+      builder: (_) => BobaMapBloc(TeaShopRepo(), FavoriteRepo()),
       dispose: (_, bloc) => bloc.dispose(),
       child: BobaMap(),
     );

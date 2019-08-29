@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:boba_explorer/data/bloc_base.dart';
+import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
+import 'package:boba_explorer/data/repo/mapper.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,11 +11,29 @@ import 'package:tuple/tuple.dart';
 
 class BobaMapBloc implements BlocBase {
   TeaShopRepo _teaShopRepo;
+  FavoriteRepo _favoriteRepo;
 
   final BehaviorSubject<List<TeaShop>> _teaShopsController =
       BehaviorSubject(seedValue: []);
 
-  Stream<List<TeaShop>> get teaShops => _teaShopsController.stream;
+  Stream<List<TeaShop>> get teaShops {
+    return Observable.combineLatest2<List<TeaShop>, List<TeaShop>,
+            List<TeaShop>>(
+        _teaShopsController.stream, _favoriteShopsController.stream,
+        (shops, favoriteShops) {
+      for (var shop in shops) {
+        for (var favoriteShop in favoriteShops) {
+          if (shop.docId == favoriteShop.docId) {
+            shop.isFavorite = true;
+          }
+        }
+      }
+      return shops;
+    });
+  }
+
+  final BehaviorSubject<List<TeaShop>> _favoriteShopsController =
+      BehaviorSubject(seedValue: []);
 
   final BehaviorSubject<_QueryConfig> _queryConfigController =
       BehaviorSubject();
@@ -26,7 +46,7 @@ class BobaMapBloc implements BlocBase {
   final BehaviorSubject<Tuple2<Set<String>, Set<String>>> _prevCurFilters =
       BehaviorSubject();
 
-  BobaMapBloc(this._teaShopRepo) {
+  BobaMapBloc(this._teaShopRepo, this._favoriteRepo) {
     _queryConfigController
         .switchMap((config) {
           Set<String> filteredShops = _filterListController.value;
@@ -37,7 +57,7 @@ class BobaMapBloc implements BlocBase {
         .listen((shops) {
           _teaShopsController.add(shops);
         });
-
+    //=============================================================
     _prevCurFilters.doOnData((filtersTuple) {
       _filterListController.add(filtersTuple.item2);
     }).flatMap((filtersTuple) {
@@ -90,11 +110,21 @@ class BobaMapBloc implements BlocBase {
           .doOnData((shops) => shops..addAll(intersectionData));
     }).listen((shops) => _teaShopsController.add(shops),
         onError: (e) => print(e));
+    //=============================================================
+
+    _favoriteShopsController.addStream(
+        Observable(_favoriteRepo.getFavoriteShops()).flatMap((favoriteShops) {
+      return Observable.fromIterable(favoriteShops)
+          .map((favoriteShop) => Mapper.favoriteShopToTeaShop(favoriteShop))
+          .toList()
+          .asObservable();
+    }));
   }
 
   @override
   void dispose() {
     _teaShopsController?.close();
+    _favoriteShopsController?.close();
     _queryConfigController?.close();
     _filterListController?.close();
   }
@@ -128,9 +158,26 @@ class BobaMapBloc implements BlocBase {
     _prevCurFilters.add(Tuple2(oldFiltersTuple.item2, newFilter));
   }
 
-  List<TeaShop> _teaShopConverter(List<DocumentSnapshot> docs) {
-    return docs.map((doc) => TeaShop.fromJson(doc.data)).toList();
+  void setFavoriteShop(bool isFavorite, TeaShop shop) {
+    _favoriteRepo.setFavoriteShop(
+        isFavorite, Mapper.teaShopToFavoriteShop(shop));
   }
+
+  List<TeaShop> _teaShopConverter(List<DocumentSnapshot> docs) {
+    return docs
+        .map((doc) => TeaShop.fromJson(doc.data)..docId = doc.documentID)
+        .toList();
+  }
+
+/*void _getFavoriteShops() {
+    _favoriteShopsController.addStream(
+        Observable(_favoriteRepo.getFavoriteShops()).flatMap((favoriteShops) {
+      return Observable.fromIterable(favoriteShops)
+          .map((favoriteShop) => Mapper.favoriteShopToTeaShop(favoriteShop))
+          .toList()
+          .asObservable();
+    }));
+  }*/
 }
 
 class _QueryConfig {

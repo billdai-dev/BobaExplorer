@@ -1,15 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'package:boba_explorer/data/repo/tea_shop/tea_shop.g.dart';
+part 'tea_shop.g.dart';
 
 Position positionConverter(Map<dynamic, dynamic> json) {
   GeoPoint point = json['geopoint'] as GeoPoint;
-  return Position(json['geohash'] as String, point.latitude, point.longitude);
+  double lat = point?.latitude ?? json['latitude'];
+  double lng = point?.longitude ?? json['longitude'];
+  return Position(json['geohash'] as String, lat, lng);
 }
 
 @JsonSerializable()
 class TeaShop extends Object {
+  @JsonKey(name: 'docId')
+  String docId;
+
   @JsonKey(name: 'shopName')
   String shopName;
 
@@ -34,7 +39,11 @@ class TeaShop extends Object {
   @JsonKey(name: 'position', fromJson: positionConverter)
   Position position;
 
+  @JsonKey(defaultValue: false)
+  bool isFavorite;
+
   TeaShop(
+    this.docId,
     this.shopName,
     this.branchName,
     this.city,
@@ -43,6 +52,7 @@ class TeaShop extends Object {
     this.phone,
     this.pinColor,
     this.position,
+    this.isFavorite,
   );
 
   factory TeaShop.fromJson(Map<String, dynamic> srcJson) =>

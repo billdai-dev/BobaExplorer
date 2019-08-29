@@ -1,4 +1,7 @@
 import 'package:boba_explorer/app_bloc.dart';
+import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
+import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
+import 'package:boba_explorer/ui/search_boba_page/search_boba_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -33,68 +36,82 @@ class SearchBobaDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return Consumer<AppBloc>(
-      builder: (context, appBloc, child) {
-        return StreamBuilder<List<String>>(
-          stream: appBloc.supportedShops
-              .map((shops) => shops.map((shop) => shop.name).toList()),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return Container();
-            }
-            final supportedShops = snapshot.data;
-            _randomShops ??= (supportedShops..shuffle())
-                .take((supportedShops.length / 3.0).round())
-                .toList();
-            final shops = query.isEmpty
-                ? _randomShops
-                : supportedShops
-                    .where((shopName) => shopName.contains(query))
-                    .toList();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                if (query.isEmpty)
-                  Container(
-                    color: Colors.grey.shade100,
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                          children: <Widget>[
-                            Icon(
-                              Icons.history,
-                              color: Colors.black26,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              "歷史搜尋紀錄",
-                              style: TextStyle(color: Colors.black26),
-                            ),
-                          ],
-                        ),
-                        //TODO: Get search history
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 0,
-                          children: supportedShops
-                              .take(6)
-                              .map((shop) => _buildSuggestionTag(
-                                  shop, () => close(context, shop)))
-                              .toList(),
-                        ),
-                      ],
+    return Provider<SearchBobaBloc>(
+      builder: (_) => SearchBobaBloc(FavoriteRepo()),
+      dispose: (_, bloc) => bloc.dispose(),
+      child: Consumer<AppBloc>(
+        builder: (context, appBloc, child) {
+          return StreamBuilder<List<String>>(
+            stream: appBloc.supportedShops
+                .map((shops) => shops.map((shop) => shop.name).toList()),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Container();
+              }
+              final supportedShops = snapshot.data;
+              _randomShops ??= (supportedShops..shuffle())
+                  .take((supportedShops.length / 3.0).round())
+                  .toList();
+              final shops = query.isEmpty
+                  ? _randomShops
+                  : supportedShops
+                      .where((shopName) => shopName.contains(query))
+                      .toList();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  if (query.isEmpty)
+                    Consumer<SearchBobaBloc>(
+                      builder: (context, bloc, child) {
+                        return StreamBuilder<List<TeaShop>>(
+                          stream: bloc.favoriteShops,
+                          builder: (context, snapshot) {
+                            final shops = snapshot.data ?? [];
+
+                            return Container(
+                              color: Colors.grey.shade100,
+                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Row(
+                                    children: <Widget>[
+                                      Icon(
+                                        Icons.history,
+                                        color: Colors.black26,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        "歷史搜尋紀錄",
+                                        style: TextStyle(color: Colors.black26),
+                                      ),
+                                    ],
+                                  ),
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 0,
+                                    children: shops.map((shop) {
+                                      String shopName = shop.shopName;
+                                      return _buildSuggestionTag(shopName,
+                                          () => close(context, shopName));
+                                    }).toList(),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
+                  Expanded(
+                    child: _buildResultList(shops),
                   ),
-                Expanded(
-                  child: _buildResultList(shops),
-                ),
-              ],
-            );
-          },
-        );
-      },
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 

@@ -430,6 +430,7 @@ class _ShopItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    BobaMapBloc bloc = Provider.of<BobaMapBloc>(context, listen: false);
     /*Color color = _hue == null
         ? Colors.redAccent
         : HSVColor.fromAHSV(1, _hue.toDouble(), 1, 1).toColor();*/
@@ -556,12 +557,12 @@ class _ShopItem extends StatelessWidget {
                       painter: _FavoriteStampCustomPainter(),
                       child: Container(
                         alignment: Alignment.bottomRight,
-                        child: GestureDetector(
-                          onTap: () {},
-                          child: Icon(
-                            Icons.favorite_border,
-                            color: Colors.redAccent.shade200,
-                          ),
+                        child: FavoriteCheckbox(
+                          _shop.isFavorite,
+                          (isFavorite) {
+                            bloc.setFavoriteShop(isFavorite, _shop);
+                          },
+                          key: ValueKey(_shop.docId),
                         ),
                       ),
                     ),
@@ -664,5 +665,41 @@ class _FavoriteStampCustomPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
     return false;
+  }
+}
+
+class FavoriteCheckbox extends StatefulWidget {
+  final bool _isFavorite;
+  final Function(bool isFavorite) onFavoriteChanged;
+
+  FavoriteCheckbox(this._isFavorite, this.onFavoriteChanged, {Key key})
+      : super(key: key);
+
+  @override
+  _FavoriteCheckboxState createState() => _FavoriteCheckboxState();
+}
+
+class _FavoriteCheckboxState extends State<FavoriteCheckbox> {
+  bool isFavorite;
+
+  @override
+  void initState() {
+    super.initState();
+    isFavorite = widget._isFavorite;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        isFavorite = !isFavorite;
+        widget.onFavoriteChanged(isFavorite);
+        setState(() {});
+      },
+      child: Icon(
+        isFavorite ? Icons.favorite : Icons.favorite_border,
+        color: Colors.redAccent.shade200,
+      ),
+    );
   }
 }
