@@ -1,6 +1,6 @@
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
-import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
+import 'package:boba_explorer/data/repo/search_boba/search_boba_repo.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -37,7 +37,7 @@ class SearchBobaDelegate extends SearchDelegate<String> {
   @override
   Widget buildSuggestions(BuildContext context) {
     return Provider<SearchBobaBloc>(
-      builder: (_) => SearchBobaBloc(FavoriteRepo()),
+      builder: (_) => SearchBobaBloc(FavoriteRepo(), SearchBobaRepo()),
       dispose: (_, bloc) => bloc.dispose(),
       child: Consumer<AppBloc>(
         builder: (context, appBloc, child) {
@@ -63,8 +63,8 @@ class SearchBobaDelegate extends SearchDelegate<String> {
                   if (query.isEmpty)
                     Consumer<SearchBobaBloc>(
                       builder: (context, bloc, child) {
-                        return StreamBuilder<List<TeaShop>>(
-                          stream: bloc.favoriteShops,
+                        return StreamBuilder<List<String>>(
+                          stream: bloc.recentSearch,
                           builder: (context, snapshot) {
                             final shops = snapshot.data ?? [];
 
@@ -91,9 +91,11 @@ class SearchBobaDelegate extends SearchDelegate<String> {
                                     spacing: 12,
                                     runSpacing: 0,
                                     children: shops.map((shop) {
-                                      String shopName = shop.shopName;
-                                      return _buildSuggestionTag(shopName,
-                                          () => close(context, shopName));
+                                      //String shopName = shop.shopName;
+                                      return _buildSuggestionTag(shop, () {
+                                        query = shop;
+                                        showResults(context);
+                                      });
                                     }).toList(),
                                   ),
                                 ],
@@ -104,7 +106,7 @@ class SearchBobaDelegate extends SearchDelegate<String> {
                       },
                     ),
                   Expanded(
-                    child: _buildResultList(shops),
+                    child: _buildResultList(false, shops),
                   ),
                 ],
               );
@@ -129,25 +131,33 @@ class SearchBobaDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildResults(BuildContext context) {
-    return Consumer<AppBloc>(
-      builder: (context, appBloc, child) {
-        return StreamBuilder<List<String>>(
-            stream: appBloc.supportedShops
-                .map((shops) => shops.map((shop) => shop.name).toList()),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return Container();
-              }
-              final filteredShops = snapshot.data
-                  .where((shopName) => shopName.contains(query))
-                  .toList();
-              return _buildResultList(filteredShops);
-            });
+    return Provider<SearchBobaBloc>(
+      builder: (_) {
+        final bloc = SearchBobaBloc(FavoriteRepo(), SearchBobaRepo());
+        bloc.addRecentSearch(query);
+        return bloc;
       },
+      dispose: (_, bloc) => bloc.dispose(),
+      child: Consumer<AppBloc>(
+        builder: (context, appBloc, child) {
+          return StreamBuilder<List<String>>(
+              stream: appBloc.supportedShops
+                  .map((shops) => shops.map((shop) => shop.name).toList()),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Container();
+                }
+                final filteredShops = snapshot.data
+                    .where((shopName) => shopName.contains(query))
+                    .toList();
+                return _buildResultList(true, filteredShops);
+              });
+        },
+      ),
     );
   }
 
-  Widget _buildResultList(List<String> shops) {
+  Widget _buildResultList(bool isShowingResult, List<String> shops) {
     /*final filteredShops = snapshot.data
         .where((shopName) => shopName.contains(query))
         .toList();*/
@@ -175,7 +185,14 @@ class SearchBobaDelegate extends SearchDelegate<String> {
           title: RichText(
             text: TextSpan(children: spans),
           ),
-          onTap: () => close(context, shopName),
+          onTap: () {
+            if (isShowingResult) {
+              close(context, shopName);
+            } else {
+              query = shopName;
+              showResults(context);
+            }
+          },
         );
       },
       itemCount: shops.length,

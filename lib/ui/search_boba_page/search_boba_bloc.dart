@@ -3,18 +3,26 @@ import 'dart:async';
 import 'package:boba_explorer/data/bloc_base.dart';
 import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
 import 'package:boba_explorer/data/repo/mapper.dart';
+import 'package:boba_explorer/data/repo/search_boba/search_boba_repo.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
 import 'package:rxdart/rxdart.dart';
 
 class SearchBobaBloc extends BlocBase {
-  FavoriteRepo _favoriteRepo;
+  final FavoriteRepo _favoriteRepo;
 
-  final StreamController<List<TeaShop>> _favoriteShopsController =
+  final SearchBobaRepo _searchBobaRepo;
+
+  final BehaviorSubject<List<TeaShop>> _favoriteShopsController =
       BehaviorSubject();
 
   Stream<List<TeaShop>> get favoriteShops => _favoriteShopsController.stream;
 
-  SearchBobaBloc(this._favoriteRepo) {
+  final BehaviorSubject<List<String>> _recentSearchController =
+      BehaviorSubject();
+
+  Stream<List<String>> get recentSearch => _recentSearchController.stream;
+
+  SearchBobaBloc(this._favoriteRepo, this._searchBobaRepo) {
     _favoriteShopsController.addStream(
         Observable(_favoriteRepo.getFavoriteShops()).flatMap((favoriteShops) {
       return Observable.fromIterable(favoriteShops)
@@ -22,6 +30,10 @@ class SearchBobaBloc extends BlocBase {
           .toList()
           .asObservable();
     }));
+
+    _searchBobaRepo
+        .getRecentSearch()
+        .then((shops) => _recentSearchController.add(shops));
 
     /*_favoriteRepo.getFavoriteShops().then((shops) {
       return shops.map((json) {
@@ -35,5 +47,10 @@ class SearchBobaBloc extends BlocBase {
   @override
   void dispose() {
     _favoriteShopsController?.close();
+    _recentSearchController?.close();
+  }
+
+  Future<void> addRecentSearch(String shop) {
+    return _searchBobaRepo.addRecentSearch(shop);
   }
 }
