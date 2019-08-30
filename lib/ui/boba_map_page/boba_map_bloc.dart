@@ -14,7 +14,7 @@ class BobaMapBloc implements BlocBase {
   FavoriteRepo _favoriteRepo;
 
   final BehaviorSubject<List<TeaShop>> _teaShopsController =
-      BehaviorSubject(seedValue: []);
+      BehaviorSubject.seeded([]);
 
   Stream<List<TeaShop>> get teaShops {
     return Observable.combineLatest2<List<TeaShop>, List<TeaShop>,
@@ -33,13 +33,13 @@ class BobaMapBloc implements BlocBase {
   }
 
   final BehaviorSubject<List<TeaShop>> _favoriteShopsController =
-      BehaviorSubject(seedValue: []);
+      BehaviorSubject.seeded([]);
 
   final BehaviorSubject<_QueryConfig> _queryConfigController =
       BehaviorSubject();
 
   final BehaviorSubject<Set<String>> _filterListController =
-      BehaviorSubject(seedValue: {});
+      BehaviorSubject.seeded({});
 
   Stream<Set<String>> get filterList => _filterListController.stream;
 

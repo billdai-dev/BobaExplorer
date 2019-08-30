@@ -6,6 +6,7 @@ import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';
+import 'package:boba_explorer/ui/login/login_dialog.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_delegate.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -144,8 +145,25 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
           child: Row(
             children: <Widget>[
               SizedBox(width: 12),
-              CircleAvatar(radius: 15, child: Text("戴")),
-              //TODO: Add 3rd party login
+              GestureDetector(
+                onTap: () async {
+                  bool isLoginSuccess = await showDialog(
+                    context: context,
+                    builder: (context) {
+                      return Dialog(
+                        child: LoginDialog(),
+                      );
+                    },
+                  );
+                  if (isLoginSuccess == null || !isLoginSuccess) {
+                    return;
+                  }
+                },
+                child: CircleAvatar(
+                  radius: 15,
+                  child: Text("戴"),
+                ),
+              ),
               SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(

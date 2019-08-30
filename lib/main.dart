@@ -2,17 +2,27 @@ import 'dart:async';
 
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
+import 'package:boba_explorer/data/repo/login/login_repo.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
+import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
 
 void main() => runApp(
-      Provider<AppBloc>(
-        builder: (_) => AppBloc(),
-        dispose: (_, appBloc) => appBloc.dispose(),
+      MultiProvider(
+        providers: [
+          Provider<AppBloc>(
+            builder: (_) => AppBloc(),
+            dispose: (_, appBloc) => appBloc.dispose(),
+          ),
+          Provider<LoginBloc>(
+            builder: (_) => LoginBloc(LoginRepo()),
+            dispose: (_, loginBloc) => loginBloc.dispose(),
+          ),
+        ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           home: MyApp(),
