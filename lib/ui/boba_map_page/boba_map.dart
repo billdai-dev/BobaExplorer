@@ -150,9 +150,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                   bool isLoginSuccess = await showDialog(
                     context: context,
                     builder: (context) {
-                      return Dialog(
-                        child: LoginDialog(),
-                      );
+                      return LoginDialog();
                     },
                   );
                   if (isLoginSuccess == null || !isLoginSuccess) {

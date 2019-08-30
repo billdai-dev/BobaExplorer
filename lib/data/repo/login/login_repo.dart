@@ -41,7 +41,7 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
-    return _auth.signInWithCredential(credential).then((result) => result.user);
+    return _auth.signInWithCredential(credential);
   }
 
   @override
@@ -59,9 +59,7 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
       if (loginResult.status == FacebookLoginStatus.loggedIn) {
         final AuthCredential credential = FacebookAuthProvider.getCredential(
             accessToken: loginResult.accessToken.token);
-        return _auth
-            .signInWithCredential(credential)
-            .then((result) => result.user);
+        return _auth.signInWithCredential(credential);
       } else {
         return null;
       }

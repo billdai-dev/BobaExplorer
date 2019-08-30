@@ -21,6 +21,7 @@ class _LoginDialogState extends State<LoginDialog>
       duration: Duration(milliseconds: 200),
     );
     loginBloc = Provider.of<LoginBloc>(context, listen: false);
+    _animController.forward();
   }
 
   @override
@@ -32,9 +33,9 @@ class _LoginDialogState extends State<LoginDialog>
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double widthMargin = screenWidth * 0.6 / 2;
+    double widthMargin = screenWidth * 0.0 / 2;
     double screenHeight = MediaQuery.of(context).size.height;
-    double heightMargin = screenHeight * 0.7 / 2;
+    double heightMargin = screenHeight * 0.6 / 2;
 
     return ScaleTransition(
       scale: Tween(begin: 0.0, end: 1.0).animate(
