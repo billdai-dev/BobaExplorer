@@ -35,6 +35,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   ValueNotifier<bool> _searchBtnVisibilityNotifier = ValueNotifier(false);
   PageController _shopInfoPageController;
   bool _shouldBlockNextMove = false;
+  bool _shouldJumpToFirstPage = false;
 
   Completer<BitmapDescriptor> _markerIconCompleter;
   BitmapDescriptor _markerIcon;
@@ -85,12 +86,15 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
             child: StreamBuilder<List<TeaShop>>(
               stream: _bobaMapBloc?.teaShops,
               builder: (ctx, snapshot) {
-                Future(() {
-                  if (snapshot.hasData) {
-                    _shouldBlockNextMove = true;
-                    _shopInfoPageController?.jumpToPage(0);
-                  }
-                });
+                if (_shouldJumpToFirstPage) {
+                  Future(() {
+                    if (snapshot.hasData) {
+                      _shouldBlockNextMove = true;
+                      _shouldJumpToFirstPage = false;
+                      _shopInfoPageController?.jumpToPage(0);
+                    }
+                  });
+                }
 
                 List<TeaShop> teaShops = snapshot.data;
                 _markers = _genMarkers(teaShops);
@@ -153,6 +157,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                     if (query == null || query.isEmpty) {
                       return;
                     }
+                    _shouldJumpToFirstPage = true;
                     _bobaMapBloc?.filter(shops: {query});
                   },
                   child: Text(
@@ -230,6 +235,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
               if (newFilteredShops == null) {
                 return;
               }
+              _shouldJumpToFirstPage = true;
               _bobaMapBloc.filter(shops: newFilteredShops);
             },
           ),
@@ -254,6 +260,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                     return;
                   }
                   _searchBtnVisibilityNotifier.value = false;
+                  _shouldJumpToFirstPage = true;
                   LatLng latLng = _cameraPos.target;
                   _bobaMapBloc?.seekBoba(
                       lat: latLng.latitude, lng: latLng.longitude);
