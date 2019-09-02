@@ -427,7 +427,9 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
             itemCount: shops?.length ?? 0,
             itemBuilder: (context, index) {
               TeaShop shop = shops[index];
-              return _ShopItem(shop);
+              return _ShopItem(shop, () {
+                _moveCamera(shop.position.latitude, shop.position.longitude);
+              });
             },
           ),
         ),
@@ -474,10 +476,18 @@ class ShopFilterButton extends StatelessWidget {
   }
 }
 
-class _ShopItem extends StatelessWidget {
+class _ShopItem extends StatefulWidget {
   final TeaShop _shop;
+  final VoidCallback _onTap;
 
-  _ShopItem(this._shop);
+  _ShopItem(this._shop, this._onTap);
+
+  @override
+  _ShopItemState createState() => _ShopItemState();
+}
+
+class _ShopItemState extends State<_ShopItem> {
+  final ValueNotifier<bool> isCardTappingNotifier = ValueNotifier(false);
 
   @override
   Widget build(BuildContext context) {
@@ -485,144 +495,159 @@ class _ShopItem extends StatelessWidget {
     /*Color color = _hue == null
         ? Colors.redAccent
         : HSVColor.fromAHSV(1, _hue.toDouble(), 1, 1).toColor();*/
-    String shopName = _shop.shopName;
-    String branchName = _shop.branchName;
+    String shopName = widget._shop.shopName;
+    String branchName = widget._shop.branchName;
     branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
         ? branchName
         : "$branchName店";
-    String city = _shop.city;
-    String district = _shop.district;
-    String address = _shop.address;
-    String phone = _shop.phone;
+    String city = widget._shop.city;
+    String district = widget._shop.district;
+    String address = widget._shop.address;
+    String phone = widget._shop.phone;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.fromLTRB(8, 0, 8, 2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromARGB(255, 52, 146, 210),
-              Color.fromARGB(255, 242, 252, 254),
-            ],
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    SizedBox(height: 8),
-                    Row(
-                      children: <Widget>[
-                        Text(
-                          shopName,
-                          style: Theme.of(context).textTheme.title,
-                        ),
-                        Spacer(),
-                        _buildBranchTag(branchName),
-                        SizedBox(width: 4),
-                        PopupMenuButton<_ShopOverflowOption>(
-                          offset: Offset(0, -20),
-                          child: Icon(Icons.more_vert),
-                          onSelected: (option) => _handleOverflowAction(
-                            option,
-                            shopName: shopName,
-                            branchName: branchName,
-                            address: "$city$district$address",
-                          ),
-                          itemBuilder: (context) {
-                            return <PopupMenuEntry<_ShopOverflowOption>>[
-                              PopupMenuItem(
-                                value: _ShopOverflowOption.share,
-                                child: buildPopupMenuButton(
-                                  "分享",
-                                  icon: Icons.share,
-                                ),
-                              ),
-                              PopupMenuItem(
-                                value: _ShopOverflowOption.report,
-                                child: buildPopupMenuButton(
-                                  "回報",
-                                  icon: Icons.report_problem,
-                                ),
-                              ),
-                            ];
-                          },
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4),
-                    Text("地址"),
-                    SizedBox(height: 2),
-                    Flexible(
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: <Widget>[
-                          Text(
-                            "$city$district$address",
-                            style: TextStyle(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 4),
+    return GestureDetector(
+      onTap: widget._onTap,
+      onTapDown: (detail) => isCardTappingNotifier.value = true,
+      onTapUp: (detail) => isCardTappingNotifier.value = false,
+      onTapCancel: () => isCardTappingNotifier.value = false,
+      child: ValueListenableBuilder(
+        valueListenable: isCardTappingNotifier,
+        builder: (context, isCardTapping, child) {
+          return Card(
+            elevation: isCardTapping ? 24 : 2,
+            clipBehavior: Clip.antiAlias,
+            margin: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.fromARGB(255, 52, 146, 210),
+                    Color.fromARGB(255, 242, 252, 254),
                   ],
                 ),
               ),
-            ),
-            Container(
-              height: 45,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Expanded(
-                    child: FlatButton.icon(
-                      padding: EdgeInsets.zero,
-                      onPressed: () => _launchDial(phone),
-                      icon: Icon(Icons.phone),
-                      label: Text("撥號至店家"),
-                    ),
-                  ),
-                  Expanded(
-                    child: FlatButton.icon(
-                      padding: EdgeInsets.zero,
-                      onPressed: () => _launchMaps("$city$district$address"),
-                      icon: Icon(
-                        FontAwesomeIcons.locationArrow,
-                        size: 18,
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SizedBox(height: 8),
+                          Row(
+                            children: <Widget>[
+                              Text(
+                                shopName,
+                                style: Theme.of(context).textTheme.title,
+                              ),
+                              Spacer(),
+                              _buildBranchTag(branchName),
+                              SizedBox(width: 4),
+                              PopupMenuButton<_ShopOverflowOption>(
+                                offset: Offset(0, -20),
+                                child: Icon(Icons.more_vert),
+                                onSelected: (option) => _handleOverflowAction(
+                                  option,
+                                  shopName: shopName,
+                                  branchName: branchName,
+                                  address: "$city$district$address",
+                                ),
+                                itemBuilder: (context) {
+                                  return <PopupMenuEntry<_ShopOverflowOption>>[
+                                    PopupMenuItem(
+                                      value: _ShopOverflowOption.share,
+                                      child: buildPopupMenuButton(
+                                        "分享",
+                                        icon: Icons.share,
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: _ShopOverflowOption.report,
+                                      child: buildPopupMenuButton(
+                                        "回報",
+                                        icon: Icons.report_problem,
+                                      ),
+                                    ),
+                                  ];
+                                },
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 4),
+                          Text("地址"),
+                          SizedBox(height: 2),
+                          Flexible(
+                            child: ListView(
+                              shrinkWrap: true,
+                              children: <Widget>[
+                                Text(
+                                  "$city$district$address",
+                                  style: TextStyle(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                        ],
                       ),
-                      label: Text("在地圖上查看"),
                     ),
                   ),
                   Container(
-                    width: 54,
-                    child: CustomPaint(
-                      painter: _FavoriteStampCustomPainter(),
-                      child: Container(
-                        alignment: Alignment.bottomRight,
-                        child: FavoriteCheckbox(
-                          _shop.isFavorite,
-                          (isFavorite) {
-                            bloc.setFavoriteShop(isFavorite, _shop);
-                          },
-                          key: ValueKey(_shop.docId),
+                    height: 45,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Expanded(
+                          child: FlatButton.icon(
+                            padding: EdgeInsets.zero,
+                            onPressed: () => _launchDial(phone),
+                            icon: Icon(Icons.phone),
+                            label: Text("撥號至店家"),
+                          ),
                         ),
-                      ),
+                        Expanded(
+                          child: FlatButton.icon(
+                            padding: EdgeInsets.zero,
+                            onPressed: () =>
+                                _launchMaps("$city$district$address"),
+                            icon: Icon(
+                              FontAwesomeIcons.locationArrow,
+                              size: 18,
+                            ),
+                            label: Text("在地圖上查看"),
+                          ),
+                        ),
+                        Container(
+                          width: 54,
+                          child: CustomPaint(
+                            painter: _FavoriteStampCustomPainter(),
+                            child: Container(
+                              alignment: Alignment.bottomRight,
+                              child: FavoriteCheckbox(
+                                widget._shop.isFavorite,
+                                (isFavorite) {
+                                  bloc.setFavoriteShop(
+                                      isFavorite, widget._shop);
+                                },
+                                key: ValueKey(widget._shop.docId),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
