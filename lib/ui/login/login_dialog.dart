@@ -66,11 +66,17 @@ class _LoginDialogState extends State<LoginDialog>
                   children: <Widget>[
                     IconButton(
                       icon: Icon(FontAwesomeIcons.facebook),
-                      onPressed: () => loginBloc.facebookLogin(),
+                      onPressed: () async {
+                        final user = await loginBloc.facebookLogin();
+                        Navigator.pop(context, user);
+                      },
                     ),
                     IconButton(
                       icon: Icon(FontAwesomeIcons.google),
-                      onPressed: () => loginBloc.googleLogin(),
+                      onPressed: () async {
+                        final user = await loginBloc.googleLogin();
+                        Navigator.pop(context, user);
+                      },
                     ),
                     IconButton(
                       icon: Icon(FontAwesomeIcons.userSecret),

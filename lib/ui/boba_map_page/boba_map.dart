@@ -6,8 +6,11 @@ import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';
+import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/login/login_dialog.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_delegate.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -142,53 +145,78 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
         child: Card(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           elevation: 4,
-          child: Row(
-            children: <Widget>[
-              SizedBox(width: 12),
-              GestureDetector(
-                onTap: () async {
-                  bool isLoginSuccess = await showDialog(
-                    context: context,
-                    builder: (context) {
-                      return LoginDialog();
+          child: Consumer<LoginBloc>(
+            builder: (context, loginBloc, child) {
+              return Row(
+                children: <Widget>[
+                  SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () async {
+                      final userInfo = await showDialog<FirebaseUser>(
+                        context: context,
+                        builder: (context) {
+                          return LoginDialog();
+                        },
+                      );
+                      if (userInfo == null) {
+                        return;
+                      }
+                      String userName = userInfo.displayName ?? "";
+                      Scaffold.of(context).showSnackBar(SnackBar(
+                        content: Text("歡迎，$userName，現在您可以收藏店家囉"),
+                      ));
                     },
-                  );
-                  if (isLoginSuccess == null || !isLoginSuccess) {
-                    return;
-                  }
-                },
-                child: CircleAvatar(
-                  radius: 15,
-                  child: Text("戴"),
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () async {
-                    String query = await showSearch<String>(
-                      context: context,
-                      delegate: SearchBobaDelegate(),
-                    );
-                    if (query == null || query.isEmpty) {
-                      return;
-                    }
-                    _shouldJumpToFirstPage = true;
-                    _bobaMapBloc?.filter(shops: {query});
-                  },
-                  child: Text(
-                    "搜尋飲料店",
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                    child: StreamBuilder<FirebaseUser>(
+                      stream: loginBloc.currentUser,
+                      builder: (context, snapshot) {
+                        final user = snapshot.data;
+                        var child;
+                        var avatar;
+                        if (user == null) {
+                          child = Icon(FontAwesomeIcons.user);
+                        } else if (user.photoUrl == null) {
+                          child = Text(user.displayName);
+                        } else {
+                          avatar = CachedNetworkImageProvider(user.photoUrl);
+                        }
+                        return CircleAvatar(
+                          minRadius: 15,
+                          maxRadius: 18,
+                          backgroundImage: avatar,
+                          child: child,
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.favorite, color: Colors.redAccent),
-                onPressed: () {
-                  //TODO: Go to favorite page
-                },
-              ),
-            ],
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        String query = await showSearch<String>(
+                          context: context,
+                          delegate: SearchBobaDelegate(),
+                        );
+                        if (query == null || query.isEmpty) {
+                          return;
+                        }
+                        _shouldJumpToFirstPage = true;
+                        _bobaMapBloc?.filter(shops: {query});
+                      },
+                      child: Text(
+                        "搜尋飲料店",
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.favorite, color: Colors.redAccent),
+                    onPressed: () {
+                      //TODO: Go to favorite page
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
