@@ -16,6 +16,7 @@ class LoginBloc extends BlocBase {
 
   LoginBloc(this._loginRepo) {
     _loginRepo.getCurrentUser().then((user) {
+      print("USER:$user");
       _currentUser.add(user);
       _onAuthChanged = _loginRepo.getAuthChangedStream();
       _currentUser.addStream(_onAuthChanged);
@@ -32,12 +33,16 @@ class LoginBloc extends BlocBase {
     return _loginRepo.facebookLogin(user);
   }
 
-  Future<FirebaseUser> guestLogin() {
+  Future<FirebaseUser> guestLogin() async {
     final user = _currentUser.value;
-    if (user == null) {
-      return null;
+    if (user != null) {
+      return user;
     }
     return _loginRepo.guestLogin();
+  }
+
+  Future<void> logout() {
+    return _loginRepo.logout();
   }
 
   @override

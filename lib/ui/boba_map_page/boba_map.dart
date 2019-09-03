@@ -166,27 +166,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                         content: Text("歡迎，$userName，現在您可以收藏店家囉"),
                       ));
                     },
-                    child: StreamBuilder<FirebaseUser>(
-                      stream: loginBloc.currentUser,
-                      builder: (context, snapshot) {
-                        final user = snapshot.data;
-                        var child;
-                        var avatar;
-                        if (user == null) {
-                          child = Icon(FontAwesomeIcons.user);
-                        } else if (user.photoUrl == null) {
-                          child = Text(user.displayName);
-                        } else {
-                          avatar = CachedNetworkImageProvider(user.photoUrl);
-                        }
-                        return CircleAvatar(
-                          minRadius: 15,
-                          maxRadius: 18,
-                          backgroundImage: avatar,
-                          child: child,
-                        );
-                      },
-                    ),
+                    child: _buildAvatar(loginBloc),
                   ),
                   SizedBox(width: 12),
                   Expanded(
@@ -220,6 +200,49 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
           ),
         ),
       ),
+    );
+  }
+
+  StreamBuilder<FirebaseUser> _buildAvatar(LoginBloc loginBloc) {
+    return StreamBuilder<FirebaseUser>(
+      stream: loginBloc.currentUser,
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+        var child;
+        var avatar;
+        if (user == null) {
+          child = Icon(
+            FontAwesomeIcons.solidUserCircle,
+            color: Colors.grey,
+          );
+        } else if (user.isAnonymous) {
+          child = Container(
+            decoration: ShapeDecoration(
+              shape: CircleBorder(
+                side: BorderSide(color: Colors.grey),
+              ),
+            ),
+            child: ClipOval(
+              child: Icon(
+                FontAwesomeIcons.userSecret,
+                color: Colors.grey,
+              ),
+            ),
+          );
+        } else if (user.photoUrl == null) {
+          child = Text(user.displayName ?? "");
+        } else {
+          avatar = CachedNetworkImageProvider(user.photoUrl);
+        }
+        return CircleAvatar(
+          minRadius: 15,
+          maxRadius: 18,
+          backgroundColor:
+              user == null || user.isAnonymous ? Colors.transparent : null,
+          backgroundImage: avatar,
+          child: child,
+        );
+      },
     );
   }
 

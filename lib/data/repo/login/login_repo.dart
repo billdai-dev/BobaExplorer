@@ -18,6 +18,8 @@ abstract class LoginRepoContract {
   Stream<FirebaseUser> getAuthChangedStream();
 
   Future<FirebaseUser> getCurrentUser();
+
+  Future<void> logout();
 }
 
 class LoginRepo extends BaseRepo implements LoginRepoContract {
@@ -43,11 +45,14 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
-    if (currentUser?.isAnonymous == true ||
-        currentUser?.providerData?.any((provider) =>
-                provider.providerId != GoogleAuthProvider.providerId) ==
-            true) {
+    if (currentUser?.isAnonymous == true) {
       return _auth.linkWithCredential(credential);
+    }
+    bool isGoogleUser = currentUser?.providerData?.any((provider) =>
+            provider.providerId == GoogleAuthProvider.providerId) ==
+        true;
+    if (isGoogleUser) {
+      return currentUser.reauthenticateWithCredential(credential);
     }
     return _auth.signInWithCredential(credential);
   }
@@ -69,11 +74,14 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
     }
     final AuthCredential credential = FacebookAuthProvider.getCredential(
         accessToken: loginResult.accessToken.token);
-    if (currentUser?.isAnonymous == true ||
-        currentUser?.providerData?.any((provider) =>
-                provider.providerId != FacebookAuthProvider.providerId) ==
-            true) {
+    if (currentUser?.isAnonymous == true) {
       return _auth.linkWithCredential(credential);
+    }
+    bool isFacebookUser = currentUser?.providerData?.any((provider) =>
+            provider.providerId == FacebookAuthProvider.providerId) ==
+        true;
+    if (isFacebookUser) {
+      return currentUser.reauthenticateWithCredential(credential);
     }
     return _auth.signInWithCredential(credential);
   }
@@ -81,6 +89,11 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
   @override
   Future<FirebaseUser> guestLogin() {
     return _auth.signInAnonymously();
+  }
+
+  @override
+  Future<void> logout() {
+    return _auth.signOut();
   }
 
   @override
