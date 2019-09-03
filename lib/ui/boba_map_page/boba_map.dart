@@ -226,7 +226,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   Widget _buildShopFilterBar() {
     return Container(
       height: 50,
-      color: Colors.white,
+      color: Colors.white12,
       child: Row(
         children: <Widget>[
           StreamBuilder<Set<String>>(
@@ -462,7 +462,7 @@ class ShopFilterButton extends StatelessWidget {
           Set<String> filteredShops = snapshot.data ?? {};
           bool isSelected = filteredShops.contains(_shop.name);
           return FlatButton(
-            color: isSelected ? color.withOpacity(0.5) : Colors.white,
+            color: isSelected ? color.withOpacity(0.5) : null,
             textColor: isSelected
                 ? brightness < 0.1791 ? color : Colors.grey.shade700
                 : Colors.grey,

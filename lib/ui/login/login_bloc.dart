@@ -23,11 +23,21 @@ class LoginBloc extends BlocBase {
   }
 
   Future<FirebaseUser> googleLogin() {
-    return _loginRepo.googleLogin();
+    final user = _currentUser.value;
+    return _loginRepo.googleLogin(user);
   }
 
   Future<FirebaseUser> facebookLogin() {
-    return _loginRepo.facebookLogin();
+    final user = _currentUser.value;
+    return _loginRepo.facebookLogin(user);
+  }
+
+  Future<FirebaseUser> guestLogin() {
+    final user = _currentUser.value;
+    if (user == null) {
+      return null;
+    }
+    return _loginRepo.guestLogin();
   }
 
   @override

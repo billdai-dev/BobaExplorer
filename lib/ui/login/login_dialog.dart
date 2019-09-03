@@ -16,11 +16,11 @@ class _LoginDialogState extends State<LoginDialog>
   @override
   void initState() {
     super.initState();
+    loginBloc = Provider.of<LoginBloc>(context, listen: false);
     _animController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 200),
     );
-    loginBloc = Provider.of<LoginBloc>(context, listen: false);
     _animController.forward();
   }
 
@@ -33,9 +33,9 @@ class _LoginDialogState extends State<LoginDialog>
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double widthMargin = screenWidth * 0.0 / 2;
+    double widthMargin = screenWidth * 0.08 / 2;
     double screenHeight = MediaQuery.of(context).size.height;
-    double heightMargin = screenHeight * 0.6 / 2;
+    double heightMargin = screenHeight * 0.58 / 2;
 
     return ScaleTransition(
       scale: Tween(begin: 0.0, end: 1.0).animate(
@@ -52,41 +52,193 @@ class _LoginDialogState extends State<LoginDialog>
             borderRadius: BorderRadius.circular(12),
           ),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Container(
-                  alignment: Alignment.centerRight,
-                  child: CloseButton(),
-                ),
-                Text("請選擇任一種登入方式"),
-                SizedBox(height: 8),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
-                    IconButton(
-                      icon: Icon(FontAwesomeIcons.facebook),
-                      onPressed: () async {
-                        final user = await loginBloc.facebookLogin();
-                        Navigator.pop(context, user);
-                      },
+                    Text(
+                      "請選擇登入方式",
+                      style: Theme.of(context).textTheme.subhead,
                     ),
-                    IconButton(
-                      icon: Icon(FontAwesomeIcons.google),
-                      onPressed: () async {
-                        final user = await loginBloc.googleLogin();
-                        Navigator.pop(context, user);
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(FontAwesomeIcons.userSecret),
-                      onPressed: () {},
+                    Spacer(),
+                    InkWell(
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(Icons.close),
                     ),
                   ],
-                )
+                ),
+                Divider(endIndent: 36),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: <Widget>[
+                      _buildFbLoginBtn(),
+                      _buildGoogleLoginBtn(),
+                      _buildGuestLoginBtn(),
+                    ],
+                  ),
+                ),
+                Center(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.top,
+                          child: Icon(
+                            Icons.warning,
+                            size: 16,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        TextSpan(
+                            text: " 訪客模式無法將資料保存於雲端",
+                            style: Theme.of(context).textTheme.caption),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFbLoginBtn() {
+    const Color fbBlue = Color.fromARGB(255, 66, 103, 178);
+    return InkWell(
+      onTap: () async {
+        final user = await loginBloc.facebookLogin();
+        Navigator.pop(context, user);
+      },
+      child: Container(
+        height: 42,
+        decoration: ShapeDecoration(
+          color: fbBlue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        child: InkWell(
+          child: Row(
+            children: <Widget>[
+              SizedBox(width: 8),
+              Icon(
+                FontAwesomeIcons.facebookSquare,
+                color: Colors.white,
+                size: 26,
+              ),
+              Expanded(
+                child: Text(
+                  "使用 Facebook 帳號登入",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleLoginBtn() {
+    const Color googleBlue = Color.fromARGB(255, 66, 133, 244);
+    return InkWell(
+      onTap: () async {
+        final user = await loginBloc.googleLogin();
+        Navigator.pop(context, user);
+      },
+      child: Container(
+        height: 42,
+        decoration: ShapeDecoration(
+          color: googleBlue,
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: googleBlue),
+          ),
+        ),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 40,
+              height: double.infinity,
+              decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(),
+              ),
+              child: Center(
+                child: Image.asset(
+                  "assets/images/icon_google_48.png",
+                  width: 20,
+                  height: 20,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                "使用 Google 帳號登入",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuestLoginBtn() {
+    return InkWell(
+      onTap: () => loginBloc.guestLogin(),
+      child: Container(
+        padding: const EdgeInsets.only(left: 12),
+        height: 40,
+        decoration: ShapeDecoration(
+          color: Colors.grey.shade300,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          overflow: Overflow.clip,
+          children: <Widget>[
+            Positioned(
+              left: 0,
+              right: 0,
+              top: -14,
+              bottom: -3,
+              child: FittedBox(
+                child: Icon(
+                  FontAwesomeIcons.userSecret,
+                  color: Colors.grey.withOpacity(0.45),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Container(
+                alignment: Alignment(0, 0.3),
+                child: Text(
+                  "使用訪客身份登入",
+                  style: TextStyle(
+                    letterSpacing: 0.4,
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

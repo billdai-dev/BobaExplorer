@@ -9,9 +9,11 @@ import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 abstract class LoginRepoContract {
-  Future<FirebaseUser> googleLogin();
+  Future<FirebaseUser> googleLogin(FirebaseUser currentUser);
 
-  Future<FirebaseUser> facebookLogin();
+  Future<FirebaseUser> facebookLogin(FirebaseUser currentUser);
+
+  Future<FirebaseUser> guestLogin();
 
   Stream<FirebaseUser> getAuthChangedStream();
 
@@ -30,7 +32,7 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
       : super(network: network, localStorage: localStorage);
 
   @override
-  Future<FirebaseUser> googleLogin() async {
+  Future<FirebaseUser> googleLogin(FirebaseUser currentUser) async {
     final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
     final GoogleSignInAuthentication googleAuth =
         await googleUser?.authentication;
@@ -41,11 +43,17 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
+    if (currentUser?.isAnonymous == true ||
+        currentUser?.providerData?.any((provider) =>
+                provider.providerId != GoogleAuthProvider.providerId) ==
+            true) {
+      return _auth.linkWithCredential(credential);
+    }
     return _auth.signInWithCredential(credential);
   }
 
   @override
-  Future<FirebaseUser> facebookLogin() async {
+  Future<FirebaseUser> facebookLogin(FirebaseUser currentUser) async {
     Map<String, String> appData =
         await AppAvailability.checkAvailability(_facebookPackageName)
             .catchError((e) => null);
@@ -54,16 +62,25 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
         _facebookLogin.loginBehavior = FacebookLoginBehavior.webViewOnly;
       }
     }
-    return _facebookLogin
-        .logInWithReadPermissions(['email']).then((loginResult) {
-      if (loginResult.status == FacebookLoginStatus.loggedIn) {
-        final AuthCredential credential = FacebookAuthProvider.getCredential(
-            accessToken: loginResult.accessToken.token);
-        return _auth.signInWithCredential(credential);
-      } else {
-        return null;
-      }
-    });
+    final loginResult =
+        await _facebookLogin.logInWithReadPermissions(['email']);
+    if (loginResult?.status != FacebookLoginStatus.loggedIn) {
+      return null;
+    }
+    final AuthCredential credential = FacebookAuthProvider.getCredential(
+        accessToken: loginResult.accessToken.token);
+    if (currentUser?.isAnonymous == true ||
+        currentUser?.providerData?.any((provider) =>
+                provider.providerId != FacebookAuthProvider.providerId) ==
+            true) {
+      return _auth.linkWithCredential(credential);
+    }
+    return _auth.signInWithCredential(credential);
+  }
+
+  @override
+  Future<FirebaseUser> guestLogin() {
+    return _auth.signInAnonymously();
   }
 
   @override
