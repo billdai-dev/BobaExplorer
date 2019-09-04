@@ -45,16 +45,29 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
-    if (currentUser?.isAnonymous == true) {
-      return _auth.linkWithCredential(credential);
+    FirebaseUser newUser;
+    if (currentUser == null) {
+      newUser = await _auth.signInWithCredential(credential);
+    } else if (currentUser.isAnonymous == true) {
+      newUser = await _auth.linkWithCredential(credential);
+    } else {
+      bool wasGoogleUser = currentUser?.providerData?.any((provider) =>
+              provider.providerId == GoogleAuthProvider.providerId) ==
+          true;
+
+      newUser = wasGoogleUser
+          ? await currentUser.reauthenticateWithCredential(credential)
+          : await _auth.linkWithCredential(credential);
     }
-    bool isGoogleUser = currentUser?.providerData?.any((provider) =>
-            provider.providerId == GoogleAuthProvider.providerId) ==
-        true;
-    if (isGoogleUser) {
-      return currentUser.reauthenticateWithCredential(credential);
-    }
-    return _auth.signInWithCredential(credential);
+    final googleProviderData = newUser?.providerData?.firstWhere(
+        (data) => data.providerId == GoogleAuthProvider.providerId,
+        orElse: () => null);
+    final profile = UserUpdateInfo()
+      ..displayName = googleProviderData?.displayName
+      ..photoUrl = googleProviderData?.photoUrl;
+    return await newUser
+        ?.updateProfile(profile)
+        ?.then((_) => _auth.currentUser());
   }
 
   @override
@@ -74,16 +87,29 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
     }
     final AuthCredential credential = FacebookAuthProvider.getCredential(
         accessToken: loginResult.accessToken.token);
-    if (currentUser?.isAnonymous == true) {
-      return _auth.linkWithCredential(credential);
+
+    FirebaseUser newUser;
+    if (currentUser == null) {
+      newUser = await _auth.signInWithCredential(credential);
+    } else if (currentUser.isAnonymous == true) {
+      newUser = await _auth.linkWithCredential(credential);
+    } else {
+      bool wasFbUser = currentUser?.providerData?.any((provider) =>
+              provider.providerId == FacebookAuthProvider.providerId) ==
+          true;
+      newUser = wasFbUser
+          ? await currentUser?.reauthenticateWithCredential(credential)
+          : await _auth.linkWithCredential(credential);
     }
-    bool isFacebookUser = currentUser?.providerData?.any((provider) =>
-            provider.providerId == FacebookAuthProvider.providerId) ==
-        true;
-    if (isFacebookUser) {
-      return currentUser.reauthenticateWithCredential(credential);
-    }
-    return _auth.signInWithCredential(credential);
+    final fbProviderData = newUser?.providerData?.firstWhere(
+        (data) => data.providerId == FacebookAuthProvider.providerId,
+        orElse: () => null);
+    final profile = UserUpdateInfo()
+      ..displayName = fbProviderData?.displayName
+      ..photoUrl = fbProviderData?.photoUrl;
+    return await newUser
+        ?.updateProfile(profile)
+        ?.then((_) => _auth.currentUser());
   }
 
   @override
@@ -92,7 +118,9 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
   }
 
   @override
-  Future<void> logout() {
+  Future<void> logout() async {
+    await _googleSignIn.disconnect().catchError((e) {});
+    await _facebookLogin.logOut().catchError((e) {});
     return _auth.signOut();
   }
 

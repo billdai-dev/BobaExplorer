@@ -181,8 +181,16 @@ class _LoginDialogState extends State<LoginDialog>
     String text = user == null ? "使用 Google 帳號登入" : "以 Google 帳號繼續";
     return InkWell(
       onTap: () async {
-        final user = await loginBloc.googleLogin();
-        Navigator.pop(context, user);
+        final googleUser = await loginBloc.googleLogin();
+        if (user?.isAnonymous == true) {
+          showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => _buildSyncDataDialog());
+          //TODO:Call and await sync data function, then dismiss dialog
+          Navigator.pop(context);
+        }
+        Navigator.pop(context, googleUser);
       },
       child: Container(
         height: 42,
@@ -282,11 +290,57 @@ class _LoginDialogState extends State<LoginDialog>
       ),
       borderSide: BorderSide(color: Colors.redAccent.shade100),
       onPressed: () async {
-        await loginBloc.logout();
-        Navigator.pop(context, null);
+        await showDialog(
+            context: context,
+            builder: (context) => _buildClearDataRequestDialog());
       },
       icon: Icon(FontAwesomeIcons.signOutAlt),
       label: Text("登出"),
+    );
+  }
+
+  Widget _buildSyncDataDialog() {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Container(
+        child: Column(
+          children: <Widget>[
+            Text("雲端資料同步中..."),
+            SizedBox(height: 12),
+            //TODO: Syncing data animation
+            Placeholder(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClearDataRequestDialog() {
+    return AlertDialog(
+      title: Text('清除訪客資料'),
+      content: Text("請問是否要清除店家收藏紀錄？"),
+      actions: <Widget>[
+        FlatButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text("不登出"),
+        ),
+        FlatButton(
+          onPressed: () async {
+            await loginBloc.logout();
+            Navigator.pop(context, true);
+          },
+          child: Text("否"),
+        ),
+        FlatButton(
+          onPressed: () async {
+            //TODO:Delete local data
+            Navigator.pop(context, true);
+          },
+          child: Text("是"),
+        ),
+      ],
     );
   }
 }

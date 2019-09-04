@@ -8,7 +8,7 @@ import 'package:rxdart/rxdart.dart';
 class LoginBloc extends BlocBase {
   final LoginRepo _loginRepo;
 
-  Stream<FirebaseUser> _onAuthChanged;
+  StreamSubscription<FirebaseUser> _onAuthChangedListener;
 
   final BehaviorSubject<FirebaseUser> _currentUser = BehaviorSubject();
 
@@ -16,21 +16,29 @@ class LoginBloc extends BlocBase {
 
   LoginBloc(this._loginRepo) {
     _loginRepo.getCurrentUser().then((user) {
-      print("USER:$user");
       _currentUser.add(user);
-      _onAuthChanged = _loginRepo.getAuthChangedStream();
-      _currentUser.addStream(_onAuthChanged);
+      _onAuthChangedListener = _loginRepo
+          .getAuthChangedStream()
+          .listen((user) => _currentUser.add(user));
     });
   }
 
-  Future<FirebaseUser> googleLogin() {
+  Future<FirebaseUser> googleLogin() async {
     final user = _currentUser.value;
-    return _loginRepo.googleLogin(user);
+    final newUser = await _loginRepo.googleLogin(user);
+    if (newUser != null) {
+      _currentUser.add(newUser);
+    }
+    return newUser;
   }
 
-  Future<FirebaseUser> facebookLogin() {
+  Future<FirebaseUser> facebookLogin() async {
     final user = _currentUser.value;
-    return _loginRepo.facebookLogin(user);
+    final newUser = await _loginRepo.facebookLogin(user);
+    if (newUser != null) {
+      _currentUser.add(newUser);
+    }
+    return newUser;
   }
 
   Future<FirebaseUser> guestLogin() async {
@@ -47,6 +55,7 @@ class LoginBloc extends BlocBase {
 
   @override
   void dispose() {
-    _onAuthChanged.drain().then((_) => _currentUser?.close());
+    _onAuthChangedListener?.cancel();
+    _currentUser?.close();
   }
 }

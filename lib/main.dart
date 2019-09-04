@@ -23,10 +23,7 @@ void main() => runApp(
             dispose: (_, loginBloc) => loginBloc.dispose(),
           ),
         ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          home: MyApp(),
-        ),
+        child: MyApp(),
       ),
     );
 
@@ -36,9 +33,35 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  StreamSubscription _checkVersionSub;
-  bool _appVersionChecked = false;
+  /*StreamSubscription _checkVersionSub;
+  bool _appVersionChecked = false;*/
 
+  /*@override
+  void initState() {
+    super.initState();
+    AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
+    appBloc.appVersion.first.then((event) {
+      if (!event.shouldUpdate) {
+        return;
+      }
+      _appVersionChecked = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog<bool>(
+                context: context,
+                barrierDismissible: !event.forceUpdate,
+                builder: (context) =>
+                    _AppUpdateDialog(event.forceUpdate, event.requiredVersion))
+            .then((agreeUpdate) {
+          if (agreeUpdate == null || !agreeUpdate) {
+            return;
+          }
+          LaunchReview.launch(writeReview: false);
+        });
+      });
+    });
+  }*/
+
+/*
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -47,6 +70,46 @@ class _MyAppState extends State<MyApp> {
       if (_checkVersionSub != null) {
         return;
       }
+      _checkVersionSub = appBloc.appVersion.listen((event) {
+        if (!event.shouldUpdate) {
+          return;
+        }
+        _appVersionChecked = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          showDialog<bool>(
+                  context: context,
+                  barrierDismissible: !event.forceUpdate,
+                  builder: (context) => _AppUpdateDialog(
+                      event.forceUpdate, event.requiredVersion))
+              .then((agreeUpdate) {
+            if (agreeUpdate == null || !agreeUpdate) {
+              return;
+            }
+            LaunchReview.launch(writeReview: false);
+          });
+        });
+      });
+    }
+  }
+*/
+
+  /*@override
+  void dispose() {
+    _checkVersionSub?.cancel();
+    super.dispose();
+  }*/
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      onGenerateRoute: _routeGenerator,
+    );
+  }
+
+  /*void _checkAppVersion(BuildContext context) {
+    AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
+    if (_checkVersionSub == null) {
       _checkVersionSub = appBloc.appVersion.listen((event) {
         if (!event.shouldUpdate) {
           return;
@@ -65,20 +128,28 @@ class _MyAppState extends State<MyApp> {
         });
       });
     }
-  }
+  }*/
 
-  @override
-  void dispose() {
-    _checkVersionSub?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Provider<BobaMapBloc>(
-      builder: (_) => BobaMapBloc(TeaShopRepo(), FavoriteRepo()),
-      dispose: (_, bloc) => bloc.dispose(),
-      child: BobaMap(),
+  Route<dynamic> _routeGenerator(RouteSettings routeSetting) {
+    String routeName = routeSetting.name;
+    String lastRoute = routeName.substring(routeSetting.name.lastIndexOf("/"));
+    return MaterialPageRoute(
+      builder: (context) {
+        switch (lastRoute) {
+          case BobaMap.routeName:
+            return Provider<BobaMapBloc>(
+              builder: (_) => BobaMapBloc(TeaShopRepo(), FavoriteRepo()),
+              dispose: (_, bloc) => bloc.dispose(),
+              child: BobaMap(),
+            );
+          default:
+            return Container(
+              alignment: Alignment.center,
+              child: Text("Page not found"),
+            );
+        }
+      },
+      settings: routeSetting,
     );
   }
 }

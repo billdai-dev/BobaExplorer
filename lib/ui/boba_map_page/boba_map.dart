@@ -23,6 +23,8 @@ import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BobaMap extends StatefulWidget {
+  static const String routeName = "/";
+
   BobaMap({Key key}) : super(key: key);
 
   @override
