@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:boba_explorer/data/bloc_base.dart';
+import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
 import 'package:boba_explorer/data/repo/login/login_repo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoginBloc extends BlocBase {
   final LoginRepo _loginRepo;
+  final FavoriteRepo _favoriteRepo;
 
   StreamSubscription<FirebaseUser> _onAuthChangedListener;
 
@@ -14,13 +16,19 @@ class LoginBloc extends BlocBase {
 
   Stream<FirebaseUser> get currentUser => _currentUser.stream;
 
-  LoginBloc(this._loginRepo) {
+  LoginBloc(this._loginRepo, this._favoriteRepo) {
     _loginRepo.getCurrentUser().then((user) {
       _currentUser.add(user);
       _onAuthChangedListener = _loginRepo
           .getAuthChangedStream()
           .listen((user) => _currentUser.add(user));
     });
+  }
+
+  @override
+  void dispose() {
+    _onAuthChangedListener?.cancel();
+    _currentUser?.close();
   }
 
   Future<FirebaseUser> googleLogin() async {
@@ -53,9 +61,7 @@ class LoginBloc extends BlocBase {
     return _loginRepo.logout();
   }
 
-  @override
-  void dispose() {
-    _onAuthChangedListener?.cancel();
-    _currentUser?.close();
+  Future<void> deleteAllFavoriteShops() {
+    return _favoriteRepo.deleteAllFavoriteShops();
   }
 }

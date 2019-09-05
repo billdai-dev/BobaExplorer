@@ -73,4 +73,8 @@ class BobaDatabase extends _$BobaDatabase {
     return (delete(favoriteShops)..where((shop) => shop.docId.equals(docId)))
         .go();
   }
+
+  Future<void> deleteAllFavoriteShops() {
+    return delete(favoriteShops).go();
+  }
 }

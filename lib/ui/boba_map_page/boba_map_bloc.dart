@@ -10,8 +10,8 @@ import 'package:rxdart/rxdart.dart';
 import 'package:tuple/tuple.dart';
 
 class BobaMapBloc implements BlocBase {
-  TeaShopRepo _teaShopRepo;
-  FavoriteRepo _favoriteRepo;
+  final TeaShopRepo _teaShopRepo;
+  final FavoriteRepo _favoriteRepo;
 
   final BehaviorSubject<List<TeaShop>> _teaShopsController =
       BehaviorSubject(seedValue: []);
@@ -21,13 +21,10 @@ class BobaMapBloc implements BlocBase {
             List<TeaShop>>(
         _teaShopsController.stream, _favoriteShopsController.stream,
         (shops, favoriteShops) {
-      for (var shop in shops) {
-        for (var favoriteShop in favoriteShops) {
-          if (shop.docId == favoriteShop.docId) {
-            shop.isFavorite = true;
-          }
-        }
-      }
+      shops.forEach((shop) {
+        shop.isFavorite = favoriteShops
+            .any((favoriteShop) => shop.docId == favoriteShop.docId);
+      });
       return shops;
     });
   }

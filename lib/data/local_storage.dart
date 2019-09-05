@@ -38,6 +38,10 @@ class LocalStorage {
     return _db.deleteFavoriteShop(shop.docId);
   }
 
+  Future<void> deleteAllFavoriteShops() {
+    return _db.deleteAllFavoriteShops();
+  }
+
   Future<List<String>> loadRecentSearch() {
     return _pref.future.then((pref) => pref.getStringList(_keyRecentSearch));
   }

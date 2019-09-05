@@ -22,6 +22,20 @@ import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+Future<FirebaseUser> showLoginDialog(BuildContext context) async {
+  final user = await showDialog<FirebaseUser>(
+    context: context,
+    builder: (context) => LoginDialog(),
+  );
+  if (user != null) {
+    String userName = user.displayName ?? "";
+    Scaffold.of(context).showSnackBar(SnackBar(
+      content: Text("歡迎，$userName，現在您可以收藏店家囉"),
+    ));
+  }
+  return user;
+}
+
 class BobaMap extends StatefulWidget {
   static const String routeName = "/";
 
@@ -75,9 +89,9 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
-    super.dispose();
     _shopInfoPageController?.dispose();
     _animController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -145,7 +159,9 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
         width: double.infinity,
         height: 50,
         child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
           elevation: 4,
           child: Consumer<LoginBloc>(
             builder: (context, loginBloc, child) {
@@ -153,21 +169,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                 children: <Widget>[
                   SizedBox(width: 12),
                   GestureDetector(
-                    onTap: () async {
-                      final userInfo = await showDialog<FirebaseUser>(
-                        context: context,
-                        builder: (context) {
-                          return LoginDialog();
-                        },
-                      );
-                      if (userInfo == null) {
-                        return;
-                      }
-                      String userName = userInfo.displayName ?? "";
-                      Scaffold.of(context).showSnackBar(SnackBar(
-                        content: Text("歡迎，$userName，現在您可以收藏店家囉"),
-                      ));
-                    },
+                    onTap: () => showLoginDialog(context),
                     child: _buildAvatar(loginBloc),
                   ),
                   SizedBox(width: 12),
@@ -190,10 +192,24 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.favorite, color: Colors.redAccent),
-                    onPressed: () {
-                      //TODO: Go to favorite page
+                  StreamBuilder<FirebaseUser>(
+                    stream: loginBloc.currentUser,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.none) {
+                        return Container();
+                      }
+                      return IconButton(
+                        icon: Icon(Icons.favorite, color: Colors.redAccent),
+                        onPressed: () async {
+                          if (snapshot.data == null) {
+                            final newUser = await showLoginDialog(context);
+                            if (newUser == null) {
+                              return;
+                            }
+                          }
+                          //TODO:Show Favorite page
+                        },
+                      );
                     },
                   ),
                 ],
@@ -655,12 +671,12 @@ class _ShopItemState extends State<_ShopItem> {
                             child: Container(
                               alignment: Alignment.bottomRight,
                               child: FavoriteCheckbox(
-                                widget._shop.isFavorite,
-                                (isFavorite) {
+                                key: UniqueKey(),
+                                isFavorite: widget._shop.isFavorite,
+                                onFavoriteChanged: (isFavorite) {
                                   bloc.setFavoriteShop(
                                       isFavorite, widget._shop);
                                 },
-                                key: ValueKey(widget._shop.docId),
                               ),
                             ),
                           ),
@@ -771,10 +787,13 @@ class _FavoriteStampCustomPainter extends CustomPainter {
 
 class FavoriteCheckbox extends StatefulWidget {
   final bool _isFavorite;
-  final Function(bool isFavorite) onFavoriteChanged;
+  final Function(bool isFavorite) _onFavoriteChanged;
 
-  FavoriteCheckbox(this._isFavorite, this.onFavoriteChanged, {Key key})
-      : super(key: key);
+  FavoriteCheckbox(
+      {Key key, @required isFavorite, @required Function onFavoriteChanged})
+      : this._isFavorite = isFavorite,
+        _onFavoriteChanged = onFavoriteChanged,
+        super(key: key);
 
   @override
   _FavoriteCheckboxState createState() => _FavoriteCheckboxState();
@@ -791,16 +810,32 @@ class _FavoriteCheckboxState extends State<FavoriteCheckbox> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        isFavorite = !isFavorite;
-        widget.onFavoriteChanged(isFavorite);
-        setState(() {});
+    return Consumer<LoginBloc>(
+      builder: (context, loginBloc, child) {
+        return StreamBuilder<FirebaseUser>(
+          stream: loginBloc.currentUser,
+          builder: (context, snapshot) {
+            final user = snapshot.data;
+            return GestureDetector(
+              onTap: () async {
+                if (user == null) {
+                  final newUser = await showLoginDialog(context);
+                  if (newUser == null) {
+                    return;
+                  }
+                }
+                isFavorite = !isFavorite;
+                widget._onFavoriteChanged(isFavorite);
+                setState(() {});
+              },
+              child: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: Colors.redAccent.shade200,
+              ),
+            );
+          },
+        );
       },
-      child: Icon(
-        isFavorite ? Icons.favorite : Icons.favorite_border,
-        color: Colors.redAccent.shade200,
-      ),
     );
   }
 }

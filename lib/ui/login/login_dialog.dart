@@ -1,3 +1,4 @@
+import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -289,11 +290,10 @@ class _LoginDialogState extends State<LoginDialog>
         borderRadius: BorderRadius.circular(8),
       ),
       borderSide: BorderSide(color: Colors.redAccent.shade100),
-      onPressed: () async {
-        await showDialog(
-            context: context,
-            builder: (context) => _buildClearDataRequestDialog());
-      },
+      onPressed: () => showDialog(
+        context: context,
+        builder: (context) => _buildClearDataRequestDialog(),
+      ),
       icon: Icon(FontAwesomeIcons.signOutAlt),
       label: Text("登出"),
     );
@@ -329,14 +329,15 @@ class _LoginDialogState extends State<LoginDialog>
         FlatButton(
           onPressed: () async {
             await loginBloc.logout();
-            Navigator.pop(context, true);
+            Navigator.popUntil(context, ModalRoute.withName(BobaMap.routeName));
           },
           child: Text("否"),
         ),
         FlatButton(
           onPressed: () async {
-            //TODO:Delete local data
-            Navigator.pop(context, true);
+            await loginBloc.deleteAllFavoriteShops();
+            await loginBloc.logout();
+            Navigator.popUntil(context, ModalRoute.withName(BobaMap.routeName));
           },
           child: Text("是"),
         ),
