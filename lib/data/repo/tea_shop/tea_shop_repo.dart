@@ -7,11 +7,12 @@ import 'package:rxdart/rxdart.dart';
 
 abstract class TeaShopRepoContract {
   Observable<List<DocumentSnapshot>> getTeaShops(
-      double lat, double lng, double radius,
-      {Set<String> shopNames});
+      {double lat, double lng, double radius, Set<String> shopNames});
 }
 
 class TeaShopRepo extends BaseRepo implements TeaShopRepoContract {
+  static const double _101Lat = 25.0339639;
+  static const double _101Lng = 121.5622835;
   static const String _path = "tea_shops";
   static const String _fieldPosition = "position";
   static const String _fieldShopName = "shopName";
@@ -21,8 +22,14 @@ class TeaShopRepo extends BaseRepo implements TeaShopRepoContract {
 
   @override
   Observable<List<DocumentSnapshot>> getTeaShops(
-      double lat, double lng, double radius,
-      {Set<String> shopNames}) {
+      {double lat, double lng, double radius, Set<String> shopNames}) {
+    if (lat == null || lng == null) {
+      lat = _101Lat;
+      lng = _101Lng;
+    }
+    if (radius == null) {
+      radius = 0.5;
+    }
     if (shopNames == null || shopNames.isEmpty) {
       return _buildQueryStream(lat, lng, radius);
     }

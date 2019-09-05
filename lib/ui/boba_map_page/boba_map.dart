@@ -9,6 +9,7 @@ import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/login/login_dialog.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_delegate.dart';
+import 'package:boba_explorer/util.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -176,15 +177,19 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                   Expanded(
                     child: GestureDetector(
                       onTap: () async {
-                        String query = await showSearch<String>(
+                        var result = await showSearch(
                           context: context,
                           delegate: SearchBobaDelegate(),
                         );
-                        if (query == null || query.isEmpty) {
-                          return;
+                        if (result is TeaShop) {
+                          //TODO: Show the shop data on map
+                        } else if (result is String) {
+                          if (result.isEmpty) {
+                            return;
+                          }
+                          _shouldJumpToFirstPage = true;
+                          _bobaMapBloc?.filter(shops: {result});
                         }
-                        _shouldJumpToFirstPage = true;
-                        _bobaMapBloc?.filter(shops: {query});
                       },
                       child: Text(
                         "搜尋飲料店",
@@ -656,7 +661,7 @@ class _ShopItemState extends State<_ShopItem> {
                           child: FlatButton.icon(
                             padding: EdgeInsets.zero,
                             onPressed: () =>
-                                _launchMaps("$city$district$address"),
+                                Util.launchMap("$city$district$address"),
                             icon: Icon(
                               FontAwesomeIcons.locationArrow,
                               size: 18,
@@ -708,23 +713,6 @@ class _ShopItemState extends State<_ShopItem> {
     String dialUri = "tel:$phoneNumber";
     if (await canLaunch(dialUri)) {
       await launch(dialUri);
-    }
-  }
-
-  Future<void> _launchMaps(String address) async {
-    String googleMapUrl =
-        "https://www.google.com/maps/search/?api=1&query=$address";
-    googleMapUrl = Uri.encodeFull(googleMapUrl);
-    if (Platform.isIOS) {
-      if (!await canLaunch("googlemaps://")) {
-        var iosMapUrl = "http://maps.apple.com/?q=$address";
-        iosMapUrl = Uri.encodeFull(iosMapUrl);
-        await launch(iosMapUrl);
-        return;
-      }
-    }
-    if (await canLaunch(googleMapUrl)) {
-      await launch(googleMapUrl);
     }
   }
 

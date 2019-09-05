@@ -5,7 +5,6 @@ import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
 import 'package:boba_explorer/data/repo/mapper.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:tuple/tuple.dart';
 
@@ -47,10 +46,13 @@ class BobaMapBloc implements BlocBase {
     _queryConfigController
         .switchMap((config) {
           Set<String> filteredShops = _filterListController.value;
-          return _teaShopRepo.getTeaShops(config.lat, config.lng, config.radius,
+          return _teaShopRepo.getTeaShops(
+              lat: config.lat,
+              lng: config.lng,
+              radius: config.radius,
               shopNames: filteredShops);
         })
-        .map(_teaShopConverter)
+        .map(Mapper.docToTeaShop)
         .listen((shops) {
           _teaShopsController.add(shops);
         });
@@ -101,9 +103,12 @@ class BobaMapBloc implements BlocBase {
       //Do query/queries for those new added filters
       final config = _queryConfigController.value;
       return _teaShopRepo
-          .getTeaShops(config?.lat, config?.lng, config?.radius,
+          .getTeaShops(
+              lat: config?.lat,
+              lng: config?.lng,
+              radius: config?.radius,
               shopNames: result)
-          .map(_teaShopConverter)
+          .map(Mapper.docToTeaShop)
           .doOnData((shops) => shops..addAll(intersectionData));
     }).listen((shops) => _teaShopsController.add(shops),
         onError: (e) => print(e));
@@ -158,12 +163,6 @@ class BobaMapBloc implements BlocBase {
   void setFavoriteShop(bool isFavorite, TeaShop shop) {
     _favoriteRepo.setFavoriteShop(
         isFavorite, Mapper.teaShopToFavoriteShop(shop));
-  }
-
-  List<TeaShop> _teaShopConverter(List<DocumentSnapshot> docs) {
-    return docs
-        .map((doc) => TeaShop.fromJson(doc.data)..docId = doc.documentID)
-        .toList();
   }
 
 /*void _getFavoriteShops() {

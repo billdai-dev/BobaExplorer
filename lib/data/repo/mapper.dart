@@ -1,7 +1,14 @@
 import 'package:boba_explorer/data/moor_db.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Mapper {
+  static List<TeaShop> docToTeaShop(List<DocumentSnapshot> docs) {
+    return docs
+        .map((doc) => TeaShop.fromJson(doc.data)..docId = doc.documentID)
+        .toList();
+  }
+
   static FavoriteShop teaShopToFavoriteShop(TeaShop teaShop) {
     if (teaShop == null) {
       return null;

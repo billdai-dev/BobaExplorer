@@ -1,11 +1,13 @@
 import 'package:boba_explorer/app_bloc.dart';
-import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
 import 'package:boba_explorer/data/repo/search_boba/search_boba_repo.dart';
+import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
+import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_bloc.dart';
+import 'package:boba_explorer/util.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class SearchBobaDelegate extends SearchDelegate<String> {
+class SearchBobaDelegate extends SearchDelegate {
   List<String> _randomShops;
 
   @override
@@ -37,7 +39,10 @@ class SearchBobaDelegate extends SearchDelegate<String> {
   @override
   Widget buildSuggestions(BuildContext context) {
     return Provider<SearchBobaBloc>(
-      builder: (_) => SearchBobaBloc(FavoriteRepo(), SearchBobaRepo()),
+      builder: (_) => SearchBobaBloc(
+        SearchBobaRepo(),
+        TeaShopRepo(),
+      ),
       dispose: (_, bloc) => bloc.dispose(),
       child: Consumer<AppBloc>(
         builder: (context, appBloc, child) {
@@ -106,7 +111,7 @@ class SearchBobaDelegate extends SearchDelegate<String> {
                       },
                     ),
                   Expanded(
-                    child: _buildResultList(false, shops),
+                    child: _buildSuggestionList(false, shops),
                   ),
                 ],
               );
@@ -133,35 +138,31 @@ class SearchBobaDelegate extends SearchDelegate<String> {
   Widget buildResults(BuildContext context) {
     return Provider<SearchBobaBloc>(
       builder: (_) {
-        final bloc = SearchBobaBloc(FavoriteRepo(), SearchBobaRepo());
+        final bloc = SearchBobaBloc(
+          SearchBobaRepo(),
+          TeaShopRepo(),
+        );
         if (query.isNotEmpty) {
           bloc.addRecentSearch(query);
         }
         return bloc;
       },
       dispose: (_, bloc) => bloc.dispose(),
-      child: Consumer<AppBloc>(
-        builder: (context, appBloc, child) {
-          return StreamBuilder<List<String>>(
-              stream: appBloc.supportedShops
-                  .map((shops) => shops.map((shop) => shop.name).toList()),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Container();
-                }
-                List<String> filteredShops = query.isEmpty
-                    ? []
-                    : snapshot.data
-                        .where((shopName) => shopName.contains(query))
-                        .toList();
-                return _buildResultList(true, filteredShops);
-              });
+      child: Consumer<SearchBobaBloc>(
+        builder: (context, searchBloc, child) {
+          return FutureBuilder<List<TeaShop>>(
+            future: searchBloc.searchTeaShop(query),
+            builder: (context, snapshot) {
+              final shops = snapshot.data ?? [];
+              return _buildResultList(shops);
+            },
+          );
         },
       ),
     );
   }
 
-  Widget _buildResultList(bool isShowingResult, List<String> shops) {
+  Widget _buildSuggestionList(bool isShowingResult, List<String> shops) {
     /*final filteredShops = snapshot.data
         .where((shopName) => shopName.contains(query))
         .toList();*/
@@ -200,6 +201,56 @@ class SearchBobaDelegate extends SearchDelegate<String> {
         );
       },
       itemCount: shops.length,
+    );
+  }
+
+  Widget _buildResultList(List<TeaShop> results) {
+    return ListView.separated(
+      itemBuilder: (context, index) {
+        final shop = results[index];
+        String branchName = shop.branchName;
+        branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
+            ? branchName
+            : "$branchName店";
+        String address = '${shop.city}${shop.district}${shop.address}';
+        return ListTile(
+          title: Row(
+            children: <Widget>[
+              Text(
+                shop.shopName,
+                style: Theme.of(context).textTheme.subhead,
+              ),
+              Spacer(),
+              Text(
+                branchName,
+                style: Theme.of(context).textTheme.body2,
+              ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              SizedBox(height: 2),
+              Text(
+                address,
+                style: Theme.of(context)
+                    .textTheme
+                    .body1
+                    .copyWith(color: Colors.grey),
+              ),
+            ],
+          ),
+          trailing: IconButton(
+            icon: Icon(Icons.navigation),
+            onPressed: () => Util.launchMap(address),
+          ),
+          dense: true,
+          isThreeLine: true,
+          onTap: () => close(context, shop),
+        );
+      },
+      separatorBuilder: (context, index) => Divider(height: 12),
+      itemCount: results.length,
     );
   }
 }
