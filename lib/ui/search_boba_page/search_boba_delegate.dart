@@ -134,7 +134,9 @@ class SearchBobaDelegate extends SearchDelegate<String> {
     return Provider<SearchBobaBloc>(
       builder: (_) {
         final bloc = SearchBobaBloc(FavoriteRepo(), SearchBobaRepo());
-        bloc.addRecentSearch(query);
+        if (query.isNotEmpty) {
+          bloc.addRecentSearch(query);
+        }
         return bloc;
       },
       dispose: (_, bloc) => bloc.dispose(),
@@ -147,9 +149,11 @@ class SearchBobaDelegate extends SearchDelegate<String> {
                 if (!snapshot.hasData) {
                   return Container();
                 }
-                final filteredShops = snapshot.data
-                    .where((shopName) => shopName.contains(query))
-                    .toList();
+                List<String> filteredShops = query.isEmpty
+                    ? []
+                    : snapshot.data
+                        .where((shopName) => shopName.contains(query))
+                        .toList();
                 return _buildResultList(true, filteredShops);
               });
         },

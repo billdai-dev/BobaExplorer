@@ -52,6 +52,9 @@ class LocalStorage {
     recentSearch
       ..remove(shop)
       ..insert(0, shop);
+    while (recentSearch.length > 5) {
+      recentSearch.removeLast();
+    }
     return pref.setStringList(_keyRecentSearch, recentSearch);
   }
 }
