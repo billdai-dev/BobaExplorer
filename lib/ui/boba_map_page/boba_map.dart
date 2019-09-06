@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -98,6 +99,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      endDrawer: FavoriteDrawer(),
       resizeToAvoidBottomInset: false,
       appBar: _buildAppBar(),
       body: Column(
@@ -161,6 +163,8 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
 
   Widget _buildAppBar() {
     return AppBar(
+      automaticallyImplyLeading: false,
+      actions: <Widget>[SizedBox.shrink()],
       backgroundColor: Colors.white,
       elevation: 0,
       title: Container(
@@ -219,7 +223,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                                 return;
                               }
                             }
-                            //TODO:Show Favorite page
+                            Scaffold.of(context).openEndDrawer();
                           },
                         );
                       },
@@ -412,14 +416,6 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
           _shouldBlockNextMove = false;
           return;
         }
-        /*if (_isTriggeredByMarker) {
-          _isTriggeredByMarker = false;
-          return;
-        }
-        if (_isPageSwipedByUser) {
-          _isPageSwipedByUser = false;
-          return;
-        }*/
         if (_animController.status != AnimationStatus.completed) {
           _animController.forward();
         }
@@ -494,6 +490,162 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   void _moveCamera(double lat, double lng) {
     final pos = LatLng(lat, lng);
     _mapController?.animateCamera(CameraUpdate.newLatLng(pos));
+  }
+}
+
+class FavoriteDrawer extends StatefulWidget {
+  @override
+  _FavoriteDrawerState createState() => _FavoriteDrawerState();
+}
+
+class _FavoriteDrawerState extends State<FavoriteDrawer> {
+  BobaMapBloc bobaMapBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    bobaMapBloc = Provider.of<BobaMapBloc>(context, listen: false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    return SafeArea(
+      child: Container(
+        constraints: BoxConstraints(maxWidth: screenWidth * 0.6),
+        child: Drawer(
+          child: StreamBuilder<List<TeaShop>>(
+            stream: bobaMapBloc.favoriteShops,
+            builder: (context, snapshot) {
+              Map<String, List<TeaShop>> favoriteMap = snapshot.hasData
+                  ? snapshot.data.fold({}, (map, shop) {
+                      String name = shop.shopName;
+                      if (map.containsKey(name)) {
+                        map[name].add(shop);
+                      } else {
+                        map[name] = [shop];
+                      }
+                      return map;
+                    })
+                  : {};
+              return Column(
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    alignment: Alignment.centerLeft,
+                    width: double.infinity,
+                    color: Colors.blueGrey.shade500,
+                    child: Text(
+                      "店家收藏列表",
+                      style: Theme.of(context)
+                          .textTheme
+                          .subhead
+                          .copyWith(color: Colors.white),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      color: Colors.blueGrey.shade600,
+                      child: CustomScrollView(
+                        slivers: favoriteMap.keys
+                            .map((name) =>
+                                _buildHeader(context, name, favoriteMap[name]))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+      BuildContext context, String shopName, List<TeaShop> shops) {
+    return SliverStickyHeader(
+      header: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        alignment: Alignment.center,
+        color: Colors.grey.shade300,
+        child: Text(
+          shopName,
+          style: Theme.of(context).textTheme.subhead,
+        ),
+      ),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => _buildFavoriteItem(context, shops[index]),
+          childCount: shops?.length ?? 0,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFavoriteItem(BuildContext context, TeaShop shop) {
+    String branchName = shop.branchName;
+    branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
+        ? branchName
+        : "$branchName店";
+    String address = '${shop.city}${shop.district}${shop.address}';
+    return Dismissible(
+      key: ValueKey(shop.docId),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) {},
+      confirmDismiss: (direction) async {
+        await bobaMapBloc.setFavoriteShop(false, shop);
+        return true;
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        elevation: 2,
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: ShapeDecoration(
+                      shape: StadiumBorder(
+                        side: BorderSide(color: Colors.brown, width: 0.5),
+                      ),
+                    ),
+                    child: Text(
+                      branchName,
+                      style: Theme.of(context)
+                          .textTheme
+                          .subtitle
+                          .copyWith(color: Colors.brown),
+                    ),
+                  ),
+                  Spacer(),
+                  InkWell(
+                    onTap: () async {
+                      await bobaMapBloc.setFavoriteShop(false, shop);
+                    },
+                    child: Icon(
+                      Icons.favorite,
+                      color: Colors.redAccent,
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 4),
+              Text(address),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

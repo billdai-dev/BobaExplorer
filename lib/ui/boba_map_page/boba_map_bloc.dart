@@ -31,6 +31,8 @@ class BobaMapBloc implements BlocBase {
   final BehaviorSubject<List<TeaShop>> _favoriteShopsController =
       BehaviorSubject(seedValue: []);
 
+  Stream<List<TeaShop>> get favoriteShops => _favoriteShopsController.stream;
+
   final BehaviorSubject<_QueryConfig> _queryConfigController =
       BehaviorSubject();
 
@@ -160,8 +162,8 @@ class BobaMapBloc implements BlocBase {
     _prevCurFilters.add(Tuple2(oldFiltersTuple.item2, newFilter));
   }
 
-  void setFavoriteShop(bool isFavorite, TeaShop shop) {
-    _favoriteRepo.setFavoriteShop(
+  Future<void> setFavoriteShop(bool isFavorite, TeaShop shop) {
+    return _favoriteRepo.setFavoriteShop(
         isFavorite, Mapper.teaShopToFavoriteShop(shop));
   }
 
