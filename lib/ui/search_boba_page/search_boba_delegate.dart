@@ -151,25 +151,82 @@ class SearchBobaDelegate extends SearchDelegate {
         return bloc;
       },
       dispose: (_, bloc) => bloc.dispose(),
-      child: Consumer<SearchBobaBloc>(
-        builder: (context, searchBloc, child) {
-          if (searchFutureTuple == null || searchFutureTuple.item1 != query) {
-            searchFutureTuple = Tuple2(query, searchBloc.searchTeaShop(query));
-          }
-          return FutureBuilder<List<TeaShop>>(
-            future: searchFutureTuple.item2,
+      child: Consumer<AppBloc>(
+        builder: (context, appBloc, child) {
+          return StreamBuilder<List<String>>(
+            stream: appBloc.supportedShops
+                .map((shops) => shops.map((shop) => shop.name).toList()),
             builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
+              final supportedShops = snapshot.data ?? [];
+
+              String target = supportedShops.firstWhere(
+                  (name) => name.toLowerCase().contains(query.toLowerCase()),
+                  orElse: () => null);
+              if (target == null) {
                 return Container(
-                  alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    height: 3,
-                    child: LinearProgressIndicator(),
+                  alignment: Alignment(0, -0.1),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Icon(
+                        Icons.error_outline,
+                        size: 60,
+                        color: Colors.grey,
+                      ),
+                      Text(
+                        "查無相關店家",
+                        style: Theme.of(context)
+                            .textTheme
+                            .headline
+                            .copyWith(color: Colors.grey),
+                      ),
+                    ],
                   ),
                 );
               }
-              final shops = snapshot.data ?? [];
-              return _buildResultList(context, shops);
+              return Consumer<SearchBobaBloc>(
+                builder: (context, searchBloc, child) {
+                  if (searchFutureTuple == null ||
+                      searchFutureTuple.item1 != query) {
+                    searchFutureTuple =
+                        Tuple2(query, searchBloc.searchTeaShop(target));
+                  }
+                  return FutureBuilder<List<TeaShop>>(
+                    future: searchFutureTuple.item2,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState != ConnectionState.done) {
+                        return Container(
+                          alignment: Alignment.topCenter,
+                          child: SizedBox(
+                            height: 3,
+                            child: LinearProgressIndicator(),
+                          ),
+                        );
+                      }
+                      final shops = snapshot.data ?? [];
+                      print(shops);
+                      return Stack(
+                        children: <Widget>[
+                          Positioned.fill(
+                            child: _buildResultList(context, shops),
+                          ),
+                          if (shops.isNotEmpty)
+                            Positioned.fill(
+                              child: Container(
+                                alignment: Alignment(0, 0.9),
+                                child: FloatingActionButton.extended(
+                                  onPressed: () => close(context, target),
+                                  icon: Icon(FontAwesomeIcons.mapMarkedAlt),
+                                  label: Text("在地圖上查看"),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              );
             },
           );
         },
@@ -178,9 +235,6 @@ class SearchBobaDelegate extends SearchDelegate {
   }
 
   Widget _buildSuggestionList(bool isShowingResult, List<String> shops) {
-    /*final filteredShops = snapshot.data
-        .where((shopName) => shopName.contains(query))
-        .toList();*/
     return ListView.separated(
       separatorBuilder: (context, index) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
