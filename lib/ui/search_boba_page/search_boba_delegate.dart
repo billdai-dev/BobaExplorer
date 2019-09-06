@@ -5,10 +5,13 @@ import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_bloc.dart';
 import 'package:boba_explorer/util.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:tuple/tuple.dart';
 
 class SearchBobaDelegate extends SearchDelegate {
   List<String> _randomShops;
+  Tuple2<String, Future<List<TeaShop>>> searchFutureTuple;
 
   @override
   Widget buildLeading(BuildContext context) {
@@ -150,11 +153,23 @@ class SearchBobaDelegate extends SearchDelegate {
       dispose: (_, bloc) => bloc.dispose(),
       child: Consumer<SearchBobaBloc>(
         builder: (context, searchBloc, child) {
+          if (searchFutureTuple == null || searchFutureTuple.item1 != query) {
+            searchFutureTuple = Tuple2(query, searchBloc.searchTeaShop(query));
+          }
           return FutureBuilder<List<TeaShop>>(
-            future: searchBloc.searchTeaShop(query),
+            future: searchFutureTuple.item2,
             builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return Container(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    height: 3,
+                    child: LinearProgressIndicator(),
+                  ),
+                );
+              }
               final shops = snapshot.data ?? [];
-              return _buildResultList(shops);
+              return _buildResultList(context, shops);
             },
           );
         },
@@ -204,53 +219,109 @@ class SearchBobaDelegate extends SearchDelegate {
     );
   }
 
-  Widget _buildResultList(List<TeaShop> results) {
-    return ListView.separated(
-      itemBuilder: (context, index) {
-        final shop = results[index];
-        String branchName = shop.branchName;
-        branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
-            ? branchName
-            : "$branchName店";
-        String address = '${shop.city}${shop.district}${shop.address}';
-        return ListTile(
-          title: Row(
-            children: <Widget>[
-              Text(
-                shop.shopName,
-                style: Theme.of(context).textTheme.subhead,
-              ),
-              Spacer(),
-              Text(
-                branchName,
-                style: Theme.of(context).textTheme.body2,
-              ),
-            ],
+  Widget _buildResultList(BuildContext context, List<TeaShop> results) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Container(
+          color: Colors.grey.shade100,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: Text(
+            "搜尋結果",
+            style:
+                Theme.of(context).textTheme.body2.copyWith(color: Colors.grey),
           ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              SizedBox(height: 2),
-              Text(
-                address,
-                style: Theme.of(context)
-                    .textTheme
-                    .body1
-                    .copyWith(color: Colors.grey),
+        ),
+        Expanded(
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemBuilder: (context, index) {
+              final shop = results[index];
+              return _buildResultItem(context, shop);
+            },
+            separatorBuilder: (context, index) => Divider(height: 0),
+            itemCount: results.length,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResultItem(BuildContext context, TeaShop shop) {
+    String branchName = shop.branchName;
+    branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
+        ? branchName
+        : "$branchName店";
+    String address = '${shop.city}${shop.district}${shop.address}';
+    return InkWell(
+      onTap: () {},
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: <Widget>[
+            Icon(FontAwesomeIcons.mapMarkerAlt, color: Colors.grey),
+            SizedBox(width: 12),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        shop.shopName,
+                        style: Theme.of(context).textTheme.subhead,
+                      ),
+                      Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: ShapeDecoration(
+                          shape: StadiumBorder(
+                            side: BorderSide(width: 0.5, color: Colors.brown),
+                          ),
+                        ),
+                        child: Text(
+                          branchName,
+                          style: Theme.of(context)
+                              .textTheme
+                              .body2
+                              .copyWith(color: Colors.brown),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    address,
+                    style: Theme.of(context)
+                        .textTheme
+                        .body1
+                        .copyWith(color: Colors.grey),
+                  ),
+                ],
               ),
-            ],
-          ),
-          trailing: IconButton(
-            icon: Icon(Icons.navigation),
-            onPressed: () => Util.launchMap(address),
-          ),
-          dense: true,
-          isThreeLine: true,
-          onTap: () => close(context, shop),
-        );
-      },
-      separatorBuilder: (context, index) => Divider(height: 12),
-      itemCount: results.length,
+            ),
+            SizedBox(width: 16),
+            GestureDetector(
+              child: Container(
+                width: 32,
+                height: 32,
+                alignment: Alignment.center,
+                decoration: ShapeDecoration(
+                  shape: CircleBorder(),
+                  color: Colors.blue.shade400,
+                ),
+                child: Icon(
+                  FontAwesomeIcons.locationArrow,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () => Util.launchMap(address),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
