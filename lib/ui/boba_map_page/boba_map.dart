@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
@@ -107,18 +106,25 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
             child: StreamBuilder<List<TeaShop>>(
               stream: _bobaMapBloc?.teaShops,
               builder: (ctx, snapshot) {
+                List<TeaShop> teaShops = snapshot.data;
+                _markers = _genMarkers(teaShops);
+
+                //Jump to first page after data changed
                 if (_shouldJumpToFirstPage) {
                   Future(() {
-                    if (snapshot.hasData) {
+                    if (teaShops != null && teaShops.isNotEmpty) {
                       _shouldBlockNextMove = true;
                       _shouldJumpToFirstPage = false;
-                      _shopInfoPageController?.jumpToPage(0);
+                      if (_shopInfoPageController.page.round() != 0) {
+                        _shopInfoPageController?.jumpToPage(0);
+                      } else {
+                        _moveCamera(teaShops[0].position?.latitude,
+                            teaShops[0].position?.longitude);
+                      }
                     }
                   });
                 }
 
-                List<TeaShop> teaShops = snapshot.data;
-                _markers = _genMarkers(teaShops);
                 return Stack(
                   children: <Widget>[
                     _buildMap(_markers),
