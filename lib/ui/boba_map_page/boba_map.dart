@@ -189,13 +189,13 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                           delegate: SearchBobaDelegate(_userLocation?.latitude,
                               _userLocation?.longitude),
                         );
+                        if (result == null) {
+                          return;
+                        }
+                        _shouldJumpToFirstPage = true;
                         if (result is TeaShop) {
-                          //TODO: Show the shop data on map
-                        } else if (result is String) {
-                          if (result.isEmpty) {
-                            return;
-                          }
-                          _shouldJumpToFirstPage = true;
+                          _bobaMapBloc.searchSingleShop(shop: result);
+                        } else if (result is String && result.isNotEmpty) {
                           _bobaMapBloc?.filter(shops: {result});
                         }
                       },

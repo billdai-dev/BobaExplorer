@@ -165,15 +165,12 @@ class BobaMapBloc implements BlocBase {
         isFavorite, Mapper.teaShopToFavoriteShop(shop));
   }
 
-/*void _getFavoriteShops() {
-    _favoriteShopsController.addStream(
-        Observable(_favoriteRepo.getFavoriteShops()).flatMap((favoriteShops) {
-      return Observable.fromIterable(favoriteShops)
-          .map((favoriteShop) => Mapper.favoriteShopToTeaShop(favoriteShop))
-          .toList()
-          .asObservable();
-    }));
-  }*/
+  void searchSingleShop({TeaShop shop}) {
+    if (shop != null) {
+      _teaShopsController.add([shop]);
+      _filterListController.add({shop.shopName});
+    }
+  }
 }
 
 class _QueryConfig {

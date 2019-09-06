@@ -314,7 +314,7 @@ class SearchBobaDelegate extends SearchDelegate {
         : "$branchName店";
     String address = '${shop.city}${shop.district}${shop.address}';
     return InkWell(
-      onTap: () {},
+      onTap: () => close(context, shop),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
