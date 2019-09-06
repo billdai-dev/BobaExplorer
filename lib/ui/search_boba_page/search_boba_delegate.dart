@@ -10,8 +10,12 @@ import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
 class SearchBobaDelegate extends SearchDelegate {
+  final double _lat;
+  final double _lng;
   List<String> _randomShops;
-  Tuple2<String, Future<List<TeaShop>>> searchFutureTuple;
+  Tuple2<String, Future<List<TeaShop>>> _searchFutureTuple;
+
+  SearchBobaDelegate(this._lat, this._lng);
 
   @override
   Widget buildLeading(BuildContext context) {
@@ -186,13 +190,15 @@ class SearchBobaDelegate extends SearchDelegate {
               }
               return Consumer<SearchBobaBloc>(
                 builder: (context, searchBloc, child) {
-                  if (searchFutureTuple == null ||
-                      searchFutureTuple.item1 != query) {
-                    searchFutureTuple =
-                        Tuple2(query, searchBloc.searchTeaShop(target));
+                  if (_searchFutureTuple == null ||
+                      _searchFutureTuple.item1 != query) {
+                    _searchFutureTuple = Tuple2(
+                        query,
+                        searchBloc.searchTeaShop(target,
+                            lat: _lat, lng: _lng, radius: 0.5));
                   }
                   return FutureBuilder<List<TeaShop>>(
-                    future: searchFutureTuple.item2,
+                    future: _searchFutureTuple.item2,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState != ConnectionState.done) {
                         return Container(

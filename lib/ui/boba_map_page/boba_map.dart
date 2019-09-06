@@ -51,6 +51,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   GoogleMapController _mapController;
   CameraPosition _cameraPos;
   Set<Marker> _markers;
+  LatLng _userLocation;
   ValueNotifier<bool> _isCameraTooFarNotifier = ValueNotifier(true);
   ValueNotifier<bool> _searchBtnVisibilityNotifier = ValueNotifier(false);
   PageController _shopInfoPageController;
@@ -185,7 +186,8 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                       onTap: () async {
                         var result = await showSearch(
                           context: context,
-                          delegate: SearchBobaDelegate(),
+                          delegate: SearchBobaDelegate(_userLocation?.latitude,
+                              _userLocation?.longitude),
                         );
                         if (result is TeaShop) {
                           //TODO: Show the shop data on map
@@ -395,12 +397,12 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
       onMapCreated: (controller) async {
         _mapController = controller;
         _markerIcon = await _markerIconCompleter.future;
-        LatLng _curPosition = await Geolocator()
+        _userLocation = await Geolocator()
             .getCurrentPosition()
             .then((pos) =>
                 pos == null ? null : LatLng(pos.latitude, pos.longitude))
             .catchError((err) {});
-        LatLng pos = _curPosition ?? _tw101;
+        LatLng pos = _userLocation ?? _tw101;
         controller.animateCamera(CameraUpdate.newLatLng(pos));
         _bobaMapBloc.seekBoba(lat: pos.latitude, lng: pos.longitude);
       },
