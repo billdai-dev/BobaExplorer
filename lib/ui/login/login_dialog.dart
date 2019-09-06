@@ -35,98 +35,106 @@ class _LoginDialogState extends State<LoginDialog>
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double widthMargin = screenWidth * 0.08 / 2;
+    double widthMargin = screenWidth * 0.04 / 2;
     double screenHeight = MediaQuery.of(context).size.height;
-    double heightMargin = screenHeight * 0.55 / 2;
+    double heightMargin = screenHeight * 0.56 / 2;
 
-    return ScaleTransition(
-      scale: Tween(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _animController,
-          curve: Curves.fastOutSlowIn,
-        ),
-      ),
-      child: Container(
-        margin: EdgeInsets.symmetric(
-            horizontal: widthMargin, vertical: heightMargin),
-        child: Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return WillPopScope(
+      onWillPop: () async {
+        await _animController.reverse();
+        return true;
+      },
+      child: ScaleTransition(
+        scale: Tween(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _animController,
+            curve: Curves.fastOutSlowIn,
           ),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-            child: StreamBuilder<FirebaseUser>(
-              stream: loginBloc.currentUser,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.none) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                final currentUser = snapshot.data;
-                String title;
-                if (currentUser == null) {
-                  title = "歡迎！您可以透過以下方式登入";
-                } else if (currentUser.isAnonymous) {
-                  title = "哈囉, 訪客！您可以連結社群帳號以同步資料至雲端";
-                } else {
-                  title = "哈囉！${currentUser.displayName ?? ""}，需要什麼服務嗎？";
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Flexible(
-                          child: Text(
-                            title,
-                            style: Theme.of(context).textTheme.subhead,
-                          ),
-                        ),
-                        SizedBox(width: 4),
-                        InkWell(
-                          onTap: () => Navigator.pop(context),
-                          child: Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    Divider(endIndent: 36),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        ),
+        child: Container(
+          margin: EdgeInsets.symmetric(
+              horizontal: widthMargin, vertical: heightMargin),
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+              child: StreamBuilder<FirebaseUser>(
+                stream: loginBloc.currentUser,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.none) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  final currentUser = snapshot.data;
+                  String title;
+                  if (currentUser == null) {
+                    title = "歡迎！\n您可以透過以下方式登入";
+                  } else if (currentUser.isAnonymous) {
+                    title = "哈囉, 訪客！您可以連結社群帳號以同步資料至雲端";
+                  } else {
+                    title = "哈囉！${currentUser.displayName ?? ""}，需要什麼服務嗎？";
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          _buildFbLoginBtn(currentUser),
-                          _buildGoogleLoginBtn(currentUser),
-                          if (currentUser == null)
-                            _buildGuestLoginBtn()
-                          else
-                            _buildLogoutBtn(),
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: Theme.of(context).textTheme.subhead,
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () async {
+                              await _animController.reverse();
+                              Navigator.pop(context);
+                            },
+                            child: Icon(Icons.close),
+                          ),
                         ],
                       ),
-                    ),
-                    if (currentUser == null)
-                      Center(
-                        child: RichText(
-                          text: TextSpan(
-                            children: [
-                              WidgetSpan(
-                                alignment: PlaceholderAlignment.top,
-                                child: Icon(
-                                  Icons.warning,
-                                  size: 16,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                              TextSpan(
-                                  text: " 訪客模式無法將資料保存於雲端",
-                                  style: Theme.of(context).textTheme.caption),
-                            ],
-                          ),
+                      Divider(endIndent: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: <Widget>[
+                            _buildFbLoginBtn(currentUser),
+                            _buildGoogleLoginBtn(currentUser),
+                            if (currentUser == null)
+                              _buildGuestLoginBtn()
+                            else
+                              _buildLogoutBtn(currentUser),
+                          ],
                         ),
-                      )
-                  ],
-                );
-              },
+                      ),
+                      if (currentUser == null)
+                        Center(
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                WidgetSpan(
+                                  alignment: PlaceholderAlignment.top,
+                                  child: Icon(
+                                    Icons.warning,
+                                    size: 16,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                TextSpan(
+                                    text: " 訪客模式無法將資料保存於雲端",
+                                    style: Theme.of(context).textTheme.caption),
+                              ],
+                            ),
+                          ),
+                        )
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -284,16 +292,23 @@ class _LoginDialogState extends State<LoginDialog>
     );
   }
 
-  Widget _buildLogoutBtn() {
+  Widget _buildLogoutBtn(FirebaseUser currentUser) {
     return OutlineButton.icon(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
       borderSide: BorderSide(color: Colors.redAccent.shade100),
-      onPressed: () => showDialog(
-        context: context,
-        builder: (context) => _buildClearDataRequestDialog(),
-      ),
+      onPressed: () async {
+        if (currentUser?.isAnonymous == true) {
+          showDialog(
+            context: context,
+            builder: (context) => _buildClearDataRequestDialog(),
+          );
+          return;
+        }
+        Navigator.pop(context);
+        await loginBloc.logout();
+      },
       icon: Icon(FontAwesomeIcons.signOutAlt),
       label: Text("登出"),
     );
