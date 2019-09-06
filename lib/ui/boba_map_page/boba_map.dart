@@ -166,68 +166,68 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
       title: Container(
         width: double.infinity,
         height: 50,
-        child: Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          elevation: 4,
-          child: Consumer<LoginBloc>(
-            builder: (context, loginBloc, child) {
-              return Row(
-                children: <Widget>[
-                  SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () => showLoginDialog(context),
-                    child: _buildAvatar(loginBloc),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async {
-                        var result = await showSearch(
-                          context: context,
-                          delegate: SearchBobaDelegate(_userLocation?.latitude,
-                              _userLocation?.longitude),
-                        );
-                        if (result == null) {
-                          return;
-                        }
-                        _shouldJumpToFirstPage = true;
-                        if (result is TeaShop) {
-                          _bobaMapBloc.searchSingleShop(shop: result);
-                        } else if (result is String && result.isNotEmpty) {
-                          _bobaMapBloc?.filter(shops: {result});
-                        }
-                      },
+        child: GestureDetector(
+          onTap: () async {
+            var result = await showSearch(
+              context: context,
+              delegate: SearchBobaDelegate(
+                  _userLocation?.latitude, _userLocation?.longitude),
+            );
+            if (result == null) {
+              return;
+            }
+            _shouldJumpToFirstPage = true;
+            if (result is TeaShop) {
+              _bobaMapBloc.searchSingleShop(shop: result);
+            } else if (result is String && result.isNotEmpty) {
+              _bobaMapBloc?.filter(shops: {result});
+            }
+          },
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            elevation: 4,
+            child: Consumer<LoginBloc>(
+              builder: (context, loginBloc, child) {
+                return Row(
+                  children: <Widget>[
+                    SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () => showLoginDialog(context),
+                      child: _buildAvatar(loginBloc),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
                       child: Text(
                         "搜尋飲料店",
                         style: TextStyle(color: Colors.grey, fontSize: 16),
                       ),
                     ),
-                  ),
-                  StreamBuilder<FirebaseUser>(
-                    stream: loginBloc.currentUser,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.none) {
-                        return Container();
-                      }
-                      return IconButton(
-                        icon: Icon(Icons.favorite, color: Colors.redAccent),
-                        onPressed: () async {
-                          if (snapshot.data == null) {
-                            final newUser = await showLoginDialog(context);
-                            if (newUser == null) {
-                              return;
+                    StreamBuilder<FirebaseUser>(
+                      stream: loginBloc.currentUser,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.none) {
+                          return Container();
+                        }
+                        return IconButton(
+                          icon: Icon(Icons.favorite, color: Colors.redAccent),
+                          onPressed: () async {
+                            if (snapshot.data == null) {
+                              final newUser = await showLoginDialog(context);
+                              if (newUser == null) {
+                                return;
+                              }
                             }
-                          }
-                          //TODO:Show Favorite page
-                        },
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
+                            //TODO:Show Favorite page
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
