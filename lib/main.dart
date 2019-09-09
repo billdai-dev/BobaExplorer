@@ -135,7 +135,8 @@ class _MyAppState extends State<MyApp> {
         switch (lastRoute) {
           case BobaMap.routeName:
             return Provider<BobaMapBloc>(
-              builder: (_) => BobaMapBloc(TeaShopRepo(), FavoriteRepo()),
+              builder: (_) =>
+                  BobaMapBloc(TeaShopRepo(), FavoriteRepo(), LoginRepo()),
               dispose: (_, bloc) => bloc.dispose(),
               child: BobaMap(),
             );

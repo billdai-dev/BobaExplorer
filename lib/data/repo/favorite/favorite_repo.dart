@@ -2,9 +2,12 @@ import 'package:boba_explorer/data/local_storage.dart';
 import 'package:boba_explorer/data/moor_db.dart';
 import 'package:boba_explorer/data/network.dart';
 import 'package:boba_explorer/data/repo/base_repo.dart';
+import 'package:boba_explorer/data/repo/mapper.dart';
+import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
+import 'package:rxdart/rxdart.dart';
 
 abstract class FavoriteRepoContract {
-  Stream<List<FavoriteShop>> getFavoriteShops();
+  Stream<List<TeaShop>> getFavoriteShops();
 
   Future<void> setFavoriteShop(bool isFavorite, FavoriteShop shop);
 
@@ -16,13 +19,27 @@ class FavoriteRepo extends BaseRepo implements FavoriteRepoContract {
       : super(network: network, localStorage: localStorage);
 
   @override
-  Stream<List<FavoriteShop>> getFavoriteShops() {
-    return localStorage.loadFavoriteShops();
+  Stream<List<TeaShop>> getFavoriteShops({String uid}) {
+    if (uid == null) {
+      return Observable(localStorage.loadFavoriteShops())
+          .flatMap((favoriteShops) {
+        return Observable.fromIterable(favoriteShops)
+            .map((shop) => Mapper.favoriteShopToTeaShop(shop))
+            .toList()
+            .asObservable();
+      });
+    }
+    return Observable(network.fetchFavoriteShops(uid))
+        .map((docs) => Mapper.docsToTeaShops(docs));
   }
 
   @override
-  Future<void> setFavoriteShop(bool isFavorite, FavoriteShop shop) {
-    return localStorage.setFavoriteShops(isFavorite, shop);
+  Future<void> setFavoriteShop(bool isFavorite, FavoriteShop shop,
+      {String uid}) {
+    if (uid == null) {
+      return localStorage.setFavoriteShops(isFavorite, shop);
+    }
+    return network.setFavoriteShop(isFavorite, shop.docId, uid);
   }
 
   @override

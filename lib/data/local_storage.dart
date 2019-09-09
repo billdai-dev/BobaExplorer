@@ -10,8 +10,6 @@ class LocalStorage {
 
   Completer<SharedPreferences> _pref;
 
-  //Future<SharedPreferences> get pref => _pref.future;
-
   BobaDatabase _db;
 
   LocalStorage._({Future<SharedPreferences> pref, BobaDatabase db}) {
