@@ -167,7 +167,7 @@ class BobaMapBloc implements BlocBase {
         isFavorite, Mapper.teaShopToFavoriteShop(shop));
   }
 
-  void searchSingleShop({TeaShop shop}) {
+  void searchSingleShop(TeaShop shop) {
     if (shop != null) {
       _teaShopsController.add([shop]);
       _filterListController.add({shop.shopName});

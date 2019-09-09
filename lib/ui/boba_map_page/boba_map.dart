@@ -99,7 +99,10 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      endDrawer: FavoriteDrawer(),
+      endDrawer: FavoriteDrawer((shop) {
+        _shouldJumpToFirstPage = true;
+        _bobaMapBloc.searchSingleShop(shop);
+      }),
       resizeToAvoidBottomInset: false,
       appBar: _buildAppBar(),
       body: Column(
@@ -182,7 +185,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
             }
             _shouldJumpToFirstPage = true;
             if (result is TeaShop) {
-              _bobaMapBloc.searchSingleShop(shop: result);
+              _bobaMapBloc.searchSingleShop(result);
             } else if (result is String && result.isNotEmpty) {
               _bobaMapBloc?.filter(shops: {result});
             }
@@ -494,6 +497,10 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
 }
 
 class FavoriteDrawer extends StatefulWidget {
+  final Function(TeaShop shop) onFavoriteItemClick;
+
+  FavoriteDrawer(this.onFavoriteItemClick);
+
   @override
   _FavoriteDrawerState createState() => _FavoriteDrawerState();
 }
@@ -536,7 +543,7 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
                     width: double.infinity,
                     color: Colors.blueGrey.shade500,
                     child: Text(
-                      "店家收藏列表",
+                      "收藏列表",
                       style: Theme.of(context)
                           .textTheme
                           .subhead
@@ -604,44 +611,50 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
         ),
         elevation: 2,
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    decoration: ShapeDecoration(
-                      shape: StadiumBorder(
-                        side: BorderSide(color: Colors.brown, width: 0.5),
+        child: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+            widget.onFavoriteItemClick(shop);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: ShapeDecoration(
+                        shape: StadiumBorder(
+                          side: BorderSide(color: Colors.brown, width: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        branchName,
+                        style: Theme.of(context)
+                            .textTheme
+                            .subtitle
+                            .copyWith(color: Colors.brown),
                       ),
                     ),
-                    child: Text(
-                      branchName,
-                      style: Theme.of(context)
-                          .textTheme
-                          .subtitle
-                          .copyWith(color: Colors.brown),
+                    Spacer(),
+                    InkWell(
+                      onTap: () async {
+                        await bobaMapBloc.setFavoriteShop(false, shop);
+                      },
+                      child: Icon(
+                        Icons.favorite,
+                        color: Colors.redAccent,
+                        size: 22,
+                      ),
                     ),
-                  ),
-                  Spacer(),
-                  InkWell(
-                    onTap: () async {
-                      await bobaMapBloc.setFavoriteShop(false, shop);
-                    },
-                    child: Icon(
-                      Icons.favorite,
-                      color: Colors.redAccent,
-                      size: 22,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 4),
-              Text(address),
-            ],
+                  ],
+                ),
+                SizedBox(height: 4),
+                Text(address),
+              ],
+            ),
           ),
         ),
       ),
@@ -831,19 +844,12 @@ class _ShopItemState extends State<_ShopItem> {
                         ),
                         Container(
                           width: 54,
-                          child: CustomPaint(
-                            painter: _FavoriteStampCustomPainter(),
-                            child: Container(
-                              alignment: Alignment.bottomRight,
-                              child: FavoriteCheckbox(
-                                key: UniqueKey(),
-                                isFavorite: widget._shop.isFavorite,
-                                onFavoriteChanged: (isFavorite) {
-                                  bloc.setFavoriteShop(
-                                      isFavorite, widget._shop);
-                                },
-                              ),
-                            ),
+                          child: FavoriteCheckbox(
+                            key: UniqueKey(),
+                            isFavorite: widget._shop.isFavorite,
+                            onFavoriteChanged: (isFavorite) {
+                              bloc.setFavoriteShop(isFavorite, widget._shop);
+                            },
                           ),
                         ),
                       ],
@@ -976,9 +982,15 @@ class _FavoriteCheckboxState extends State<FavoriteCheckbox> {
                 widget._onFavoriteChanged(isFavorite);
                 setState(() {});
               },
-              child: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: Colors.redAccent.shade200,
+              child: CustomPaint(
+                painter: _FavoriteStampCustomPainter(),
+                child: Container(
+                  alignment: Alignment.bottomRight,
+                  child: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: Colors.redAccent.shade200,
+                  ),
+                ),
               ),
             );
           },
