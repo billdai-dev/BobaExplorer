@@ -5,6 +5,7 @@ import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';
+import 'package:boba_explorer/ui/custom_widget.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/login/login_dialog.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_delegate.dart';
@@ -49,6 +50,8 @@ class BobaMap extends StatefulWidget {
 class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   static const _tw101 = const LatLng(25.0339639, 121.5622835);
   BobaMapBloc _bobaMapBloc;
+
+  ValueNotifier<bool> _isMapCreatedNotifier = ValueNotifier(false);
   GoogleMapController _mapController;
   CameraPosition _cameraPos;
   Set<Marker> _markers;
@@ -98,69 +101,78 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      endDrawer: FavoriteDrawer((shop) {
-        _shouldJumpToFirstPage = true;
-        _bobaMapBloc.searchSingleShop(shop);
-      }),
-      resizeToAvoidBottomInset: false,
-      appBar: _buildAppBar(),
-      body: Column(
-        children: <Widget>[
-          _buildShopFilterBar(),
-          Expanded(
-            child: StreamBuilder<List<TeaShop>>(
-              stream: _bobaMapBloc?.teaShops,
-              builder: (ctx, snapshot) {
-                List<TeaShop> teaShops = snapshot.data;
-                _markers = _genMarkers(teaShops);
+    return Stack(
+      children: <Widget>[
+        Scaffold(
+          endDrawer: FavoriteDrawer((shop) {
+            _shouldJumpToFirstPage = true;
+            _bobaMapBloc.searchSingleShop(shop);
+          }),
+          resizeToAvoidBottomInset: false,
+          appBar: _buildAppBar(),
+          body: Column(
+            children: <Widget>[
+              _buildShopFilterBar(),
+              Expanded(
+                child: StreamBuilder<List<TeaShop>>(
+                  stream: _bobaMapBloc?.teaShops,
+                  builder: (ctx, snapshot) {
+                    List<TeaShop> teaShops = snapshot.data;
+                    _markers = _genMarkers(teaShops);
 
-                //Jump to first page after data changed
-                if (_shouldJumpToFirstPage) {
-                  Future(() {
-                    if (teaShops != null && teaShops.isNotEmpty) {
-                      _shouldBlockNextMove = true;
-                      _shouldJumpToFirstPage = false;
-                      if (_shopInfoPageController.page.round() != 0) {
-                        _shopInfoPageController?.jumpToPage(0);
-                      } else {
-                        _moveCamera(teaShops[0].position?.latitude,
-                            teaShops[0].position?.longitude);
-                      }
+                    //Jump to first page after data changed
+                    if (_shouldJumpToFirstPage) {
+                      Future(() {
+                        if (teaShops != null && teaShops.isNotEmpty) {
+                          _shouldBlockNextMove = true;
+                          _shouldJumpToFirstPage = false;
+                          if (_shopInfoPageController.page.round() != 0) {
+                            _shopInfoPageController?.jumpToPage(0);
+                          } else {
+                            _moveCamera(teaShops[0].position?.latitude,
+                                teaShops[0].position?.longitude);
+                          }
+                        }
+                      });
                     }
-                  });
-                }
 
-                return Stack(
-                  children: <Widget>[
-                    _buildMap(_markers),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      top: 15,
-                      height: 50,
-                      child: FractionallySizedBox(
-                        widthFactor: 0.6,
-                        child: FittedBox(
-                          fit: BoxFit.fitHeight,
-                          child: _buildSearchButton(),
+                    return Stack(
+                      children: <Widget>[
+                        _buildMap(_markers),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 15,
+                          height: 50,
+                          child: FractionallySizedBox(
+                            widthFactor: 0.6,
+                            child: FittedBox(
+                              fit: BoxFit.fitHeight,
+                              child: _buildSearchButton(),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 12,
-                      height: 150,
-                      child: _buildShopCards(teaShops),
-                    ),
-                  ],
-                );
-              },
-            ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 12,
+                          height: 150,
+                          child: _buildShopCards(teaShops),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: _isMapCreatedNotifier,
+          builder: (context, isMapCreated, child) =>
+              LoadingWidget(!isMapCreated),
+        ),
+      ],
     );
   }
 
@@ -402,6 +414,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
       myLocationEnabled: true,
       myLocationButtonEnabled: false,
       onMapCreated: (controller) async {
+        //_isMapCreatedNotifier.value = true;
         _mapController = controller;
         _markerIcon = await _markerIconCompleter.future;
         _userLocation = await Geolocator()
@@ -410,7 +423,9 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                 pos == null ? null : LatLng(pos.latitude, pos.longitude))
             .catchError((err) {});
         LatLng pos = _userLocation ?? _tw101;
-        controller.animateCamera(CameraUpdate.newLatLng(pos));
+        controller
+            .animateCamera(CameraUpdate.newLatLng(pos))
+            .then((_) => _isMapCreatedNotifier.value = true);
         _bobaMapBloc.seekBoba(lat: pos.latitude, lng: pos.longitude);
       },
       markers: markers,
