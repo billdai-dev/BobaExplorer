@@ -1,8 +1,13 @@
 import 'package:boba_explorer/data/moor_db.dart';
 import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
+import 'package:boba_explorer/remote_config_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Mapper {
+  static List<String> rcShopToStrings(List<Shop> shops) {
+    return shops.map((shop) => shop.name).toList();
+  }
+
   static List<TeaShop> docsToTeaShops(List<DocumentSnapshot> docs) {
     return docs
         .map((doc) => TeaShop.fromJson(doc.data)..docId = doc.documentID)

@@ -1,4 +1,5 @@
 import 'package:boba_explorer/app_bloc.dart';
+import 'package:boba_explorer/data/repo/mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -60,7 +61,7 @@ class _ShopFilterDialogState extends State<ShopFilterDialog>
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: StreamBuilder<List<String>>(
                 stream: appBloc.supportedShops
-                    .map((shops) => shops.map((shop) => shop.name).toList()),
+                    .map((shops) => Mapper.rcShopToStrings(shops)),
                 builder: (context, supportedShopsData) {
                   List<String> supportedShops = supportedShopsData.hasData
                       ? supportedShopsData.data.toList()
