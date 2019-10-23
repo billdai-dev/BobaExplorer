@@ -1,7 +1,6 @@
-import 'dart:math';
-
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
+import 'package:boba_explorer/ui/suggestion/suggestion_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -185,7 +184,7 @@ class _LoginDialogState extends State<LoginDialog>
         Navigator.pop(context);
         return showDialog(
           context: context,
-          builder: (context) => _SuggestionDialog(),
+          builder: (context) => SuggestionDialog(),
         );
       },
       child: Stack(
@@ -435,159 +434,3 @@ class _LoginDialogState extends State<LoginDialog>
     );
   }
 }
-
-class _SuggestionDialog extends StatefulWidget {
-  @override
-  _SuggestionDialogState createState() => _SuggestionDialogState();
-}
-
-class _SuggestionDialogState extends State<_SuggestionDialog> {
-  ValueNotifier<_SuggestionType> suggestionTypeNotifier;
-  ValueNotifier<String> shopNameNotifier;
-
-  @override
-  void initState() {
-    super.initState();
-    suggestionTypeNotifier = ValueNotifier(null);
-    shopNameNotifier = ValueNotifier(null);
-  }
-
-  @override
-  void dispose() {
-    suggestionTypeNotifier.dispose();
-    shopNameNotifier.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraint) {
-          return Container(
-            height: min(screenHeight * 0.58, constraint.maxHeight),
-            child: ListView(
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  //height: constraint.maxHeight * 0.5,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          InkWell(
-                            onTap: () {},
-                            child: Icon(Icons.arrow_back),
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            "我有話要說 ( ～'ω')～",
-                            style: Theme.of(context).textTheme.title,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "問題類型",
-                        style: Theme.of(context).textTheme.subtitle,
-                      ),
-                      SizedBox(height: 4),
-                      Container(
-                        height: 40,
-                        decoration: ShapeDecoration(
-                          color: Colors.grey.shade100,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: ValueListenableBuilder<_SuggestionType>(
-                            valueListenable: suggestionTypeNotifier,
-                            builder: (context, suggestionType, child) {
-                              return DropdownButton<_SuggestionType>(
-                                hint: Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: Text("請選擇問題類型"),
-                                ),
-                                value: suggestionType,
-                                items: _SuggestionType.values.map((option) {
-                                  String text;
-                                  switch (option) {
-                                    case _SuggestionType.bugReport:
-                                      text = "Bug 回報";
-                                      break;
-                                    case _SuggestionType.wish:
-                                      text = "許願新增店家 / 功能";
-                                      break;
-                                    case _SuggestionType.opinion:
-                                      text = "提供意見、建議";
-                                      break;
-                                  }
-                                  return DropdownMenuItem(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(left: 8),
-                                      child: Text(text),
-                                    ),
-                                    value: option,
-                                  );
-                                }).toList(),
-                                onChanged: (value) =>
-                                    suggestionTypeNotifier.value = value,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      ValueListenableBuilder<_SuggestionType>(
-                        valueListenable: suggestionTypeNotifier,
-                        builder: (context, suggestionType, child) {
-                          if (suggestionType == null) {
-                            return Container();
-                          }
-                          return IndexedStack(
-                            sizing: StackFit.passthrough,
-                            index:
-                                _SuggestionType.values.indexOf(suggestionType),
-                            children: <Widget>[
-                              _buildBugReportContent(),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildBugReportContent() {
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text("錯誤簡述"),
-          SizedBox(height: 4),
-          TextFormField(
-            decoration: InputDecoration(
-              hintText: "請輸入您遇到的問題",
-              helperText: "ex: App 閃退？哪個功能、畫面出錯？",
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum _SuggestionType { bugReport, wish, opinion }
