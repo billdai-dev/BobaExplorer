@@ -6,7 +6,7 @@ part of 'moor_db.dart';
 // MoorGenerator
 // **************************************************************************
 
-// ignore_for_file: unnecessary_brace_in_string_interps
+// ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
 class FavoriteShop extends DataClass implements Insertable<FavoriteShop> {
   final String docId;
   final String shopName;
@@ -100,8 +100,7 @@ class FavoriteShop extends DataClass implements Insertable<FavoriteShop> {
   }
 
   @override
-  T createCompanion<T extends UpdateCompanion<FavoriteShop>>(
-      bool nullToAbsent) {
+  FavoriteShopsCompanion createCompanion(bool nullToAbsent) {
     return FavoriteShopsCompanion(
       docId:
           docId == null && nullToAbsent ? const Value.absent() : Value(docId),
@@ -131,7 +130,7 @@ class FavoriteShop extends DataClass implements Insertable<FavoriteShop> {
       updatedTs: updatedTs == null && nullToAbsent
           ? const Value.absent()
           : Value(updatedTs),
-    ) as T;
+    );
   }
 
   FavoriteShop copyWith(
@@ -207,18 +206,18 @@ class FavoriteShop extends DataClass implements Insertable<FavoriteShop> {
   bool operator ==(other) =>
       identical(this, other) ||
       (other is FavoriteShop &&
-          other.docId == docId &&
-          other.shopName == shopName &&
-          other.branchName == branchName &&
-          other.phone == phone &&
-          other.city == city &&
-          other.district == district &&
-          other.address == address &&
-          other.geoHash == geoHash &&
-          other.lat == lat &&
-          other.lng == lng &&
-          other.createdTs == createdTs &&
-          other.updatedTs == updatedTs);
+          other.docId == this.docId &&
+          other.shopName == this.shopName &&
+          other.branchName == this.branchName &&
+          other.phone == this.phone &&
+          other.city == this.city &&
+          other.district == this.district &&
+          other.address == this.address &&
+          other.geoHash == this.geoHash &&
+          other.lat == this.lat &&
+          other.lng == this.lng &&
+          other.createdTs == this.createdTs &&
+          other.updatedTs == this.updatedTs);
 }
 
 class FavoriteShopsCompanion extends UpdateCompanion<FavoriteShop> {
@@ -248,6 +247,28 @@ class FavoriteShopsCompanion extends UpdateCompanion<FavoriteShop> {
     this.createdTs = const Value.absent(),
     this.updatedTs = const Value.absent(),
   });
+  FavoriteShopsCompanion.insert({
+    @required String docId,
+    @required String shopName,
+    @required String branchName,
+    this.phone = const Value.absent(),
+    @required String city,
+    @required String district,
+    @required String address,
+    @required String geoHash,
+    @required double lat,
+    @required double lng,
+    this.createdTs = const Value.absent(),
+    this.updatedTs = const Value.absent(),
+  })  : docId = Value(docId),
+        shopName = Value(shopName),
+        branchName = Value(branchName),
+        city = Value(city),
+        district = Value(district),
+        address = Value(address),
+        geoHash = Value(geoHash),
+        lat = Value(lat),
+        lng = Value(lng);
   FavoriteShopsCompanion copyWith(
       {Value<String> docId,
       Value<String> shopName,
@@ -582,8 +603,7 @@ class $FavoriteShopsTable extends FavoriteShops
 }
 
 abstract class _$BobaDatabase extends GeneratedDatabase {
-  _$BobaDatabase(QueryExecutor e)
-      : super(const SqlTypeSystem.withDefaults(), e);
+  _$BobaDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
   $FavoriteShopsTable _favoriteShops;
   $FavoriteShopsTable get favoriteShops =>
       _favoriteShops ??= $FavoriteShopsTable(this);
