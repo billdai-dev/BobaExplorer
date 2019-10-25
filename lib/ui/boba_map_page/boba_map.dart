@@ -901,19 +901,18 @@ class _ShopItemState extends State<_ShopItem> {
     return Column(
       children: <Widget>[
         if (icon != null)
-          Flexible(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Icon(icon),
-                SizedBox(width: 8),
-                Text(text),
-              ],
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon),
+              SizedBox(width: 8),
+              Text(text),
+            ],
           )
         else
-          Flexible(child: Text(text)),
-        Divider(height: 12),
+          Text(text),
+        SizedBox(height: 8),
+        Divider(height: 0),
       ],
     );
   }
