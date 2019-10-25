@@ -26,6 +26,9 @@ class FavoriteShops extends Table {
   DateTimeColumn get createdTs => dateTime().nullable()();
 
   DateTimeColumn get updatedTs => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {docId};
 }
 
 // This will make moor generate a class called "Category" to represent a row in this table.
@@ -67,6 +70,26 @@ class BobaDatabase extends _$BobaDatabase {
     }
     return (update(favoriteShops)..where((shop) => shop.docId.equals(docId)))
         .write(shop);
+  }
+
+  Future<void> addFavoriteShops(List<FavoriteShop> shops) async {
+    shops.map((shop) {
+      return shop.copyWith(
+          createdTs: DateTime.now(), updatedTs: DateTime.now());
+    }).toList();
+    await into(favoriteShops).insertAll(shops, orReplace: true);
+
+    (delete(favoriteShops).go())
+        .then((_) => into(favoriteShops).insertAll(shops, orReplace: true));
+    //String docId = shop.docId;
+    /*final shops = await (select(favoriteShops)
+      ..where((shop) => shop.docId.equals(docId)))
+        .get();
+    if (shops == null || shops.isEmpty) {
+      return into(favoriteShops).insert(shop);
+    }
+    return (update(favoriteShops)..where((shop) => shop.docId.equals(docId)))
+        .write(shop);*/
   }
 
   Future<void> deleteFavoriteShop(String docId) {

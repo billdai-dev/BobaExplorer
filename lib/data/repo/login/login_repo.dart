@@ -4,6 +4,7 @@ import 'package:boba_explorer/data/local_storage.dart';
 import 'package:boba_explorer/data/network.dart';
 import 'package:boba_explorer/data/repo/base_repo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_appavailability/flutter_appavailability.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -49,7 +50,13 @@ class LoginRepo extends BaseRepo implements LoginRepoContract {
     if (currentUser == null) {
       newUser = await _auth.signInWithCredential(credential);
     } else if (currentUser.isAnonymous == true) {
-      newUser = await _auth.linkWithCredential(credential);
+      newUser = await (_auth.linkWithCredential(credential).catchError((e) {
+        if (e is PlatformException &&
+            e.code == 'ERROR_CREDENTIAL_ALREADY_IN_USE') {
+          return _auth.signInWithCredential(credential);
+        }
+        throw e;
+      }));
     } else {
       bool wasGoogleUser = currentUser?.providerData?.any((provider) =>
               provider.providerId == GoogleAuthProvider.providerId) ==

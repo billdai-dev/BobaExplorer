@@ -77,4 +77,19 @@ class Network {
         .document(docId)
         .updateData({_fieldFavoriteUid: value});
   }
+
+  Future<void> importFavoriteShops(String uid, List<String> ids) async {
+    if (uid == null || ids == null || ids.isEmpty) {
+      return null;
+    }
+    var futures = ids.map((docId) {
+      return _firestore
+          .collection(_collectionTeaShop)
+          .document(docId)
+          .updateData({
+        _fieldFavoriteUid: FieldValue.arrayUnion([uid])
+      });
+    });
+    return Future.wait(futures).catchError((e) => null);
+  }
 }

@@ -64,4 +64,12 @@ class LoginBloc extends BlocBase {
   Future<void> deleteAllFavoriteShops() {
     return _favoriteRepo.deleteAllFavoriteShops();
   }
+
+  Future<void> syncFavoriteShops() async {
+    String uid = _currentUser.value?.uid;
+    if (uid == null) {
+      return null;
+    }
+    return _favoriteRepo.syncRemoteFavoriteShops(uid);
+  }
 }

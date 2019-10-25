@@ -36,6 +36,10 @@ class LocalStorage {
     return _db.deleteFavoriteShop(shop.docId);
   }
 
+  Future<void> importFavoriteShops(List<FavoriteShop> shops) {
+    return _db.addFavoriteShops(shops);
+  }
+
   Future<void> deleteAllFavoriteShops() {
     return _db.deleteAllFavoriteShops();
   }

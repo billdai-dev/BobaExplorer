@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/suggestion/suggestion_dialog.dart';
@@ -266,11 +268,17 @@ class _LoginDialogState extends State<LoginDialog>
       onTap: () async {
         final googleUser = await loginBloc.googleLogin();
         if (user?.isAnonymous == true) {
+          Completer isSyncCompleted = Completer();
           showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (context) => _buildSyncDataDialog());
-          //TODO:Call and await sync data function, then dismiss dialog
+              builder: (context) {
+                return _buildSyncDataDialog();
+              });
+          loginBloc
+              ?.syncFavoriteShops()
+              ?.whenComplete(() => isSyncCompleted.complete());
+          await isSyncCompleted.future;
           Navigator.pop(context);
         }
         Navigator.pop(context, googleUser);

@@ -164,9 +164,10 @@ class BobaMapBloc implements BlocBase {
 
   Future<void> setFavoriteShop(bool isFavorite, TeaShop shop) async {
     var user = await _loginRepo.getCurrentUser();
+    String uid = user == null || user.isAnonymous ? null : user.uid;
     return _favoriteRepo.setFavoriteShop(
         isFavorite, Mapper.teaShopToFavoriteShop(shop),
-        uid: user?.uid);
+        uid: uid);
   }
 
   void searchSingleShop(TeaShop shop) {

@@ -12,6 +12,8 @@ abstract class FavoriteRepoContract {
   Future<void> setFavoriteShop(bool isFavorite, FavoriteShop shop);
 
   Future<void> deleteAllFavoriteShops();
+
+  Future<void> syncRemoteFavoriteShops(String uid);
 }
 
 class FavoriteRepo extends BaseRepo implements FavoriteRepoContract {
@@ -45,5 +47,18 @@ class FavoriteRepo extends BaseRepo implements FavoriteRepoContract {
   @override
   Future<void> deleteAllFavoriteShops() {
     return localStorage.deleteAllFavoriteShops();
+  }
+
+  @override
+  Future<void> syncRemoteFavoriteShops(String uid) async {
+    if (uid == null) {
+      return null;
+    }
+    return localStorage
+        .loadFavoriteShops()
+        .first
+        .then(
+            (favoriteShops) => favoriteShops.map((shop) => shop.docId).toList())
+        .then((ids) => network.importFavoriteShops(uid, ids));
   }
 }
