@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:boba_explorer/data/repo/city_data.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/suggestion/suggestion_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
 
 class SuggestionDialog extends StatefulWidget {
@@ -27,6 +29,8 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
   ValueNotifier<String> districtNotifier;
 
   ValueNotifier<bool> isOpinionValidNotifier;
+  GlobalKey<FormState> opinionFormKey;
+  TextEditingController opinionController;
 
   @override
   void initState() {
@@ -43,6 +47,10 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
     wishShopNotifier = ValueNotifier(null);
     cityNotifier = ValueNotifier(null);
     districtNotifier = ValueNotifier(null);
+
+    isOpinionValidNotifier = ValueNotifier(false);
+    opinionFormKey = GlobalKey();
+    opinionController = TextEditingController();
   }
 
   @override
@@ -55,6 +63,8 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
     wishShopNotifier?.dispose();
     cityNotifier?.dispose();
     districtNotifier?.dispose();
+    isOpinionValidNotifier?.dispose();
+    opinionController?.dispose();
     super.dispose();
   }
 
@@ -72,82 +82,35 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
         child: LayoutBuilder(
           builder: (context, constraint) {
             return Container(
-              padding: const EdgeInsets.all(12),
-              height: min(screenHeight * 0.58, constraint.maxHeight),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              margin: EdgeInsets.symmetric(horizontal: 4),
+              height: min(screenHeight * 0.54, constraint.maxHeight),
               child: DropdownButtonHideUnderline(
                 child: Column(
                   children: <Widget>[
-                    Expanded(
+                    Row(
+                      children: <Widget>[
+                        Text(
+                          "作者悄悄話  ( ～'ω')～",
+                          style: Theme.of(context).textTheme.title,
+                        ),
+                        Spacer(),
+                        CloseButton(),
+                      ],
+                    ),
+                    Flexible(
                       child: ListView(
+                        physics: BouncingScrollPhysics(),
                         children: <Widget>[
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Row(
-                                children: <Widget>[
-                                  InkWell(
-                                    onTap: () {},
-                                    child: Icon(Icons.arrow_back),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Text(
-                                    "我有話要說 ( ～'ω')～",
-                                    style: Theme.of(context).textTheme.title,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 12),
                               Text(
                                 "問題類型",
-                                style: Theme.of(context).textTheme.subtitle,
+                                style: Theme.of(context).textTheme.subhead,
                               ),
                               SizedBox(height: 4),
-                              Container(
-                                height: 40,
-                                decoration: ShapeDecoration(
-                                  color: Colors.grey.shade100,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: ValueListenableBuilder<_SuggestionType>(
-                                  valueListenable: suggestionTypeNotifier,
-                                  builder: (context, suggestionType, child) {
-                                    return DropdownButton<_SuggestionType>(
-                                      hint: Padding(
-                                        padding: const EdgeInsets.only(left: 8),
-                                        child: Text("請選擇問題類型"),
-                                      ),
-                                      value: suggestionType,
-                                      items:
-                                          _SuggestionType.values.map((option) {
-                                        String text;
-                                        switch (option) {
-                                          case _SuggestionType.bugReport:
-                                            text = "Bug 回報";
-                                            break;
-                                          case _SuggestionType.wish:
-                                            text = "向作者許願";
-                                            break;
-                                          case _SuggestionType.opinion:
-                                            text = "提供意見、建議";
-                                            break;
-                                        }
-                                        return DropdownMenuItem(
-                                          child: Padding(
-                                            padding:
-                                                const EdgeInsets.only(left: 8),
-                                            child: Text(text),
-                                          ),
-                                          value: option,
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) =>
-                                          suggestionTypeNotifier.value = value,
-                                    );
-                                  },
-                                ),
-                              ),
+                              _buildSuggestionDropdown(),
                               SizedBox(height: 12),
                               ValueListenableBuilder<_SuggestionType>(
                                 valueListenable: suggestionTypeNotifier,
@@ -162,6 +125,7 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
                                     children: <Widget>[
                                       _buildBugReportContent(),
                                       _buildWishShopContent(),
+                                      _buildOpinionContent(),
                                     ],
                                   );
                                 },
@@ -182,45 +146,61 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
     );
   }
 
-  Widget _buildSubmitButton() {
-    return ValueListenableBuilder<_SuggestionType>(
-      valueListenable: suggestionTypeNotifier,
-      builder: (context, suggestionType, child) {
-        //VoidCallback onPressed;
-        ValueNotifier<bool> notifier;
-        switch (suggestionType) {
-          case _SuggestionType.bugReport:
-            notifier = isBugReportValidNotifier;
-            break;
-          case _SuggestionType.wish:
-            notifier = isWishValidNotifier;
-            break;
-          case _SuggestionType.opinion:
-            break;
-          default:
-            return Container();
-        }
-        return ValueListenableBuilder(
-          valueListenable: notifier,
-          builder: (context, isValid, child) {
-            return Container(
-              width: double.infinity,
-              child: RaisedButton(
-                disabledTextColor: Colors.grey.shade700,
-                disabledColor: Colors.grey.shade300,
-                shape: StadiumBorder(),
-                elevation: 8,
-                color: Theme.of(context).accentColor,
-                textColor: Colors.white,
-                child: Text(
-                  "送出回饋",
-                ),
-                onPressed: isValid ? () {} : null,
+  Widget _buildSuggestionDropdown() {
+    return Container(
+      height: 40,
+      decoration: ShapeDecoration(
+        color: Colors.grey.shade100,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: ValueListenableBuilder<_SuggestionType>(
+        valueListenable: suggestionTypeNotifier,
+        builder: (context, suggestionType, child) {
+          return DropdownButton<_SuggestionType>(
+            hint: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Text(
+                "請選擇問題類型",
+                style: Theme.of(context)
+                    .textTheme
+                    .body1
+                    .copyWith(color: Colors.grey),
               ),
-            );
-          },
-        );
-      },
+            ),
+            value: suggestionType,
+            items: _SuggestionType.values.map((option) {
+              String text;
+              switch (option) {
+                case _SuggestionType.bugReport:
+                  text = "Bug 回報";
+                  break;
+                case _SuggestionType.wish:
+                  text = "向作者許願";
+                  break;
+                case _SuggestionType.opinion:
+                  text = "提供意見、建議";
+                  break;
+              }
+              return DropdownMenuItem(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    text,
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                ),
+                value: option,
+              );
+            }).toList(),
+            onChanged: (value) {
+              FocusScope.of(context).requestFocus(FocusNode());
+              suggestionTypeNotifier.value = value;
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -235,7 +215,10 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text("錯誤簡述*"),
+            Text(
+              "錯誤簡述*",
+              style: Theme.of(context).textTheme.subhead,
+            ),
             TextFormField(
               controller: bugDescTextController,
               minLines: 1,
@@ -243,11 +226,19 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
               validator: (value) => value.isNotEmpty ? null : "必填",
               decoration: InputDecoration(
                 hintText: "請簡單描述您遇到的問題",
+                hintStyle: Theme.of(context)
+                    .textTheme
+                    .body1
+                    .copyWith(color: Colors.grey),
                 helperText: "ex: App 閃退？功能出錯？畫面跑版？",
               ),
+              style: Theme.of(context).textTheme.body1,
             ),
             SizedBox(height: 12),
-            Text("嚴重程度"),
+            Text(
+              "嚴重程度",
+              style: Theme.of(context).textTheme.subhead,
+            ),
             SizedBox(height: 20),
             ValueListenableBuilder<_BugSeverity>(
               valueListenable: bugSeverityNotifier,
@@ -299,10 +290,14 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text("我的願望*"),
+            Text(
+              "我的願望*",
+              style: Theme.of(context).textTheme.subhead,
+            ),
             TextFormField(
               controller: wishShopController,
               validator: (value) => value.trim().isNotEmpty ? null : "必填",
+              style: Theme.of(context).textTheme.body1,
               decoration: InputDecoration(
                 hintText: "請填寫希望增加的店家 / 功能",
               ),
@@ -318,7 +313,10 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: <Widget>[
-                          Text("縣市"),
+                          Text(
+                            "縣市",
+                            style: Theme.of(context).textTheme.subhead,
+                          ),
                           SizedBox(height: 4),
                           Container(
                             height: 35,
@@ -337,7 +335,11 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
                                     return Padding(
                                       padding: const EdgeInsets.only(left: 16),
                                       child: DropdownButton<City>(
-                                        hint: Text("請選擇縣市"),
+                                        hint: Text(
+                                          "請選擇縣市",
+                                          style:
+                                              Theme.of(context).textTheme.body1,
+                                        ),
                                         value: city,
                                         items:
                                             (snapshot.data ?? []).map((city) {
@@ -366,7 +368,10 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: <Widget>[
-                          Text("地區"),
+                          Text(
+                            "地區",
+                            style: Theme.of(context).textTheme.subhead,
+                          ),
                           SizedBox(height: 4),
                           Container(
                             height: 35,
@@ -385,7 +390,11 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
                                     return Padding(
                                       padding: const EdgeInsets.only(left: 16),
                                       child: DropdownButton<String>(
-                                        hint: Text("請選擇區域"),
+                                        hint: Text(
+                                          "請選擇區域",
+                                          style:
+                                              Theme.of(context).textTheme.body1,
+                                        ),
                                         value: district,
                                         items: city?.zone?.map((zone) {
                                           return DropdownMenuItem(
@@ -429,6 +438,99 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildOpinionContent() {
+    return Form(
+      key: opinionFormKey,
+      onChanged: () {
+        isOpinionValidNotifier.value = opinionFormKey.currentState.validate();
+      },
+      child: Container(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text("我的想法", style: Theme.of(context).textTheme.subhead),
+            TextFormField(
+              controller: opinionController,
+              validator: (value) => value.trim().isNotEmpty ? null : "必填",
+              style: Theme.of(context).textTheme.body1,
+              decoration: InputDecoration(
+                hintStyle: TextStyle(fontSize: 14),
+                hintText: "寫下想法、心得、任何你想告訴作者的話!",
+              ),
+              maxLines: null,
+            ),
+            SizedBox(height: 24),
+            Text(
+              "也歡迎到 ${Platform.isAndroid ? "Google Play" : "App Store"} 打個分數或留下評論!",
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .body2
+                  .copyWith(color: Colors.grey),
+            ),
+            SizedBox(height: Platform.isAndroid ? 4 : 12),
+            FractionallySizedBox(
+              widthFactor: Platform.isAndroid ? 0.7 : 0.58,
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  onTap: () {
+                    LaunchReview.launch(writeReview: false);
+                  },
+                  child: Image.asset(
+                      "assets/images/${Platform.isAndroid ? "google_play_badge" : "app_store_badge"}.png"),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return ValueListenableBuilder<_SuggestionType>(
+      valueListenable: suggestionTypeNotifier,
+      builder: (context, suggestionType, child) {
+        //VoidCallback onPressed;
+        ValueNotifier<bool> notifier;
+        switch (suggestionType) {
+          case _SuggestionType.bugReport:
+            notifier = isBugReportValidNotifier;
+            break;
+          case _SuggestionType.wish:
+            notifier = isWishValidNotifier;
+            break;
+          case _SuggestionType.opinion:
+            notifier = isOpinionValidNotifier;
+            break;
+          default:
+            return Container();
+        }
+        return ValueListenableBuilder(
+          valueListenable: notifier,
+          builder: (context, isValid, child) {
+            return Container(
+              width: double.infinity,
+              child: RaisedButton(
+                disabledTextColor: Colors.grey.shade700,
+                disabledColor: Colors.grey.shade300,
+                shape: StadiumBorder(),
+                elevation: 8,
+                color: Theme.of(context).accentColor,
+                textColor: Colors.white,
+                child: Text(
+                  "送出回饋",
+                ),
+                onPressed: isValid ? () {} : null,
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

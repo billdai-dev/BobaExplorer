@@ -185,6 +185,7 @@ class _LoginDialogState extends State<LoginDialog>
       onTap: () {
         Navigator.pop(context);
         return showDialog(
+          barrierDismissible: false,
           context: context,
           builder: (context) => SuggestionDialog(),
         );
