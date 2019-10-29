@@ -1,9 +1,11 @@
+import 'package:boba_explorer/data/repo/report/report.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:rxdart/rxdart.dart';
 
 class Network {
   static const String _collectionTeaShop = "tea_shops";
+  static const String _collectionReport = "report";
   static const String _fieldPosition = "position";
   static const String _fieldShopName = "shopName";
   static const String _fieldFavoriteUid = "favoriteUid";
@@ -91,5 +93,10 @@ class Network {
       });
     });
     return Future.wait(futures).catchError((e) => null);
+  }
+
+  Future<DocumentReference> sendReport(Report report) {
+    assert(report != null);
+    return _firestore.collection(_collectionReport).add(report.toJson());
   }
 }

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
-import 'package:boba_explorer/ui/suggestion/suggestion_dialog.dart';
+import 'package:boba_explorer/ui/report/report_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -187,7 +187,7 @@ class _LoginDialogState extends State<LoginDialog>
         return showDialog(
           barrierDismissible: false,
           context: context,
-          builder: (context) => SuggestionDialog(),
+          builder: (context) => ReportDialog(),
         );
       },
       child: Stack(

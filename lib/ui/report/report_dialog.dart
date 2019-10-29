@@ -2,19 +2,20 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:boba_explorer/data/repo/city_data.dart';
+import 'package:boba_explorer/data/repo/report/report_repo.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
-import 'package:boba_explorer/ui/suggestion/suggestion_bloc.dart';
+import 'package:boba_explorer/ui/report/report_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
 
-class SuggestionDialog extends StatefulWidget {
+class ReportDialog extends StatefulWidget {
   @override
-  _SuggestionDialogState createState() => _SuggestionDialogState();
+  _ReportDialogState createState() => _ReportDialogState();
 }
 
-class _SuggestionDialogState extends State<SuggestionDialog> {
-  ValueNotifier<_SuggestionType> suggestionTypeNotifier;
+class _ReportDialogState extends State<ReportDialog> {
+  ValueNotifier<_SuggestionType> reportTypeNotifier;
 
   ValueNotifier<bool> isBugReportValidNotifier;
   GlobalKey<FormState> bugReportFormKey;
@@ -35,7 +36,7 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
   @override
   void initState() {
     super.initState();
-    suggestionTypeNotifier = ValueNotifier(null);
+    reportTypeNotifier = ValueNotifier(null);
 
     isBugReportValidNotifier = ValueNotifier(false);
     bugReportFormKey = GlobalKey();
@@ -55,7 +56,7 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
 
   @override
   void dispose() {
-    suggestionTypeNotifier?.dispose();
+    reportTypeNotifier?.dispose();
     isBugReportValidNotifier?.dispose();
     bugDescTextController?.dispose();
     bugSeverityNotifier?.dispose();
@@ -71,9 +72,9 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
-    return Provider<SuggestionBloc>(
-      builder: (context) => SuggestionBloc(
-          context, Provider.of<LoginBloc>(context, listen: false)),
+    return Provider<ReportBloc>(
+      builder: (context) => ReportBloc(context,
+          Provider.of<LoginBloc>(context, listen: false), ReportRepo()),
       dispose: (_, bloc) => bloc.dispose(),
       child: Dialog(
         shape: RoundedRectangleBorder(
@@ -113,7 +114,7 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
                               _buildSuggestionDropdown(),
                               SizedBox(height: 12),
                               ValueListenableBuilder<_SuggestionType>(
-                                valueListenable: suggestionTypeNotifier,
+                                valueListenable: reportTypeNotifier,
                                 builder: (context, suggestionType, child) {
                                   if (suggestionType == null) {
                                     return Container();
@@ -156,13 +157,13 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
         ),
       ),
       child: ValueListenableBuilder<_SuggestionType>(
-        valueListenable: suggestionTypeNotifier,
+        valueListenable: reportTypeNotifier,
         builder: (context, suggestionType, child) {
           return DropdownButton<_SuggestionType>(
             hint: Padding(
               padding: const EdgeInsets.only(left: 8),
               child: Text(
-                "請選擇問題類型",
+                "選擇問題類型",
                 style: Theme.of(context)
                     .textTheme
                     .body1
@@ -196,7 +197,7 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
             }).toList(),
             onChanged: (value) {
               FocusScope.of(context).requestFocus(FocusNode());
-              suggestionTypeNotifier.value = value;
+              reportTypeNotifier.value = value;
             },
           );
         },
@@ -225,7 +226,7 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
               maxLines: 3,
               validator: (value) => value.isNotEmpty ? null : "必填",
               decoration: InputDecoration(
-                hintText: "請簡單描述您遇到的問題",
+                hintText: "簡單描述您遇到的問題",
                 hintStyle: Theme.of(context)
                     .textTheme
                     .body1
@@ -299,11 +300,11 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
               validator: (value) => value.trim().isNotEmpty ? null : "必填",
               style: Theme.of(context).textTheme.body1,
               decoration: InputDecoration(
-                hintText: "請填寫希望增加的店家 / 功能",
+                hintText: "填寫希望增加的店家 / 功能",
               ),
             ),
             SizedBox(height: 8),
-            Consumer<SuggestionBloc>(
+            Consumer<ReportBloc>(
               builder: (context, bloc, child) {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -336,7 +337,7 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
                                       padding: const EdgeInsets.only(left: 16),
                                       child: DropdownButton<City>(
                                         hint: Text(
-                                          "請選擇縣市",
+                                          "選擇縣市",
                                           style:
                                               Theme.of(context).textTheme.body1,
                                         ),
@@ -391,7 +392,7 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
                                       padding: const EdgeInsets.only(left: 16),
                                       child: DropdownButton<String>(
                                         hint: Text(
-                                          "請選擇區域",
+                                          "選擇區域",
                                           style:
                                               Theme.of(context).textTheme.body1,
                                         ),
@@ -493,7 +494,7 @@ class _SuggestionDialogState extends State<SuggestionDialog> {
 
   Widget _buildSubmitButton() {
     return ValueListenableBuilder<_SuggestionType>(
-      valueListenable: suggestionTypeNotifier,
+      valueListenable: reportTypeNotifier,
       builder: (context, suggestionType, child) {
         //VoidCallback onPressed;
         ValueNotifier<bool> notifier;
