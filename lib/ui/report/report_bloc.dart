@@ -13,6 +13,10 @@ class ReportBloc extends BlocBase {
 
   final BehaviorSubject<FirebaseUser> _currentUser = BehaviorSubject();
 
+  final PublishSubject<bool> _isLoadingController = PublishSubject();
+
+  Stream<bool> get isLoading => _isLoadingController.stream;
+
   final BehaviorSubject<List<City>> _citiesController = BehaviorSubject();
 
   Stream<List<City>> get cities => _citiesController.stream;
@@ -26,30 +30,41 @@ class ReportBloc extends BlocBase {
   }
 
   Future<bool> reportBug(String desc, int severity) {
+    _isLoadingController.add(true);
     String uid = _currentUser.value?.uid;
-    return _reportRepo.reportBug(desc, severity, uid: uid);
+    return _reportRepo
+        .reportBug(desc, severity, uid: uid)
+        .whenComplete(() => _isLoadingController.add(false));
   }
 
   Future<bool> reportRequest(String desc, {String city, String district}) {
+    _isLoadingController.add(true);
     String uid = _currentUser.value?.uid;
-    return _reportRepo.reportRequest(desc,
-        uid: uid, city: city, district: district);
+    return _reportRepo
+        .reportRequest(desc, uid: uid, city: city, district: district)
+        .whenComplete(() => _isLoadingController.add(false));
   }
 
   Future<bool> reportOpinion(String desc) {
+    _isLoadingController.add(true);
     String uid = _currentUser.value?.uid;
-    return _reportRepo.reportOpinion(desc, uid: uid);
+    return _reportRepo
+        .reportOpinion(desc, uid: uid)
+        .whenComplete(() => _isLoadingController.add(false));
   }
 
   Future<bool> reportShop(String reason, String shopName, String branchName,
       String city, String district) {
+    _isLoadingController.add(true);
     String uid = _currentUser.value?.uid;
-    return _reportRepo.reportShop(shopName, branchName, city, district, reason,
-        uid: uid);
+    return _reportRepo
+        .reportShop(shopName, branchName, city, district, reason, uid: uid)
+        .whenComplete(() => _isLoadingController.add(false));
   }
 
   @override
   void dispose() {
+    _isLoadingController?.close();
     _currentUser?.close();
     _citiesController?.close();
   }

@@ -9,7 +9,7 @@ const String _reportType_shop = "shop";
 const String reportShopReason_location = "location";
 const String reportShopReason_data = "data";
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Report extends Object {
   @JsonKey(name: 'reporterUid')
   String reporterUid;

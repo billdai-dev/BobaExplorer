@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:boba_explorer/data/repo/city_data.dart';
 import 'package:boba_explorer/data/repo/report/report_repo.dart';
+import 'package:boba_explorer/ui/custom_widget.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/report/report_bloc.dart';
 import 'package:flutter/material.dart';
@@ -22,10 +23,11 @@ class _ReportDialogState extends State<ReportDialog> {
   TextEditingController bugDescTextController;
   ValueNotifier<_BugSeverity> bugSeverityNotifier;
 
-  ValueNotifier<bool> isWishValidNotifier;
-  GlobalKey<FormState> wishFormKey;
-  TextEditingController wishShopController;
-  ValueNotifier<String> wishShopNotifier;
+  ValueNotifier<bool> isRequestValidNotifier;
+  GlobalKey<FormState> requestFormKey;
+  TextEditingController requestController;
+
+  //ValueNotifier<String> requestNotifier;
   ValueNotifier<City> cityNotifier;
   ValueNotifier<String> districtNotifier;
 
@@ -43,9 +45,10 @@ class _ReportDialogState extends State<ReportDialog> {
     bugDescTextController = TextEditingController();
     bugSeverityNotifier = ValueNotifier(_BugSeverity.light);
 
-    isWishValidNotifier = ValueNotifier(false);
-    wishFormKey = GlobalKey();
-    wishShopNotifier = ValueNotifier(null);
+    isRequestValidNotifier = ValueNotifier(false);
+    requestFormKey = GlobalKey();
+    requestController = TextEditingController();
+    //requestNotifier = ValueNotifier(null);
     cityNotifier = ValueNotifier(null);
     districtNotifier = ValueNotifier(null);
 
@@ -57,13 +60,17 @@ class _ReportDialogState extends State<ReportDialog> {
   @override
   void dispose() {
     reportTypeNotifier?.dispose();
+
     isBugReportValidNotifier?.dispose();
     bugDescTextController?.dispose();
     bugSeverityNotifier?.dispose();
-    isWishValidNotifier?.dispose();
-    wishShopNotifier?.dispose();
+
+    isRequestValidNotifier?.dispose();
+    requestController?.dispose();
+    //requestNotifier?.dispose();
     cityNotifier?.dispose();
     districtNotifier?.dispose();
+
     isOpinionValidNotifier?.dispose();
     opinionController?.dispose();
     super.dispose();
@@ -87,56 +94,68 @@ class _ReportDialogState extends State<ReportDialog> {
               margin: EdgeInsets.symmetric(horizontal: 4),
               height: min(screenHeight * 0.54, constraint.maxHeight),
               child: DropdownButtonHideUnderline(
-                child: Column(
+                child: Stack(
                   children: <Widget>[
-                    Row(
+                    Column(
                       children: <Widget>[
-                        Text(
-                          "作者悄悄話  ( ～'ω')～",
-                          style: Theme.of(context).textTheme.title,
+                        Row(
+                          children: <Widget>[
+                            Text(
+                              "作者悄悄話  ( ～'ω')～",
+                              style: Theme.of(context).textTheme.title,
+                            ),
+                            Spacer(),
+                            CloseButton(),
+                          ],
                         ),
-                        Spacer(),
-                        CloseButton(),
-                      ],
-                    ),
-                    Flexible(
-                      child: ListView(
-                        physics: BouncingScrollPhysics(),
-                        children: <Widget>[
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        Flexible(
+                          child: ListView(
+                            physics: BouncingScrollPhysics(),
                             children: <Widget>[
-                              Text(
-                                "問題類型",
-                                style: Theme.of(context).textTheme.subhead,
-                              ),
-                              SizedBox(height: 4),
-                              _buildSuggestionDropdown(),
-                              SizedBox(height: 12),
-                              ValueListenableBuilder<_SuggestionType>(
-                                valueListenable: reportTypeNotifier,
-                                builder: (context, suggestionType, child) {
-                                  if (suggestionType == null) {
-                                    return Container();
-                                  }
-                                  return IndexedStack(
-                                    sizing: StackFit.passthrough,
-                                    index: _SuggestionType.values
-                                        .indexOf(suggestionType),
-                                    children: <Widget>[
-                                      _buildBugReportContent(),
-                                      _buildWishShopContent(),
-                                      _buildOpinionContent(),
-                                    ],
-                                  );
-                                },
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    "問題類型",
+                                    style: Theme.of(context).textTheme.subhead,
+                                  ),
+                                  SizedBox(height: 4),
+                                  _buildSuggestionDropdown(),
+                                  SizedBox(height: 12),
+                                  ValueListenableBuilder<_SuggestionType>(
+                                    valueListenable: reportTypeNotifier,
+                                    builder: (context, suggestionType, child) {
+                                      if (suggestionType == null) {
+                                        return Container();
+                                      }
+                                      return IndexedStack(
+                                        sizing: StackFit.passthrough,
+                                        index: suggestionType.index,
+                                        children: <Widget>[
+                                          _buildBugReportContent(),
+                                          _buildWishShopContent(),
+                                          _buildOpinionContent(),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
+                        _buildSubmitButton(),
+                      ],
+                    ),
+                    Positioned.fill(
+                      child: Consumer<ReportBloc>(
+                        builder: (context, bloc, child) {
+                          return LoadingWidget(
+                            isLoadingStream: bloc.isLoading,
+                          );
+                        },
                       ),
                     ),
-                    _buildSubmitButton(),
                   ],
                 ),
               ),
@@ -261,7 +280,7 @@ class _ReportDialogState extends State<ReportDialog> {
                     break;
                 }
                 return Slider(
-                  value: _BugSeverity.values.indexOf(severity).toDouble(),
+                  value: severity.index.toDouble(),
                   label: label,
                   divisions: 2,
                   min: 0,
@@ -284,9 +303,9 @@ class _ReportDialogState extends State<ReportDialog> {
   Widget _buildWishShopContent() {
     return Container(
       child: Form(
-        key: wishFormKey,
+        key: requestFormKey,
         onChanged: () {
-          isWishValidNotifier.value = wishFormKey.currentState.validate();
+          isRequestValidNotifier.value = requestFormKey.currentState.validate();
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,11 +315,11 @@ class _ReportDialogState extends State<ReportDialog> {
               style: Theme.of(context).textTheme.subhead,
             ),
             TextFormField(
-              controller: wishShopController,
+              controller: requestController,
               validator: (value) => value.trim().isNotEmpty ? null : "必填",
               style: Theme.of(context).textTheme.body1,
               decoration: InputDecoration(
-                hintText: "填寫希望增加的店家 / 功能",
+                hintText: "填寫希望增加的店家資料 / 功能",
               ),
             ),
             SizedBox(height: 8),
@@ -493,41 +512,78 @@ class _ReportDialogState extends State<ReportDialog> {
   }
 
   Widget _buildSubmitButton() {
-    return ValueListenableBuilder<_SuggestionType>(
-      valueListenable: reportTypeNotifier,
-      builder: (context, suggestionType, child) {
-        //VoidCallback onPressed;
-        ValueNotifier<bool> notifier;
-        switch (suggestionType) {
-          case _SuggestionType.bugReport:
-            notifier = isBugReportValidNotifier;
-            break;
-          case _SuggestionType.wish:
-            notifier = isWishValidNotifier;
-            break;
-          case _SuggestionType.opinion:
-            notifier = isOpinionValidNotifier;
-            break;
-          default:
-            return Container();
-        }
-        return ValueListenableBuilder(
-          valueListenable: notifier,
-          builder: (context, isValid, child) {
-            return Container(
-              width: double.infinity,
-              child: RaisedButton(
-                disabledTextColor: Colors.grey.shade700,
-                disabledColor: Colors.grey.shade300,
-                shape: StadiumBorder(),
-                elevation: 8,
-                color: Theme.of(context).accentColor,
-                textColor: Colors.white,
-                child: Text(
-                  "送出回饋",
-                ),
-                onPressed: isValid ? () {} : null,
-              ),
+    return Consumer<ReportBloc>(
+      builder: (context, reportBloc, child) {
+        return ValueListenableBuilder<_SuggestionType>(
+          valueListenable: reportTypeNotifier,
+          builder: (context, suggestionType, child) {
+            ValueNotifier<bool> notifier;
+            VoidCallback onPressed;
+            var onSuccess = () async {
+              //TODO: Show success toast
+              Navigator.pop(context);
+            };
+            var onFailure = (_) {
+              //TODO: Show failure toast
+              Navigator.pop(context);
+            };
+            switch (suggestionType) {
+              case _SuggestionType.bugReport:
+                notifier = isBugReportValidNotifier;
+                onPressed = () async {
+                  String desc = bugDescTextController.text;
+                  int severity = bugSeverityNotifier.value.index;
+                  await reportBloc
+                      ?.reportBug(desc, severity)
+                      ?.then((isSuccess) =>
+                          isSuccess ? onSuccess() : onFailure(null))
+                      ?.catchError(onFailure);
+                };
+                break;
+              case _SuggestionType.wish:
+                notifier = isRequestValidNotifier;
+                onPressed = () async {
+                  String desc = requestController.text;
+                  String city = cityNotifier.value?.name;
+                  String district = districtNotifier.value;
+                  await reportBloc
+                      ?.reportRequest(desc, city: city, district: district)
+                      ?.then((isSuccess) =>
+                          isSuccess ? onSuccess() : onFailure(null))
+                      ?.catchError(onFailure);
+                };
+                break;
+              case _SuggestionType.opinion:
+                notifier = isOpinionValidNotifier;
+                onPressed = () async {
+                  String desc = opinionController.text;
+                  await reportBloc
+                      ?.reportOpinion(desc)
+                      ?.then((isSuccess) =>
+                          isSuccess ? onSuccess() : onFailure(null))
+                      ?.catchError(onFailure);
+                };
+                break;
+              default:
+                return Container();
+            }
+            return ValueListenableBuilder(
+              valueListenable: notifier,
+              builder: (context, isValid, child) {
+                return Container(
+                  width: double.infinity,
+                  child: RaisedButton(
+                    disabledTextColor: Colors.grey.shade700,
+                    disabledColor: Colors.grey.shade300,
+                    shape: StadiumBorder(),
+                    elevation: 8,
+                    color: Theme.of(context).accentColor,
+                    textColor: Colors.white,
+                    child: Text("送出回饋"),
+                    onPressed: isValid ? onPressed : null,
+                  ),
+                );
+              },
             );
           },
         );

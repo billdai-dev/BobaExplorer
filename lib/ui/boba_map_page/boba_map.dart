@@ -170,7 +170,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
         ValueListenableBuilder<bool>(
           valueListenable: _isMapCreatedNotifier,
           builder: (context, isMapCreated, child) =>
-              LoadingWidget(!isMapCreated),
+              LoadingWidget(isLoading: !isMapCreated),
         ),
       ],
     );

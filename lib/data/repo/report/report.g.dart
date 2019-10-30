@@ -28,10 +28,10 @@ Report _$ReportFromJson(Map<String, dynamic> json) {
 Map<String, dynamic> _$ReportToJson(Report instance) => <String, dynamic>{
       'reporterUid': instance.reporterUid,
       'reportType': instance.reportType,
-      'bug': instance.bug,
-      'request': instance.request,
-      'opinion': instance.opinion,
-      'shop': instance.shop,
+      'bug': instance.bug?.toJson(),
+      'request': instance.request?.toJson(),
+      'opinion': instance.opinion?.toJson(),
+      'shop': instance.shop?.toJson(),
     };
 
 Bug _$BugFromJson(Map<String, dynamic> json) {
