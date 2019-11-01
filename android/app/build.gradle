@@ -60,6 +60,12 @@ flutter {
     source '../..'
 }
 
+configurations.all {
+    resolutionStrategy {
+        force 'com.android.support:support-v4:27.1.0'
+    }
+}
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     //testImplementation 'junit:junit:4.12'
