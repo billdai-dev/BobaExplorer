@@ -9,9 +9,7 @@ abstract class ReportRepoContract {
 
   Future<bool> reportOpinion(String desc, {String uid});
 
-  Future<bool> reportShop(String shopName, String branchName, String city,
-      String district, String reason,
-      {String uid});
+  Future<bool> reportShop(String shopId, String reason, {String uid});
 }
 
 class ReportRepo extends BaseRepo implements ReportRepoContract {
@@ -45,11 +43,8 @@ class ReportRepo extends BaseRepo implements ReportRepoContract {
   }
 
   @override
-  Future<bool> reportShop(String shopName, String branchName, String city,
-      String district, String reason,
-      {String uid}) {
-    Report shopReport =
-        Report.shop(shopName, branchName, city, district, reason, uid: uid);
+  Future<bool> reportShop(String shopId, String shopName, {String uid}) {
+    Report shopReport = Report.shop(shopId, shopName, uid: uid);
     return network
         .sendReport(shopReport)
         .then((ref) => ref != null)

@@ -53,12 +53,11 @@ class ReportBloc extends BlocBase {
         .whenComplete(() => _isLoadingController.add(false));
   }
 
-  Future<bool> reportShop(String reason, String shopName, String branchName,
-      String city, String district) {
+  Future<bool> reportShop(String shopId, String reason) {
     _isLoadingController.add(true);
     String uid = _currentUser.value?.uid;
     return _reportRepo
-        .reportShop(shopName, branchName, city, district, reason, uid: uid)
+        .reportShop(shopId, reason, uid: uid)
         .whenComplete(() => _isLoadingController.add(false));
   }
 

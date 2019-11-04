@@ -8,6 +8,7 @@ import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';
 import 'package:boba_explorer/ui/custom_widget.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/login/login_dialog.dart';
+import 'package:boba_explorer/ui/report/report_dialog.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_delegate.dart';
 import 'package:boba_explorer/util.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -787,11 +788,11 @@ class _ShopItemState extends State<_ShopItem> {
                                 offset: Offset(0, -20),
                                 child: Icon(Icons.more_vert),
                                 onSelected: (option) => _handleOverflowAction(
-                                  option,
-                                  shopName: shopName,
-                                  branchName: branchName,
-                                  address: "$city$district$address",
-                                ),
+                                    option,
+                                    shopName: shopName,
+                                    branchName: branchName,
+                                    address: "$city$district$address",
+                                    teaShop: widget._shop),
                                 itemBuilder: (context) {
                                   return <PopupMenuEntry<_ShopOverflowOption>>[
                                     PopupMenuItem(
@@ -920,13 +921,19 @@ class _ShopItemState extends State<_ShopItem> {
   Future<void> _handleOverflowAction(_ShopOverflowOption option,
       {String shopName = "",
       String branchName = "",
-      String address = ""}) async {
+      String address = "",
+      TeaShop teaShop}) async {
     if (option == _ShopOverflowOption.share) {
       String googleMapUrl =
           "https://www.google.com/maps/search/?api=1&query=$address";
       googleMapUrl = Uri.encodeFull(googleMapUrl);
       await Share.share("$shopName, $branchName\n$googleMapUrl");
-    } else if (option == _ShopOverflowOption.report) {}
+    } else if (option == _ShopOverflowOption.report) {
+      showDialog(
+        context: context,
+        builder: (context) => ReportShopDialog(teaShop),
+      );
+    }
   }
 }
 

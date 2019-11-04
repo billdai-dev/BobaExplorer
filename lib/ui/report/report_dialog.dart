@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:boba_explorer/data/repo/city_data.dart';
 import 'package:boba_explorer/data/repo/report/report_repo.dart';
+import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
 import 'package:boba_explorer/ui/custom_widget.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/report/report_bloc.dart';
@@ -411,7 +412,7 @@ class _ReportDialogState extends State<ReportDialog> {
                                       padding: const EdgeInsets.only(left: 16),
                                       child: DropdownButton<String>(
                                         hint: Text(
-                                          "選擇區域",
+                                          "選擇地區",
                                           style:
                                               Theme.of(context).textTheme.body1,
                                         ),
@@ -523,7 +524,7 @@ class _ReportDialogState extends State<ReportDialog> {
               //TODO: Show success toast
               Navigator.pop(context);
             };
-            var onFailure = (_) {
+            var onFailure = (_) async {
               //TODO: Show failure toast
               Navigator.pop(context);
             };
@@ -592,5 +593,306 @@ class _ReportDialogState extends State<ReportDialog> {
   }
 }
 
+class ReportShopDialog extends StatefulWidget {
+  final TeaShop _shop;
+
+  ReportShopDialog(this._shop);
+
+  @override
+  _ReportShopDialogState createState() => _ReportShopDialogState();
+}
+
+class _ReportShopDialogState extends State<ReportShopDialog> {
+  TextEditingController _shopNameController;
+  TextEditingController _branchNameController;
+  TextEditingController _cityController;
+  TextEditingController _districtController;
+  ValueNotifier<_ShopReportItem> _reportItemNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _shopNameController = TextEditingController(text: widget._shop.shopName);
+    String branchName = widget._shop.branchName;
+    branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
+        ? branchName
+        : "$branchName店";
+    _branchNameController = TextEditingController(text: branchName);
+    _cityController = TextEditingController(text: widget._shop.city);
+    _districtController = TextEditingController(text: widget._shop.district);
+    _reportItemNotifier = ValueNotifier(null);
+  }
+
+  @override
+  void dispose() {
+    _shopNameController?.dispose();
+    _branchNameController?.dispose();
+    _cityController?.dispose();
+    _districtController?.dispose();
+    _reportItemNotifier?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Provider<ReportBloc>(
+      builder: (context) => ReportBloc(context,
+          Provider.of<LoginBloc>(context, listen: false), ReportRepo()),
+      dispose: (_, bloc) => bloc.dispose(),
+      child: Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraint) {
+            return Container(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              margin: EdgeInsets.symmetric(horizontal: 4),
+              height: min(screenHeight * 0.54, constraint.maxHeight),
+              child: Stack(
+                children: <Widget>[
+                  _buildReportShop(context),
+                  Positioned.fill(
+                    child: Consumer<ReportBloc>(
+                      builder: (context, bloc, child) {
+                        return LoadingWidget(
+                          isLoadingStream: bloc.isLoading,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportShop(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Text(
+              "店家資料勘誤",
+              style: Theme.of(context).textTheme.title,
+            ),
+            Spacer(),
+            CloseButton(),
+          ],
+        ),
+        Flexible(
+          child: ListView(
+            physics: BouncingScrollPhysics(),
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "店家名稱",
+                    style: Theme.of(context).textTheme.subhead,
+                  ),
+                  TextField(
+                    controller: _shopNameController,
+                    readOnly: true,
+                    enabled: false,
+                    enableInteractiveSelection: false,
+                    style: Theme.of(context)
+                        .textTheme
+                        .body1
+                        .copyWith(color: Colors.grey),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "門市據點",
+                    style: Theme.of(context).textTheme.subhead,
+                  ),
+                  TextField(
+                    controller: _branchNameController,
+                    readOnly: true,
+                    enabled: false,
+                    enableInteractiveSelection: false,
+                    style: Theme.of(context)
+                        .textTheme
+                        .body1
+                        .copyWith(color: Colors.grey),
+                  ),
+                  SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              "縣市",
+                              style: Theme.of(context).textTheme.subhead,
+                            ),
+                            TextField(
+                              controller: _cityController,
+                              readOnly: true,
+                              enabled: false,
+                              enableInteractiveSelection: false,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .body1
+                                  .copyWith(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Flexible(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              "地區",
+                              style: Theme.of(context).textTheme.subhead,
+                            ),
+                            TextField(
+                              controller: _districtController,
+                              readOnly: true,
+                              enabled: false,
+                              enableInteractiveSelection: false,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .body1
+                                  .copyWith(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "回報項目",
+                    style: Theme.of(context).textTheme.subhead,
+                  ),
+                  SizedBox(height: 4),
+                  ValueListenableBuilder(
+                    valueListenable: _reportItemNotifier,
+                    builder: (context, reportItem, child) {
+                      return Container(
+                        height: 50,
+                        decoration: ShapeDecoration(
+                          color: Colors.grey.shade100,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: DropdownButtonFormField<_ShopReportItem>(
+                          value: reportItem,
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.only(left: 8),
+                            border: InputBorder.none,
+                          ),
+                          hint: Text(
+                            "選擇回報項目",
+                            style: Theme.of(context)
+                                .textTheme
+                                .body1
+                                .copyWith(color: Colors.grey),
+                          ),
+                          validator: (value) => value == null ? "必填" : null,
+                          items: [
+                            DropdownMenuItem(
+                              value: _ShopReportItem.location,
+                              child: Text(
+                                "位置不準確",
+                                style: Theme.of(context).textTheme.body1,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: _ShopReportItem.data,
+                              child: Text(
+                                "店家資料錯誤",
+                                style: Theme.of(context).textTheme.body1,
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) =>
+                              _reportItemNotifier?.value = value,
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 4),
+                  ValueListenableBuilder<_ShopReportItem>(
+                    valueListenable: _reportItemNotifier,
+                    builder: (context, item, child) {
+                      String desc;
+                      if (item == _ShopReportItem.location) {
+                        desc = "該地點未看見此店家或距離誤差過大";
+                      } else if (item == _ShopReportItem.data) {
+                        desc = "資料不正確或該門市已不存在";
+                      } else {
+                        desc = "";
+                      }
+                      return Text(
+                        desc,
+                        style: Theme.of(context).textTheme.caption,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        _buildSubmitButton(),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return Consumer<ReportBloc>(
+      builder: (context, reportBloc, child) {
+        return ValueListenableBuilder<_ShopReportItem>(
+          valueListenable: _reportItemNotifier,
+          builder: (context, reportItem, child) {
+            var onSuccess = () async {
+              //TODO: Show success toast
+              Navigator.pop(context);
+            };
+            var onFailure = (_) async {
+              //TODO: Show failure toast
+              Navigator.pop(context);
+            };
+            return Container(
+              width: double.infinity,
+              child: RaisedButton(
+                disabledTextColor: Colors.grey.shade700,
+                disabledColor: Colors.grey.shade300,
+                shape: StadiumBorder(),
+                elevation: 8,
+                color: Theme.of(context).accentColor,
+                textColor: Colors.white,
+                child: Text("回報"),
+                onPressed: reportItem == null
+                    ? null
+                    : () => reportBloc
+                        ?.reportShop(widget._shop.docId,
+                            reportItem.toString()?.split(".")?.last)
+                        ?.then((isSuccess) =>
+                            isSuccess ? onSuccess() : onFailure(null))
+                        ?.catchError(onFailure),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 enum _SuggestionType { bugReport, wish, opinion }
 enum _BugSeverity { light, normal, severe }
+enum _ShopReportItem { location, data }

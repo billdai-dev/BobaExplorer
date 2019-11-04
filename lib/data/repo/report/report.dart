@@ -53,12 +53,10 @@ class Report extends Object {
         reporterUid = uid,
         opinion = Opinion(desc);
 
-  Report.shop(
-      String name, String branch, String city, String district, String reason,
-      {String uid})
+  Report.shop(String shopId, String reason, {String uid})
       : reportType = _reportType_shop,
         reporterUid = uid,
-        shop = Shop(name, branch, city, district, reason);
+        shop = Shop(shopId, reason);
 
   factory Report.fromJson(Map<String, dynamic> srcJson) =>
       _$ReportFromJson(srcJson);
@@ -124,26 +122,14 @@ class Opinion extends Object {
 
 @JsonSerializable()
 class Shop extends Object {
-  @JsonKey(name: 'name')
-  String name;
-
-  @JsonKey(name: 'branch')
-  String branch;
-
-  @JsonKey(name: 'city')
-  String city;
-
-  @JsonKey(name: 'district')
-  String district;
+  @JsonKey(name: 'shopId')
+  String shopId;
 
   @JsonKey(name: 'reason')
   String reason;
 
   Shop(
-    this.name,
-    this.branch,
-    this.city,
-    this.district,
+    this.shopId,
     this.reason,
   );
 

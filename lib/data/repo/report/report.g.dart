@@ -72,18 +72,12 @@ Map<String, dynamic> _$OpinionToJson(Opinion instance) => <String, dynamic>{
 
 Shop _$ShopFromJson(Map<String, dynamic> json) {
   return Shop(
-    json['name'] as String,
-    json['branch'] as String,
-    json['city'] as String,
-    json['district'] as String,
+    json['shopId'] as String,
     json['reason'] as String,
   );
 }
 
 Map<String, dynamic> _$ShopToJson(Shop instance) => <String, dynamic>{
-      'name': instance.name,
-      'branch': instance.branch,
-      'city': instance.city,
-      'district': instance.district,
+      'shopId': instance.shopId,
       'reason': instance.reason,
     };
