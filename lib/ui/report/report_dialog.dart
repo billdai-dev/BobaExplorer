@@ -7,6 +7,8 @@ import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
 import 'package:boba_explorer/ui/custom_widget.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/report/report_bloc.dart';
+import 'package:boba_explorer/util.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
@@ -521,11 +523,11 @@ class _ReportDialogState extends State<ReportDialog> {
             ValueNotifier<bool> notifier;
             VoidCallback onPressed;
             var onSuccess = () async {
-              //TODO: Show success toast
+              Util.showIconTextToast(context, Icons.mail, "回報成功\n感謝您的回饋");
               Navigator.pop(context);
             };
             var onFailure = (_) async {
-              //TODO: Show failure toast
+              Util.showIconTextToast(context, Icons.sms_failed, "回報失敗\n請稍候再試");
               Navigator.pop(context);
             };
             switch (suggestionType) {
@@ -836,9 +838,22 @@ class _ReportShopDialogState extends State<ReportShopDialog> {
                       } else {
                         desc = "";
                       }
-                      return Text(
-                        desc,
-                        style: Theme.of(context).textTheme.caption,
+                      return Visibility(
+                        visible: item != null,
+                        child: Row(
+                          children: <Widget>[
+                            Icon(
+                              Icons.info_outline,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(width: 2),
+                            Text(
+                              desc,
+                              style: Theme.of(context).textTheme.caption,
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),
@@ -859,11 +874,11 @@ class _ReportShopDialogState extends State<ReportShopDialog> {
           valueListenable: _reportItemNotifier,
           builder: (context, reportItem, child) {
             var onSuccess = () async {
-              //TODO: Show success toast
+              Util.showIconTextToast(context, Icons.mail, "回報成功\n感謝您的回饋");
               Navigator.pop(context);
             };
             var onFailure = (_) async {
-              //TODO: Show failure toast
+              Util.showIconTextToast(context, Icons.sms_failed, "回報失敗\n請稍候再試");
               Navigator.pop(context);
             };
             return Container(

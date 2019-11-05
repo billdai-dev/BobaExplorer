@@ -5,6 +5,7 @@ import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -98,9 +99,12 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      onGenerateRoute: _routeGenerator,
+    return BotToastInit(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        onGenerateRoute: _routeGenerator,
+        navigatorObservers: [BotToastNavigatorObserver()],
+      ),
     );
   }
 

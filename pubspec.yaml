@@ -47,6 +47,7 @@ dependencies:
   cached_network_image: ^1.1.1
   flutter_sticky_header: ^0.4.0
   flutter_spinkit: ^4.0.0
+  bot_toast: ^2.1.0
 
 dev_dependencies:
   flutter_test:
