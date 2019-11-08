@@ -329,7 +329,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                     return ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: shops.length,
-                      padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
+                      padding: const EdgeInsets.fromLTRB(4, 8, 8, 8),
                       itemBuilder: (context, index) {
                         return ShopFilterButton(shops[index]);
                       },
@@ -678,32 +678,72 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
   }
 }
 
-class ShopFilterButton extends StatelessWidget {
+class ShopFilterButton extends StatefulWidget {
   final Shop _shop;
 
   ShopFilterButton(this._shop, {Key key}) : super(key: key);
 
   @override
+  _ShopFilterButtonState createState() => _ShopFilterButtonState();
+}
+
+class _ShopFilterButtonState extends State<ShopFilterButton>
+    with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+  Animation _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 100));
+    _anim = Tween<double>(begin: 0, end: 8)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.bounceIn));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     BobaMapBloc bloc = Provider.of<BobaMapBloc>(context, listen: false);
-    Color color = Color.fromARGB(
-        _shop.color.a, _shop.color.r, _shop.color.g, _shop.color.b);
-    double brightness = color.computeLuminance();
+    Color color = Color.fromARGB(widget._shop.color.a, widget._shop.color.r,
+        widget._shop.color.g, widget._shop.color.b);
+    //double brightness = color.computeLuminance();
+    double brightness = Util.getGrayLevel(color: color);
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: StreamBuilder<Set<String>>(
         stream: bloc.filterList,
         builder: (context, snapshot) {
           Set<String> filteredShops = snapshot.data ?? {};
-          bool isSelected = filteredShops.contains(_shop.name);
-          return FlatButton(
-            color: isSelected ? color.withOpacity(0.5) : null,
-            textColor: isSelected
-                ? brightness < 0.1791 ? color : Colors.grey.shade700
-                : Colors.grey,
-            shape: StadiumBorder(),
-            child: Text(_shop.name),
-            onPressed: () => bloc.filter(shop: _shop.name),
+          bool isSelected = filteredShops.contains(widget._shop.name);
+          return AnimatedBuilder(
+            animation: _anim,
+            builder: (context, child) {
+              return RaisedButton(
+                elevation: _anim.value,
+                highlightElevation: 0,
+                highlightColor: Colors.transparent,
+                color: isSelected ? color.withOpacity(1) : Colors.white,
+                textColor: isSelected
+                    ? brightness < 0.5 ? Colors.white : Colors.black
+                    : Colors.grey,
+                shape: StadiumBorder(),
+                child: Text(widget._shop.name),
+                onPressed: () {
+                  if (_controller.isDismissed) {
+                    _controller.forward();
+                  } else {
+                    _controller.reverse();
+                  }
+                  bloc.filter(shop: widget._shop.name);
+                },
+              );
+            },
           );
         },
       ),

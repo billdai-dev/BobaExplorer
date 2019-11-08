@@ -61,4 +61,13 @@ class Util {
       },
     );
   }
+
+  static double getGrayLevel({Color color, int r, int g, int b}) {
+    if (color != null) {
+      r = color.red;
+      g = color.green;
+      b = color.blue;
+    }
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  }
 }
