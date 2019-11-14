@@ -44,7 +44,7 @@ dependencies:
   share: ^0.6.2+1
   moor_flutter: ^2.0.0
   flutter_appavailability: ^0.0.21
-  cached_network_image: ^1.1.1
+  cached_network_image: ^2.0.0-rc
   flutter_sticky_header: ^0.4.0
   flutter_spinkit: ^4.0.0
   bot_toast: ^2.1.0

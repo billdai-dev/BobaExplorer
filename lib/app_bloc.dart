@@ -95,11 +95,33 @@ CheckVersionEvent _checkAppVersion(
   int latestVersionMinor = int.parse(splitLatestVersion[1]);
   int latestVersionPatch = int.parse(splitLatestVersion[2]);
 
-  if (appVersionMajor < minVersionMajor) {
+  //Check "Force update" first
+  bool forceUpdate = appVersionMajor < minVersionMajor ||
+      (appVersionMajor == minVersionMajor &&
+          appVersionMinor < minVersionMinor) ||
+      (appVersionMajor == minVersionMajor &&
+          appVersionMinor == minVersionMinor &&
+          appVersionPatch < minVersionPatch);
+  if (forceUpdate) {
+    return CheckVersionEvent.forceUpdate(appVersion, minVersion);
+  }
+  /*if (appVersionMajor < minVersionMajor) {
     return CheckVersionEvent.forceUpdate(
         appVersion, minVersion); //Ex. 1.0.0 : 2.0.0
+  } */
+  print("latest:$latestVersion");
+  bool suggestUpdate = appVersionMajor < latestVersionMajor ||
+      (appVersionMajor == latestVersionMajor &&
+          appVersionMinor < latestVersionMinor) ||
+      (appVersionMajor == latestVersionMajor &&
+          appVersionMinor == latestVersionMinor &&
+          appVersionPatch < latestVersionPatch);
+  if (suggestUpdate) {
+    return CheckVersionEvent.suggestUpdate(appVersion, latestVersion);
   }
-  if (appVersionMajor < latestVersionMajor) {
+  return CheckVersionEvent.noUpdates(appVersion);
+
+  /*if (appVersionMajor < latestVersionMajor) {
     return CheckVersionEvent.suggestUpdate(
         appVersion, latestVersion); //Ex. 1.0.0 : 2.0.0
   }
@@ -131,7 +153,7 @@ CheckVersionEvent _checkAppVersion(
     return CheckVersionEvent.suggestUpdate(
         appVersion, latestVersion); //Ex. 1.1.0 : 1.1.3
   }
-  return CheckVersionEvent.noUpdates(appVersion);
+  return CheckVersionEvent.noUpdates(appVersion);*/
 }
 
 class CheckVersionEvent {

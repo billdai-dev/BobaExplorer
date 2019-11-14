@@ -7,6 +7,7 @@ import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
 
 void main() => runApp(
@@ -31,105 +32,48 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  /*StreamSubscription _checkVersionSub;
-  bool _appVersionChecked = false;*/
-
-  /*@override
-  void initState() {
-    super.initState();
-    AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
-    appBloc.appVersion.first.then((event) {
-      if (!event.shouldUpdate) {
-        return;
-      }
-      _appVersionChecked = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog<bool>(
-                context: context,
-                barrierDismissible: !event.forceUpdate,
-                builder: (context) =>
-                    _AppUpdateDialog(event.forceUpdate, event.requiredVersion))
-            .then((agreeUpdate) {
-          if (agreeUpdate == null || !agreeUpdate) {
-            return;
-          }
-          LaunchReview.launch(writeReview: false);
-        });
-      });
-    });
-  }*/
-
-/*
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_appVersionChecked) {
-      AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
-      if (_checkVersionSub != null) {
-        return;
-      }
-      _checkVersionSub = appBloc.appVersion.listen((event) {
-        if (!event.shouldUpdate) {
-          return;
-        }
-        _appVersionChecked = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          showDialog<bool>(
-                  context: context,
-                  barrierDismissible: !event.forceUpdate,
-                  builder: (context) => _AppUpdateDialog(
-                      event.forceUpdate, event.requiredVersion))
-              .then((agreeUpdate) {
-            if (agreeUpdate == null || !agreeUpdate) {
-              return;
-            }
-            LaunchReview.launch(writeReview: false);
-          });
-        });
-      });
-    }
-  }
-*/
-
-  /*@override
-  void dispose() {
-    _checkVersionSub?.cancel();
-    super.dispose();
-  }*/
+  bool _appVersionChecked = false;
+  final navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
     return BotToastInit(
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         onGenerateRoute: _routeGenerator,
         navigatorObservers: [BotToastNavigatorObserver()],
+        builder: (context, child) {
+          if (!_appVersionChecked) _checkAppVersion(context);
+          return child;
+        },
       ),
     );
   }
 
-  /*void _checkAppVersion(BuildContext context) {
-    AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
-    if (_checkVersionSub == null) {
-      _checkVersionSub = appBloc.appVersion.listen((event) {
-        if (!event.shouldUpdate) {
-          return;
-        }
-        _appVersionChecked = true;
-        showDialog<bool>(
-                context: context,
-                barrierDismissible: !event.forceUpdate,
-                builder: (context) =>
-                    _AppUpdateDialog(event.forceUpdate, event.requiredVersion))
-            .then((agreeUpdate) {
-          if (agreeUpdate == null || !agreeUpdate) {
-            return;
-          }
-          LaunchReview.launch(writeReview: false);
-        });
-      });
+  void _checkAppVersion(BuildContext context) {
+    if (_appVersionChecked) {
+      return;
     }
-  }*/
+    _appVersionChecked = true;
+    AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
+    appBloc.appVersion.first.then((event) {
+      if (!event.shouldUpdate) {
+        return null;
+      }
+      final navigatorContext = navigatorKey?.currentState?.overlay?.context;
+      return showDialog<bool>(
+        context: navigatorContext,
+        barrierDismissible: !event.forceUpdate,
+        builder: (context) {
+          return WillPopScope(
+            onWillPop: () async => !event.forceUpdate,
+            child: _AppUpdateDialog(event.forceUpdate, event.requiredVersion),
+          );
+        },
+      );
+    });
+  }
 
   Route<dynamic> _routeGenerator(RouteSettings routeSetting) {
     String routeName = routeSetting.name;
@@ -166,7 +110,14 @@ class _AppUpdateDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     List<Widget> options = [
       FlatButton(
-          onPressed: () => Navigator.of(context).pop(true), child: Text("Sure"))
+        onPressed: () {
+          LaunchReview.launch(writeReview: false);
+          if (!_forceUpdate) {
+            Navigator.pop(context, true);
+          }
+        },
+        child: Text("Sure"),
+      )
     ];
     if (!_forceUpdate) {
       options.insert(
@@ -178,11 +129,12 @@ class _AppUpdateDialog extends StatelessWidget {
       );
     }
     return AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8))),
-        title: Text("Version update"),
-        content: Text(
-            "A new version $_requiredVersion is available for you. Update the app now :)"),
-        actions: options);
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8))),
+      title: Text("Version update"),
+      content: Text(
+          "A new version $_requiredVersion is available for you. Update the app now :)"),
+      actions: options,
+    );
   }
 }
