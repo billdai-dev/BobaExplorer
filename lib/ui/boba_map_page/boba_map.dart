@@ -331,7 +331,10 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                       itemCount: shops.length,
                       padding: const EdgeInsets.fromLTRB(4, 8, 8, 8),
                       itemBuilder: (context, index) {
-                        return ShopFilterButton(shops[index]);
+                        return ShopFilterButton(
+                          shops[index],
+                          key: ValueKey(shops[index].name),
+                        );
                       },
                     );
                   },
@@ -688,7 +691,7 @@ class ShopFilterButton extends StatefulWidget {
 }
 
 class _ShopFilterButtonState extends State<ShopFilterButton>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   AnimationController _controller;
   Animation _anim;
 
@@ -696,9 +699,9 @@ class _ShopFilterButtonState extends State<ShopFilterButton>
   void initState() {
     super.initState();
     _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 100));
-    _anim = Tween<double>(begin: 0, end: 8)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.bounceIn));
+        AnimationController(vsync: this, duration: Duration(milliseconds: 1));
+    _anim = Tween<double>(begin: 0, end: 12).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOutExpo));
   }
 
   @override
@@ -709,10 +712,10 @@ class _ShopFilterButtonState extends State<ShopFilterButton>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     BobaMapBloc bloc = Provider.of<BobaMapBloc>(context, listen: false);
     Color color = Color.fromARGB(widget._shop.color.a, widget._shop.color.r,
         widget._shop.color.g, widget._shop.color.b);
-    //double brightness = color.computeLuminance();
     double brightness = Util.getGrayLevel(color: color);
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -721,16 +724,20 @@ class _ShopFilterButtonState extends State<ShopFilterButton>
         builder: (context, snapshot) {
           Set<String> filteredShops = snapshot.data ?? {};
           bool isSelected = filteredShops.contains(widget._shop.name);
+          _controller.value = isSelected ? 1.0 : 0.0;
           return AnimatedBuilder(
             animation: _anim,
             builder: (context, child) {
               return RaisedButton(
                 elevation: _anim.value,
+                splashColor: Colors.transparent,
                 highlightElevation: 0,
                 highlightColor: Colors.transparent,
-                color: isSelected ? color.withOpacity(1) : Colors.white,
+                color: isSelected
+                    ? color.withOpacity(0.8)
+                    : Theme.of(context).canvasColor,
                 textColor: isSelected
-                    ? brightness < 0.5 ? Colors.white : Colors.black
+                    ? brightness < 0.5 ? Colors.white : Colors.grey.shade700
                     : Colors.grey,
                 shape: StadiumBorder(),
                 child: Text(widget._shop.name),
@@ -749,6 +756,9 @@ class _ShopFilterButtonState extends State<ShopFilterButton>
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => false;
 }
 
 class _ShopItem extends StatefulWidget {
