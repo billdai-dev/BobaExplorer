@@ -8,7 +8,6 @@ import 'package:boba_explorer/ui/custom_widget.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/report/report_bloc.dart';
 import 'package:boba_explorer/util.dart';
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +17,10 @@ class ReportDialog extends StatefulWidget {
   _ReportDialogState createState() => _ReportDialogState();
 }
 
-class _ReportDialogState extends State<ReportDialog> {
+class _ReportDialogState extends State<ReportDialog>
+    with SingleTickerProviderStateMixin {
+  AnimationController dialogAnimController;
+
   ValueNotifier<_SuggestionType> reportTypeNotifier;
 
   ValueNotifier<bool> isBugReportValidNotifier;
@@ -41,6 +43,11 @@ class _ReportDialogState extends State<ReportDialog> {
   @override
   void initState() {
     super.initState();
+    dialogAnimController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 200),
+    )..forward();
+
     reportTypeNotifier = ValueNotifier(null);
 
     isBugReportValidNotifier = ValueNotifier(false);
@@ -62,6 +69,7 @@ class _ReportDialogState extends State<ReportDialog> {
 
   @override
   void dispose() {
+    dialogAnimController?.dispose();
     reportTypeNotifier?.dispose();
 
     isBugReportValidNotifier?.dispose();
@@ -86,84 +94,101 @@ class _ReportDialogState extends State<ReportDialog> {
       builder: (context) => ReportBloc(context,
           Provider.of<LoginBloc>(context, listen: false), ReportRepo()),
       dispose: (_, bloc) => bloc.dispose(),
-      child: Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraint) {
-            return Container(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              margin: EdgeInsets.symmetric(horizontal: 4),
-              height: min(screenHeight * 0.54, constraint.maxHeight),
-              child: DropdownButtonHideUnderline(
-                child: Stack(
-                  children: <Widget>[
-                    Column(
+      child: WillPopScope(
+        onWillPop: () async {
+          await dialogAnimController.reverse();
+          return true;
+        },
+        child: ScaleTransition(
+          scale: Tween(begin: 0.0, end: 1.0).animate(
+            CurvedAnimation(
+              parent: dialogAnimController,
+              curve: Curves.fastOutSlowIn,
+            ),
+          ),
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraint) {
+                return Container(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  height: min(screenHeight * 0.54, constraint.maxHeight),
+                  child: DropdownButtonHideUnderline(
+                    child: Stack(
                       children: <Widget>[
-                        Row(
+                        Column(
                           children: <Widget>[
-                            Text(
-                              "作者悄悄話  ( ～'ω')～",
-                              style: Theme.of(context).textTheme.title,
+                            Row(
+                              children: <Widget>[
+                                Text(
+                                  "作者悄悄話  ( ～'ω')～",
+                                  style: Theme.of(context).textTheme.title,
+                                ),
+                                Spacer(),
+                                CloseButton(),
+                              ],
                             ),
-                            Spacer(),
-                            CloseButton(),
-                          ],
-                        ),
-                        Flexible(
-                          child: ListView(
-                            physics: BouncingScrollPhysics(),
-                            children: <Widget>[
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            Flexible(
+                              child: ListView(
+                                physics: BouncingScrollPhysics(),
                                 children: <Widget>[
-                                  Text(
-                                    "問題類型",
-                                    style: Theme.of(context).textTheme.subhead,
-                                  ),
-                                  SizedBox(height: 4),
-                                  _buildSuggestionDropdown(),
-                                  SizedBox(height: 12),
-                                  ValueListenableBuilder<_SuggestionType>(
-                                    valueListenable: reportTypeNotifier,
-                                    builder: (context, suggestionType, child) {
-                                      if (suggestionType == null) {
-                                        return Container();
-                                      }
-                                      return IndexedStack(
-                                        sizing: StackFit.passthrough,
-                                        index: suggestionType.index,
-                                        children: <Widget>[
-                                          _buildBugReportContent(),
-                                          _buildWishShopContent(),
-                                          _buildOpinionContent(),
-                                        ],
-                                      );
-                                    },
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        "問題類型",
+                                        style:
+                                            Theme.of(context).textTheme.subhead,
+                                      ),
+                                      SizedBox(height: 4),
+                                      _buildSuggestionDropdown(),
+                                      SizedBox(height: 12),
+                                      ValueListenableBuilder<_SuggestionType>(
+                                        valueListenable: reportTypeNotifier,
+                                        builder:
+                                            (context, suggestionType, child) {
+                                          if (suggestionType == null) {
+                                            return Container();
+                                          }
+                                          return IndexedStack(
+                                            sizing: StackFit.passthrough,
+                                            index: suggestionType.index,
+                                            children: <Widget>[
+                                              _buildBugReportContent(),
+                                              _buildWishShopContent(),
+                                              _buildOpinionContent(),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
+                            ),
+                            _buildSubmitButton(),
+                          ],
+                        ),
+                        Positioned.fill(
+                          child: Consumer<ReportBloc>(
+                            builder: (context, bloc, child) {
+                              return LoadingWidget(
+                                isLoadingStream: bloc.isLoading,
+                              );
+                            },
                           ),
                         ),
-                        _buildSubmitButton(),
                       ],
                     ),
-                    Positioned.fill(
-                      child: Consumer<ReportBloc>(
-                        builder: (context, bloc, child) {
-                          return LoadingWidget(
-                            isLoadingStream: bloc.isLoading,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -604,7 +629,9 @@ class ReportShopDialog extends StatefulWidget {
   _ReportShopDialogState createState() => _ReportShopDialogState();
 }
 
-class _ReportShopDialogState extends State<ReportShopDialog> {
+class _ReportShopDialogState extends State<ReportShopDialog>
+    with SingleTickerProviderStateMixin {
+  AnimationController _dialogAnimController;
   TextEditingController _shopNameController;
   TextEditingController _branchNameController;
   TextEditingController _cityController;
@@ -614,6 +641,11 @@ class _ReportShopDialogState extends State<ReportShopDialog> {
   @override
   void initState() {
     super.initState();
+    _dialogAnimController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 200),
+    )..forward();
+
     _shopNameController = TextEditingController(text: widget._shop.shopName);
     String branchName = widget._shop.branchName;
     branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
@@ -627,6 +659,7 @@ class _ReportShopDialogState extends State<ReportShopDialog> {
 
   @override
   void dispose() {
+    _dialogAnimController?.dispose();
     _shopNameController?.dispose();
     _branchNameController?.dispose();
     _cityController?.dispose();
@@ -642,32 +675,46 @@ class _ReportShopDialogState extends State<ReportShopDialog> {
       builder: (context) => ReportBloc(context,
           Provider.of<LoginBloc>(context, listen: false), ReportRepo()),
       dispose: (_, bloc) => bloc.dispose(),
-      child: Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraint) {
-            return Container(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              margin: EdgeInsets.symmetric(horizontal: 4),
-              height: min(screenHeight * 0.54, constraint.maxHeight),
-              child: Stack(
-                children: <Widget>[
-                  _buildReportShop(context),
-                  Positioned.fill(
-                    child: Consumer<ReportBloc>(
-                      builder: (context, bloc, child) {
-                        return LoadingWidget(
-                          isLoadingStream: bloc.isLoading,
-                        );
-                      },
-                    ),
+      child: WillPopScope(
+        onWillPop: () async {
+          await _dialogAnimController.reverse();
+          return true;
+        },
+        child: ScaleTransition(
+          scale: Tween(begin: 0.0, end: 1.0).animate(
+            CurvedAnimation(
+              parent: _dialogAnimController,
+              curve: Curves.fastOutSlowIn,
+            ),
+          ),
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraint) {
+                return Container(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  height: min(screenHeight * 0.54, constraint.maxHeight),
+                  child: Stack(
+                    children: <Widget>[
+                      _buildReportShop(context),
+                      Positioned.fill(
+                        child: Consumer<ReportBloc>(
+                          builder: (context, bloc, child) {
+                            return LoadingWidget(
+                              isLoadingStream: bloc.isLoading,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            );
-          },
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
