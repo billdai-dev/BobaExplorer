@@ -5,6 +5,7 @@ import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
+import 'package:boba_explorer/ui/web_view/web_view_page.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:launch_review/launch_review.dart';
@@ -77,6 +78,9 @@ class _MyAppState extends State<MyApp> {
 
   Route<dynamic> _routeGenerator(RouteSettings routeSetting) {
     String routeName = routeSetting.name;
+    Map<String, dynamic> args = routeSetting.arguments is Map<String, dynamic>
+        ? routeSetting.arguments as Map<String, dynamic>
+        : null;
     String lastRoute = routeName.substring(routeSetting.name.lastIndexOf("/"));
     return MaterialPageRoute(
       builder: (context) {
@@ -88,10 +92,18 @@ class _MyAppState extends State<MyApp> {
               dispose: (_, bloc) => bloc.dispose(),
               child: BobaMap(),
             );
+          case WebViewPage.routeName:
+            String title = args[WebViewPage.arg_title];
+            String url = args[WebViewPage.arg_url];
+            return WebViewPage(title, url);
           default:
             return Container(
               alignment: Alignment.center,
-              child: Text("Page not found"),
+              child: Scaffold(
+                body: Center(
+                  child: Text("Page not found"),
+                ),
+              ),
             );
         }
       },
