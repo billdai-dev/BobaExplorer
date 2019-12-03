@@ -109,7 +109,7 @@ CheckVersionEvent _checkAppVersion(
     return CheckVersionEvent.forceUpdate(
         appVersion, minVersion); //Ex. 1.0.0 : 2.0.0
   } */
-  print("latest:$latestVersion");
+  //print("latest:$latestVersion");
   bool suggestUpdate = appVersionMajor < latestVersionMajor ||
       (appVersionMajor == latestVersionMajor &&
           appVersionMinor < latestVersionMinor) ||

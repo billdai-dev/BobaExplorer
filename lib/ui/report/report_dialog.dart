@@ -13,6 +13,10 @@ import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
 
 class ReportDialog extends StatefulWidget {
+  final ReportType reportType;
+
+  ReportDialog({this.reportType});
+
   @override
   _ReportDialogState createState() => _ReportDialogState();
 }
@@ -21,7 +25,7 @@ class _ReportDialogState extends State<ReportDialog>
     with SingleTickerProviderStateMixin {
   AnimationController dialogAnimController;
 
-  ValueNotifier<_SuggestionType> reportTypeNotifier;
+  ValueNotifier<ReportType> reportTypeNotifier;
 
   ValueNotifier<bool> isBugReportValidNotifier;
   GlobalKey<FormState> bugReportFormKey;
@@ -48,7 +52,7 @@ class _ReportDialogState extends State<ReportDialog>
       duration: Duration(milliseconds: 200),
     )..forward();
 
-    reportTypeNotifier = ValueNotifier(null);
+    reportTypeNotifier = ValueNotifier(widget.reportType);
 
     isBugReportValidNotifier = ValueNotifier(false);
     bugReportFormKey = GlobalKey();
@@ -147,7 +151,7 @@ class _ReportDialogState extends State<ReportDialog>
                                       SizedBox(height: 4),
                                       _buildSuggestionDropdown(),
                                       SizedBox(height: 12),
-                                      ValueListenableBuilder<_SuggestionType>(
+                                      ValueListenableBuilder<ReportType>(
                                         valueListenable: reportTypeNotifier,
                                         builder:
                                             (context, suggestionType, child) {
@@ -203,10 +207,10 @@ class _ReportDialogState extends State<ReportDialog>
           borderRadius: BorderRadius.circular(8),
         ),
       ),
-      child: ValueListenableBuilder<_SuggestionType>(
+      child: ValueListenableBuilder<ReportType>(
         valueListenable: reportTypeNotifier,
         builder: (context, suggestionType, child) {
-          return DropdownButton<_SuggestionType>(
+          return DropdownButton<ReportType>(
             hint: Padding(
               padding: const EdgeInsets.only(left: 8),
               child: Text(
@@ -218,16 +222,16 @@ class _ReportDialogState extends State<ReportDialog>
               ),
             ),
             value: suggestionType,
-            items: _SuggestionType.values.map((option) {
+            items: ReportType.values.map((option) {
               String text;
               switch (option) {
-                case _SuggestionType.bugReport:
+                case ReportType.bugReport:
                   text = "Bug 回報";
                   break;
-                case _SuggestionType.wish:
+                case ReportType.wish:
                   text = "向作者許願";
                   break;
-                case _SuggestionType.opinion:
+                case ReportType.opinion:
                   text = "提供意見、建議";
                   break;
               }
@@ -542,7 +546,7 @@ class _ReportDialogState extends State<ReportDialog>
   Widget _buildSubmitButton() {
     return Consumer<ReportBloc>(
       builder: (context, reportBloc, child) {
-        return ValueListenableBuilder<_SuggestionType>(
+        return ValueListenableBuilder<ReportType>(
           valueListenable: reportTypeNotifier,
           builder: (context, suggestionType, child) {
             ValueNotifier<bool> notifier;
@@ -556,7 +560,7 @@ class _ReportDialogState extends State<ReportDialog>
               Navigator.pop(context);
             };
             switch (suggestionType) {
-              case _SuggestionType.bugReport:
+              case ReportType.bugReport:
                 notifier = isBugReportValidNotifier;
                 onPressed = () async {
                   String desc = bugDescTextController.text;
@@ -568,7 +572,7 @@ class _ReportDialogState extends State<ReportDialog>
                       ?.catchError(onFailure);
                 };
                 break;
-              case _SuggestionType.wish:
+              case ReportType.wish:
                 notifier = isRequestValidNotifier;
                 onPressed = () async {
                   String desc = requestController.text;
@@ -581,7 +585,7 @@ class _ReportDialogState extends State<ReportDialog>
                       ?.catchError(onFailure);
                 };
                 break;
-              case _SuggestionType.opinion:
+              case ReportType.opinion:
                 notifier = isOpinionValidNotifier;
                 onPressed = () async {
                   String desc = opinionController.text;
@@ -922,7 +926,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
           builder: (context, reportItem, child) {
             var onSuccess = () async {
               Util.showIconTextToast(context, Icons.mail, "回報成功\n感謝您的回饋");
-              Navigator.pop(context);
+              Navigator.pop(context, true);
             };
             var onFailure = (_) async {
               Util.showIconTextToast(context, Icons.sms_failed, "回報失敗\n請稍候再試");
@@ -955,6 +959,6 @@ class _ReportShopDialogState extends State<ReportShopDialog>
   }
 }
 
-enum _SuggestionType { bugReport, wish, opinion }
+enum ReportType { bugReport, wish, opinion }
 enum _BugSeverity { light, normal, severe }
 enum _ShopReportItem { location, data }
