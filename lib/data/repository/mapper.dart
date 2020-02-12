@@ -1,4 +1,4 @@
-import 'package:boba_explorer/data/moor_db.dart';
+import 'package:boba_explorer/data/local/moor_db.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

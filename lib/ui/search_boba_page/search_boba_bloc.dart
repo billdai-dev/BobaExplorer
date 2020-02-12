@@ -50,7 +50,6 @@ class SearchBobaBloc extends BlocBase {
       {double lat, double lng, double radius}) {
     return _teaShopRepo
         .getTeaShops(lat: lat, lng: lng, radius: radius, shopNames: {name})
-        .map((docs) => Mapper.docsToTeaShops(docs))
         .first
         .timeout(Duration(seconds: 20));
   }

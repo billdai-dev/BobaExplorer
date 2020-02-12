@@ -47,19 +47,16 @@ class BobaMapBloc implements BlocBase {
       BehaviorSubject();
 
   BobaMapBloc(this._teaShopRepo, this._favoriteRepo, this._loginRepo) {
-    _queryConfigController
-        .switchMap((config) {
-          Set<String> filteredShops = _filterListController.value;
-          return _teaShopRepo.getTeaShops(
-              lat: config.lat,
-              lng: config.lng,
-              radius: config.radius,
-              shopNames: filteredShops);
-        })
-        .map(Mapper.docsToTeaShops)
-        .listen((shops) {
-          _teaShopsController.add(shops);
-        });
+    _queryConfigController.switchMap((config) {
+      Set<String> filteredShops = _filterListController.value;
+      return _teaShopRepo.getTeaShops(
+          lat: config.lat,
+          lng: config.lng,
+          radius: config.radius,
+          shopNames: filteredShops);
+    }).listen((shops) {
+      _teaShopsController.add(shops);
+    });
     //=============================================================
     _prevCurFilters.doOnData((filtersTuple) {
       _filterListController.add(filtersTuple.item2);
@@ -112,8 +109,7 @@ class BobaMapBloc implements BlocBase {
               lng: config?.lng,
               radius: config?.radius,
               shopNames: result)
-          .map(Mapper.docsToTeaShops)
-          .doOnData((shops) => shops..addAll(intersectionData));
+          .map((shops) => shops..addAll(intersectionData));
     }).listen((shops) => _teaShopsController.add(shops),
         onError: (e) => print(e));
     //=============================================================
@@ -165,9 +161,7 @@ class BobaMapBloc implements BlocBase {
   Future<void> setFavoriteShop(bool isFavorite, TeaShop shop) async {
     var user = await _loginRepo.getCurrentUser();
     String uid = user == null || user.isAnonymous ? null : user.uid;
-    return _favoriteRepo.setFavoriteShop(
-        isFavorite, Mapper.teaShopToFavoriteShop(shop),
-        uid: uid);
+    return _favoriteRepo.setFavoriteShop(isFavorite, shop, uid: uid);
   }
 
   void searchSingleShop(TeaShop shop) {

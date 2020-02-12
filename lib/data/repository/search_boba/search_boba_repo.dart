@@ -1,19 +1,18 @@
-import 'package:boba_explorer/data/repo/base_repo.dart';
+import 'package:boba_explorer/data/local/preference.dart';
+import 'package:boba_explorer/domain/repository/search_boba/search_boba_repository.dart';
 
-abstract class SearchBobaRepoContract {
-  Future<List<String>> getRecentSearch();
+class SearchBobaRepo implements ISearchBobaRepository {
+  IPreference _preference;
 
-  Future<bool> addRecentSearch(String shop);
-}
+  SearchBobaRepo(this._preference);
 
-class SearchBobaRepo extends BaseRepo implements SearchBobaRepoContract {
   @override
   Future<List<String>> getRecentSearch() {
-    return localStorage.loadRecentSearch();
+    return _preference.loadRecentSearch();
   }
 
   @override
   Future<bool> addRecentSearch(String shop) {
-    return localStorage.saveRecentSearch(shop);
+    return _preference.saveRecentSearch(shop);
   }
 }
