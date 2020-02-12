@@ -1,4 +1,4 @@
-import 'package:boba_explorer/data/repo/report/report.dart';
+import 'package:boba_explorer/domain/entity/report.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:rxdart/rxdart.dart';

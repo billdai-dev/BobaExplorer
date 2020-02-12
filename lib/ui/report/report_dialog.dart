@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:boba_explorer/data/repo/city_data.dart';
-import 'package:boba_explorer/data/repo/report/report_repo.dart';
-import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
+import 'package:boba_explorer/domain/entity/city_data.dart';
+import 'package:boba_explorer/data/repository/report/report_repo.dart';
+import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/ui/custom_widget.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/report/report_bloc.dart';

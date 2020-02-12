@@ -3,7 +3,7 @@ import 'package:boba_explorer/data/moor_db.dart';
 import 'package:boba_explorer/data/network.dart';
 import 'package:boba_explorer/data/repo/base_repo.dart';
 import 'package:boba_explorer/data/repo/mapper.dart';
-import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
+import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:rxdart/rxdart.dart';
 
 abstract class FavoriteRepoContract {

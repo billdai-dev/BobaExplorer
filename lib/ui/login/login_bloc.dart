@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:boba_explorer/data/bloc_base.dart';
-import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
-import 'package:boba_explorer/data/repo/login/login_repo.dart';
+import 'package:boba_explorer/ui/bloc_base.dart';
+import 'package:boba_explorer/data/repository/favorite/favorite_repo.dart';
+import 'package:boba_explorer/data/repository/login/login_repo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rxdart/rxdart.dart';
 

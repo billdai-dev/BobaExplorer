@@ -1,5 +1,5 @@
 import 'package:boba_explorer/data/repo/base_repo.dart';
-import 'package:boba_explorer/data/repo/report/report.dart';
+import 'package:boba_explorer/domain/entity/report.dart';
 
 abstract class ReportRepoContract {
   Future<bool> reportBug(String desc, int severity, {String uid});

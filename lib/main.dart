@@ -1,7 +1,7 @@
 import 'package:boba_explorer/app_bloc.dart';
-import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
-import 'package:boba_explorer/data/repo/login/login_repo.dart';
-import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
+import 'package:boba_explorer/data/repository/favorite/favorite_repo.dart';
+import 'package:boba_explorer/data/repository/login/login_repo.dart';
+import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';

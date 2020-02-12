@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:boba_explorer/data/bloc_base.dart';
-import 'package:boba_explorer/data/repo/favorite/favorite_repo.dart';
-import 'package:boba_explorer/data/repo/login/login_repo.dart';
-import 'package:boba_explorer/data/repo/mapper.dart';
-import 'package:boba_explorer/data/repo/tea_shop/tea_shop.dart';
-import 'package:boba_explorer/data/repo/tea_shop/tea_shop_repo.dart';
+import 'package:boba_explorer/ui/bloc_base.dart';
+import 'package:boba_explorer/data/repository/favorite/favorite_repo.dart';
+import 'package:boba_explorer/data/repository/login/login_repo.dart';
+import 'package:boba_explorer/data/repository/mapper.dart';
+import 'package:boba_explorer/domain/entity/tea_shop.dart';
+import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:tuple/tuple.dart';
 
