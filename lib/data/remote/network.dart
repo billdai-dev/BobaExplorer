@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:boba_explorer/data/repository/mapper.dart';
 import 'package:boba_explorer/domain/entity/report.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
@@ -46,14 +44,13 @@ class Network implements INetwork {
   /*static final String _facebookPackageName =
       Platform.isAndroid ? "com.facebook.katana" : "fb://";*/
 
-  final GoogleSignIn _googleSignIn;
-  final FacebookLogin _facebookLogin;
-  final FirebaseAuth _auth;
-  final Firestore _firestore;
-  final Geoflutterfire _geoFlutterFire;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FacebookLogin _facebookLogin = FacebookLogin();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final Firestore _firestore = Firestore.instance;
+  final Geoflutterfire _geoFlutterFire = Geoflutterfire();
 
-  Network(this._googleSignIn, this._facebookLogin, this._auth, this._firestore,
-      this._geoFlutterFire);
+  Network();
 
   @override
   Future<FirebaseUser> googleLogin(FirebaseUser currentUser) async {

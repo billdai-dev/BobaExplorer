@@ -21,7 +21,7 @@ void main() => runApp(
             dispose: (_, appBloc) => appBloc.dispose(),
           ),
           Provider<LoginBloc>(
-            builder: (_) => LoginBloc(LoginRepo(), FavoriteRepo()),
+            builder: (_) => LoginBloc(LoginRepository(), FavoriteRepo()),
             dispose: (_, loginBloc) => loginBloc.dispose(),
           ),
         ],
@@ -226,8 +226,8 @@ class _MyAppState extends State<MyApp> {
         switch (lastRoute) {
           case BobaMap.routeName:
             return Provider<BobaMapBloc>(
-              builder: (_) =>
-                  BobaMapBloc(TeaShopRepo(), FavoriteRepo(), LoginRepo()),
+              builder: (_) => BobaMapBloc(
+                  TeaShopRepository(), FavoriteRepo(), LoginRepository()),
               dispose: (_, bloc) => bloc.dispose(),
               child: BobaMap(),
             );

@@ -8,9 +8,9 @@ import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
 import 'package:rxdart/rxdart.dart';
 
 class SearchBobaBloc extends BlocBase {
-  final SearchBobaRepo _searchBobaRepo;
+  final SearchBobaRepository _searchBobaRepo;
 
-  final TeaShopRepo _teaShopRepo;
+  final TeaShopRepository _teaShopRepo;
 
   /*final BehaviorSubject<List<TeaShop>> _searchResultController =
       BehaviorSubject();

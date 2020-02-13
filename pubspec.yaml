@@ -50,6 +50,7 @@ dependencies:
   bot_toast: ^2.1.0
   webview_flutter: ^0.3.15+1
   rate_my_app: ^0.4.0
+  kiwi: ^0.2.0
 
 dev_dependencies:
   flutter_test:
@@ -57,6 +58,7 @@ dev_dependencies:
   json_serializable: ^3.2.2
   build_runner: ^1.6.7
   moor_generator: ^2.0.1
+  kiwi_generator: ^0.4.0
 
 
 # For information on the generic Dart part of this file, see the

@@ -1,10 +1,10 @@
 import 'package:boba_explorer/data/local/preference.dart';
 import 'package:boba_explorer/domain/repository/search_boba/search_boba_repository.dart';
 
-class SearchBobaRepo implements ISearchBobaRepository {
+class SearchBobaRepository implements ISearchBobaRepository {
   IPreference _preference;
 
-  SearchBobaRepo(this._preference);
+  SearchBobaRepository(this._preference);
 
   @override
   Future<List<String>> getRecentSearch() {

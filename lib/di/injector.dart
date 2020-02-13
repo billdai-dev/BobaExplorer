@@ -1,0 +1,37 @@
+import 'package:boba_explorer/data/local/moor_db.dart';
+import 'package:boba_explorer/data/local/preference.dart';
+import 'package:boba_explorer/data/remote/network.dart';
+import 'package:boba_explorer/data/repository/favorite/favorite_repo.dart';
+import 'package:boba_explorer/data/repository/login/login_repo.dart';
+import 'package:boba_explorer/data/repository/report/report_repo.dart';
+import 'package:boba_explorer/data/repository/search_boba/search_boba_repo.dart';
+import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
+import 'package:boba_explorer/domain/repository/favorite/favorite_repository.dart';
+import 'package:boba_explorer/domain/repository/login/login_repository.dart';
+import 'package:boba_explorer/domain/repository/report/report_repository.dart';
+import 'package:boba_explorer/domain/repository/search_boba/search_boba_repository.dart';
+import 'package:boba_explorer/domain/repository/tea_shop/tea_shop_repository.dart';
+import 'package:kiwi/kiwi.dart';
+
+part 'injector.g.dart';
+
+abstract class Injector {
+  @Register.singleton(INetwork, from: Network)
+  @Register.singleton(IPreference, from: Preference)
+  @Register.singleton(IDatabase, from: BobaDatabase)
+  @Register.factory(IFavoriteRepository, from: FavoriteRepo)
+  @Register.factory(ILoginRepository, from: LoginRepository)
+  @Register.factory(IReportRepository, from: ReportRepository)
+  @Register.factory(ISearchBobaRepository, from: SearchBobaRepository)
+  @Register.factory(ITeaShopRepository, from: TeaShopRepository)
+  /*@Register.factory(GetBannerUseCase)
+  @Register.factory(AppBloc)
+  @Register.factory(MealDetailBloc)
+  @Register.factory(OverviewBloc)*/
+  void dev();
+}
+
+void inject() {
+  var injector = _$Injector();
+  injector.dev();
+}

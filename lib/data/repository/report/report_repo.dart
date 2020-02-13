@@ -2,10 +2,10 @@ import 'package:boba_explorer/data/remote/network.dart';
 import 'package:boba_explorer/domain/entity/report.dart';
 import 'package:boba_explorer/domain/repository/report/report_repository.dart';
 
-class ReportRepo implements IReportRepository {
+class ReportRepository implements IReportRepository {
   INetwork _network;
 
-  ReportRepo(this._network);
+  ReportRepository(this._network);
 
   @override
   Future<bool> reportBug(String desc, int severity, {String uid}) {

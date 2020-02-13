@@ -7,7 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoginBloc extends BlocBase {
-  final LoginRepo _loginRepo;
+  final LoginRepository _loginRepo;
   final FavoriteRepo _favoriteRepo;
 
   StreamSubscription<FirebaseUser> _onAuthChangedListener;

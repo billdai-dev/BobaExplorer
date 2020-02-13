@@ -96,7 +96,7 @@ class _ReportDialogState extends State<ReportDialog>
     double screenHeight = MediaQuery.of(context).size.height;
     return Provider<ReportBloc>(
       builder: (context) => ReportBloc(context,
-          Provider.of<LoginBloc>(context, listen: false), ReportRepo()),
+          Provider.of<LoginBloc>(context, listen: false), ReportRepository()),
       dispose: (_, bloc) => bloc.dispose(),
       child: WillPopScope(
         onWillPop: () async {
@@ -677,7 +677,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
     double screenHeight = MediaQuery.of(context).size.height;
     return Provider<ReportBloc>(
       builder: (context) => ReportBloc(context,
-          Provider.of<LoginBloc>(context, listen: false), ReportRepo()),
+          Provider.of<LoginBloc>(context, listen: false), ReportRepository()),
       dispose: (_, bloc) => bloc.dispose(),
       child: WillPopScope(
         onWillPop: () async {

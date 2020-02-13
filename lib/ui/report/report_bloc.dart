@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
 class ReportBloc extends BlocBase {
-  final ReportRepo _reportRepo;
+  final ReportRepository _reportRepo;
 
   final BehaviorSubject<FirebaseUser> _currentUser = BehaviorSubject();
 

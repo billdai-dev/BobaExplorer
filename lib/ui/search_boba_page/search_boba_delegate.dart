@@ -48,8 +48,8 @@ class SearchBobaDelegate extends SearchDelegate {
   Widget buildSuggestions(BuildContext context) {
     return Provider<SearchBobaBloc>(
       builder: (_) => SearchBobaBloc(
-        SearchBobaRepo(),
-        TeaShopRepo(),
+        SearchBobaRepository(),
+        TeaShopRepository(),
       ),
       dispose: (_, bloc) => bloc.dispose(),
       child: Consumer<AppBloc>(
@@ -147,8 +147,8 @@ class SearchBobaDelegate extends SearchDelegate {
     return Provider<SearchBobaBloc>(
       builder: (_) {
         final bloc = SearchBobaBloc(
-          SearchBobaRepo(),
-          TeaShopRepo(),
+          SearchBobaRepository(),
+          TeaShopRepository(),
         );
         if (query.isNotEmpty) {
           bloc.addRecentSearch(query);

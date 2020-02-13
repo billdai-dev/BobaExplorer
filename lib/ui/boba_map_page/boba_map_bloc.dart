@@ -10,9 +10,9 @@ import 'package:rxdart/rxdart.dart';
 import 'package:tuple/tuple.dart';
 
 class BobaMapBloc implements BlocBase {
-  final TeaShopRepo _teaShopRepo;
+  final TeaShopRepository _teaShopRepo;
   final FavoriteRepo _favoriteRepo;
-  final LoginRepo _loginRepo;
+  final LoginRepository _loginRepo;
 
   final BehaviorSubject<List<TeaShop>> _teaShopsController =
       BehaviorSubject(seedValue: []);

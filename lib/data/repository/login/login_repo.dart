@@ -16,10 +16,10 @@ abstract class LoginRepoContract {
   Future<void> logout();
 }
 
-class LoginRepo implements ILoginRepository {
+class LoginRepository implements ILoginRepository {
   INetwork _network;
 
-  LoginRepo(this._network);
+  LoginRepository(this._network);
 
   @override
   Future<FirebaseUser> googleLogin(FirebaseUser currentUser) async {
