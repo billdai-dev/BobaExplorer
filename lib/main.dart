@@ -1,6 +1,6 @@
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repo.dart';
-import 'package:boba_explorer/data/repository/login/login_repo.dart';
+import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
 import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
@@ -21,7 +21,7 @@ void main() => runApp(
             dispose: (_, appBloc) => appBloc.dispose(),
           ),
           Provider<LoginBloc>(
-            builder: (_) => LoginBloc(LoginRepository(), FavoriteRepo()),
+            builder: (_) => LoginBloc(AuthRepository(), FavoriteRepo()),
             dispose: (_, loginBloc) => loginBloc.dispose(),
           ),
         ],
@@ -227,7 +227,7 @@ class _MyAppState extends State<MyApp> {
           case BobaMap.routeName:
             return Provider<BobaMapBloc>(
               builder: (_) => BobaMapBloc(
-                  TeaShopRepository(), FavoriteRepo(), LoginRepository()),
+                  TeaShopRepository(), FavoriteRepo(), AuthRepository()),
               dispose: (_, bloc) => bloc.dispose(),
               child: BobaMap(),
             );

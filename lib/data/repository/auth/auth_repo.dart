@@ -1,25 +1,11 @@
 import 'package:boba_explorer/data/remote/network.dart';
-import 'package:boba_explorer/domain/repository/login/login_repository.dart';
+import 'package:boba_explorer/domain/repository/auth/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-abstract class LoginRepoContract {
-  Future<FirebaseUser> googleLogin(FirebaseUser currentUser);
-
-  Future<FirebaseUser> facebookLogin(FirebaseUser currentUser);
-
-  Future<FirebaseUser> guestLogin();
-
-  Stream<FirebaseUser> getAuthChangedStream();
-
-  Future<FirebaseUser> getCurrentUser();
-
-  Future<void> logout();
-}
-
-class LoginRepository implements ILoginRepository {
+class AuthRepository implements IAuthRepository {
   INetwork _network;
 
-  LoginRepository(this._network);
+  AuthRepository(this._network);
 
   @override
   Future<FirebaseUser> googleLogin(FirebaseUser currentUser) async {

@@ -1,13 +1,13 @@
 import 'dart:async';
 
+import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
 import 'package:boba_explorer/ui/bloc_base.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repo.dart';
-import 'package:boba_explorer/data/repository/login/login_repo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoginBloc extends BlocBase {
-  final LoginRepository _loginRepo;
+  final AuthRepository _loginRepo;
   final FavoriteRepo _favoriteRepo;
 
   StreamSubscription<FirebaseUser> _onAuthChangedListener;
