@@ -3,11 +3,11 @@ import 'package:boba_explorer/data/remote/network.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/domain/repository/favorite/favorite_repository.dart';
 
-class FavoriteRepo implements IFavoriteRepository {
+class FavoriteRepository implements IFavoriteRepository {
   INetwork _network;
   IDatabase _database;
 
-  FavoriteRepo(this._network, this._database);
+  FavoriteRepository(this._network, this._database);
 
   @override
   Stream<List<TeaShop>> getFavoriteShops({String uid}) {

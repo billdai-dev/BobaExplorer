@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
 import 'package:boba_explorer/ui/bloc_base.dart';
-import 'package:boba_explorer/data/repository/favorite/favorite_repo.dart';
+import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
 import 'package:rxdart/rxdart.dart';
@@ -10,7 +10,7 @@ import 'package:tuple/tuple.dart';
 
 class BobaMapBloc implements BlocBase {
   final TeaShopRepository _teaShopRepo;
-  final FavoriteRepo _favoriteRepo;
+  final FavoriteRepository _favoriteRepo;
   final AuthRepository _loginRepo;
 
   final BehaviorSubject<List<TeaShop>> _teaShopsController =

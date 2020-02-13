@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:boba_explorer/ui/bloc_base.dart';
 import 'package:boba_explorer/domain/entity/city_data.dart';
-import 'package:boba_explorer/data/repository/report/report_repo.dart';
+import 'package:boba_explorer/data/repository/report/report_repository.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

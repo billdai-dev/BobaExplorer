@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:boba_explorer/domain/entity/city_data.dart';
-import 'package:boba_explorer/data/repository/report/report_repo.dart';
+import 'package:boba_explorer/data/repository/report/report_repository.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/ui/custom_widget.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
