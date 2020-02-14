@@ -1,6 +1,7 @@
 import 'package:boba_explorer/data/repository/mapper.dart';
 import 'package:boba_explorer/domain/entity/report.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -10,15 +11,15 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rxdart/rxdart.dart';
 
 abstract class INetwork {
-  Future<FirebaseUser> googleLogin(FirebaseUser currentUser);
+  Future<User> googleLogin();
 
-  Future<FirebaseUser> facebookLogin(FirebaseUser currentUser);
+  Future<User> facebookLogin();
 
-  Future<FirebaseUser> guestLogin();
+  Future<User> guestLogin();
 
-  Stream<FirebaseUser> getAuthChangedStream();
+  Stream<User> getAuthChangedStream();
 
-  Future<FirebaseUser> getCurrentUser();
+  Future<User> getCurrentUser();
 
   Future<void> logout();
 
@@ -53,7 +54,8 @@ class Network implements INetwork {
   Network();
 
   @override
-  Future<FirebaseUser> googleLogin(FirebaseUser currentUser) async {
+  Future<User> googleLogin() async {
+    final FirebaseUser currentUser = await _auth.currentUser();
     final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
     final GoogleSignInAuthentication googleAuth =
         await googleUser?.authentication;
@@ -79,7 +81,6 @@ class Network implements INetwork {
       bool wasGoogleUser = currentUser.providerData?.any((provider) =>
               provider.providerId == GoogleAuthProvider.providerId) ==
           true;
-
       newUser = wasGoogleUser
           ? await currentUser.reauthenticateWithCredential(credential)
           : await _auth.linkWithCredential(credential);
@@ -90,13 +91,13 @@ class Network implements INetwork {
     final profile = UserUpdateInfo()
       ..displayName = googleProviderData?.displayName
       ..photoUrl = googleProviderData?.photoUrl;
-    return await newUser
-        ?.updateProfile(profile)
-        ?.then((_) => _auth.currentUser());
+    return await newUser?.updateProfile(profile)?.then(
+        (_) async => Mapper.fireBaseUserToUser(await _auth.currentUser()));
   }
 
   @override
-  Future<FirebaseUser> facebookLogin(FirebaseUser currentUser) async {
+  Future<User> facebookLogin() async {
+    final FirebaseUser currentUser = await _auth.currentUser();
     final loginResult = await _facebookLogin.logIn(['email']);
     if (loginResult?.status != FacebookLoginStatus.loggedIn) {
       return null;
@@ -116,11 +117,11 @@ class Network implements INetwork {
         throw e; //TODO: Maybe throw custom domain exception
       });
     } else {
-      bool wasFbUser = currentUser?.providerData?.any((provider) =>
+      bool wasFbUser = currentUser.providerData?.any((provider) =>
               provider.providerId == FacebookAuthProvider.providerId) ==
           true;
       newUser = wasFbUser
-          ? await currentUser?.reauthenticateWithCredential(credential)
+          ? await currentUser.reauthenticateWithCredential(credential)
           : await _auth.linkWithCredential(credential);
     }
     final fbProviderData = newUser?.providerData?.firstWhere(
@@ -129,14 +130,15 @@ class Network implements INetwork {
     final profile = UserUpdateInfo()
       ..displayName = fbProviderData?.displayName
       ..photoUrl = fbProviderData?.photoUrl;
-    return await newUser
-        ?.updateProfile(profile)
-        ?.then((_) => _auth.currentUser());
+    return await newUser?.updateProfile(profile)?.then(
+        (_) async => Mapper.fireBaseUserToUser(await _auth.currentUser()));
   }
 
   @override
-  Future<FirebaseUser> guestLogin() {
-    return _auth.signInAnonymously();
+  Future<User> guestLogin() {
+    return _auth
+        .signInAnonymously()
+        .then((user) => Mapper.fireBaseUserToUser(user));
   }
 
   @override
@@ -147,13 +149,14 @@ class Network implements INetwork {
   }
 
   @override
-  Stream<FirebaseUser> getAuthChangedStream() {
-    return _auth.onAuthStateChanged;
+  Stream<User> getAuthChangedStream() {
+    return _auth.onAuthStateChanged
+        .map((user) => Mapper.fireBaseUserToUser(user));
   }
 
   @override
-  Future<FirebaseUser> getCurrentUser() {
-    return _auth.currentUser();
+  Future<User> getCurrentUser() {
+    return _auth.currentUser().then((user) => Mapper.fireBaseUserToUser(user));
   }
 
   @override

@@ -1,7 +1,9 @@
 import 'package:boba_explorer/data/local/moor_db.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Mapper {
   static List<String> rcShopToStrings(List<Shop> shops) {
@@ -10,7 +12,9 @@ class Mapper {
 
   static List<TeaShop> docsToTeaShops(List<DocumentSnapshot> docs) {
     return docs
-        .map((doc) => TeaShop.fromJson(doc.data)..docId = doc.documentID)
+        .map((doc) =>
+    TeaShop.fromJson(doc.data)
+      ..docId = doc.documentID)
         .toList();
   }
 
@@ -36,7 +40,7 @@ class Mapper {
       return null;
     }
     Position position =
-        Position(favoriteShop.geoHash, favoriteShop.lat, favoriteShop.lng);
+    Position(favoriteShop.geoHash, favoriteShop.lat, favoriteShop.lng);
     return TeaShop(
         favoriteShop.docId,
         favoriteShop.shopName,
@@ -48,5 +52,18 @@ class Mapper {
         null,
         position,
         true);
+  }
+
+  static User fireBaseUserToUser(FirebaseUser fireBaseUser) {
+    return User()
+      ..userData = fireBaseUser?.providerData?.map((provider) {
+        return UserData()
+          ..uid = provider.uid
+          ..providerId = provider.providerId
+          ..name = provider.displayName
+          ..photoUrl = provider.photoUrl
+          ..phoneNumber = provider.phoneNumber
+          ..email = provider.email;
+      })
   }
 }

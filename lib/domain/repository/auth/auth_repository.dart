@@ -1,15 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
 
 abstract class IAuthRepository {
-  Future<FirebaseUser> googleLogin(FirebaseUser currentUser);
+  Future<User> googleLogin();
 
-  Future<FirebaseUser> facebookLogin(FirebaseUser currentUser);
+  Future<User> facebookLogin();
 
-  Future<FirebaseUser> guestLogin();
+  Future<User> guestLogin();
 
-  Stream<FirebaseUser> getAuthChangedStream();
+  Stream<User> getAuthChangedStream();
 
-  Future<FirebaseUser> getCurrentUser();
+  Future<User> getCurrentUser();
 
   Future<void> logout();
 }

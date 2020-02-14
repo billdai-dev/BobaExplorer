@@ -1,4 +1,9 @@
 import 'package:boba_explorer/data/remote/network.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/domain/repository/auth/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -8,17 +13,17 @@ class AuthRepository implements IAuthRepository {
   AuthRepository(this._network);
 
   @override
-  Future<FirebaseUser> googleLogin(FirebaseUser currentUser) async {
-    return _network.googleLogin(currentUser);
+  Future<User> googleLogin() async {
+    return _network.googleLogin();
   }
 
   @override
-  Future<FirebaseUser> facebookLogin(FirebaseUser currentUser) async {
-    return _network.facebookLogin(currentUser);
+  Future<User> facebookLogin() async {
+    return _network.facebookLogin();
   }
 
   @override
-  Future<FirebaseUser> guestLogin() {
+  Future<User> guestLogin() {
     return _network.guestLogin();
   }
 
@@ -28,12 +33,12 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Stream<FirebaseUser> getAuthChangedStream() {
+  Stream<User> getAuthChangedStream() {
     return _network.getAuthChangedStream();
   }
 
   @override
-  Future<FirebaseUser> getCurrentUser() {
+  Future<User> getCurrentUser() {
     return _network.getCurrentUser();
   }
 }
