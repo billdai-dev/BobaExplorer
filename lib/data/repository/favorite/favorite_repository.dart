@@ -2,6 +2,7 @@ import 'package:boba_explorer/data/local/moor_db.dart';
 import 'package:boba_explorer/data/remote/network.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/domain/repository/favorite/favorite_repository.dart';
+import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
 
 class FavoriteRepository implements IFavoriteRepository {
   INetwork _network;
@@ -18,19 +19,21 @@ class FavoriteRepository implements IFavoriteRepository {
   }
 
   @override
-  Future<void> setFavoriteShop(bool isFavorite, TeaShop shop, {String uid}) {
+  Future<void> setFavoriteShop(SetFavoriteShopParam param) {
+    String uid = param.uid;
+    bool isFavorite = param.isFavorite;
     if (uid == null) {
       if (isFavorite) {
-        return _database.addFavoriteShop(shop);
+        return _database.addFavoriteShop(param.teaShop);
       } else {
-        return _database.deleteFavoriteShop(shop.docId);
+        return _database.deleteFavoriteShop(param.teaShop?.docId);
       }
     }
-    return _network.setFavoriteShop(isFavorite, shop.docId, uid);
+    return _network.setFavoriteShop(isFavorite, param.teaShop?.docId, uid);
   }
 
   @override
-  Future<void> deleteAllFavoriteShops() {
+  Future<void> deleteFavoriteShops() {
     return _database.deleteAllFavoriteShops();
   }
 

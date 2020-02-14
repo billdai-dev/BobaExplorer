@@ -12,9 +12,7 @@ class Mapper {
 
   static List<TeaShop> docsToTeaShops(List<DocumentSnapshot> docs) {
     return docs
-        .map((doc) =>
-    TeaShop.fromJson(doc.data)
-      ..docId = doc.documentID)
+        .map((doc) => TeaShop.fromJson(doc.data)..docId = doc.documentID)
         .toList();
   }
 
@@ -40,7 +38,7 @@ class Mapper {
       return null;
     }
     Position position =
-    Position(favoriteShop.geoHash, favoriteShop.lat, favoriteShop.lng);
+        Position(favoriteShop.geoHash, favoriteShop.lat, favoriteShop.lng);
     return TeaShop(
         favoriteShop.docId,
         favoriteShop.shopName,
@@ -56,6 +54,12 @@ class Mapper {
 
   static User fireBaseUserToUser(FirebaseUser fireBaseUser) {
     return User()
+      ..uid = fireBaseUser.uid
+      ..providerId = fireBaseUser.providerId
+      ..name = fireBaseUser.displayName
+      ..photoUrl = fireBaseUser.photoUrl
+      ..phoneNumber = fireBaseUser.phoneNumber
+      ..email = fireBaseUser.email
       ..userData = fireBaseUser?.providerData?.map((provider) {
         return UserData()
           ..uid = provider.uid
@@ -64,6 +68,6 @@ class Mapper {
           ..photoUrl = provider.photoUrl
           ..phoneNumber = provider.phoneNumber
           ..email = provider.email;
-      })
+      });
   }
 }

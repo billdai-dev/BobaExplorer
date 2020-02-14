@@ -62,7 +62,7 @@ class LoginBloc extends BlocBase {
   }
 
   Future<void> deleteAllFavoriteShops() {
-    return _favoriteRepo.deleteAllFavoriteShops();
+    return _favoriteRepo.deleteFavoriteShops();
   }
 
   Future<void> syncFavoriteShops() async {
