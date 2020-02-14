@@ -11,6 +11,7 @@ import 'package:boba_explorer/domain/repository/auth/auth_repository.dart';
 import 'package:boba_explorer/domain/repository/report/report_repository.dart';
 import 'package:boba_explorer/domain/repository/search_boba/search_boba_repository.dart';
 import 'package:boba_explorer/domain/repository/tea_shop/tea_shop_repository.dart';
+import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
 import 'package:kiwi/kiwi.dart';
 
 part 'injector.g.dart';
@@ -24,6 +25,12 @@ abstract class Injector {
   @Register.factory(IReportRepository, from: ReportRepository)
   @Register.factory(ISearchBobaRepository, from: SearchBobaRepository)
   @Register.factory(ITeaShopRepository, from: TeaShopRepository)
+  @Register.factory(GoogleLoginUseCase)
+  @Register.factory(FacebookLoginUseCase)
+  @Register.factory(GuestLoginUseCase)
+  @Register.factory(GetUserChangedStreamUseCase)
+  @Register.factory(GetCurrentUserUseCase)
+  @Register.factory(LogoutUseCase)
   /*@Register.factory(GetBannerUseCase)
   @Register.factory(AppBloc)
   @Register.factory(MealDetailBloc)
