@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/custom_widget.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
@@ -66,7 +67,7 @@ class _LoginDialogState extends State<LoginDialog>
               constraints: BoxConstraints.expand(),
               child: ListView(
                 children: <Widget>[
-                  StreamBuilder<FirebaseUser>(
+                  StreamBuilder<User>(
                     stream: loginBloc.currentUser,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.none) {
@@ -79,7 +80,7 @@ class _LoginDialogState extends State<LoginDialog>
                       } else if (currentUser.isAnonymous) {
                         title = "哈囉, 訪客！您可以連結社群帳號以同步資料至雲端";
                       } else {
-                        title = "哈囉！${currentUser.displayName ?? ""}，需要什麼服務嗎？";
+                        title = "哈囉！${currentUser.name ?? ""}，需要什麼服務嗎？";
                       }
                       return Column(
                         children: <Widget>[
@@ -249,7 +250,7 @@ class _LoginDialogState extends State<LoginDialog>
     );
   }
 
-  Widget _buildFbLoginBtn(FirebaseUser user) {
+  Widget _buildFbLoginBtn(User user) {
     const Color fbBlue = Color.fromARGB(255, 66, 103, 178);
     String text = user == null ? "使用 Facebook 帳號登入" : "以 Facebook 帳號繼續";
     return InkWell(
@@ -292,7 +293,7 @@ class _LoginDialogState extends State<LoginDialog>
     );
   }
 
-  Widget _buildGoogleLoginBtn(FirebaseUser user) {
+  Widget _buildGoogleLoginBtn(User user) {
     const Color googleBlue = Color.fromARGB(255, 66, 133, 244);
     String text = user == null ? "使用 Google 帳號登入" : "以 Google 帳號繼續";
     return InkWell(
@@ -429,7 +430,7 @@ class _LoginDialogState extends State<LoginDialog>
     );
   }
 
-  Widget _buildLogoutBtn(FirebaseUser currentUser) {
+  Widget _buildLogoutBtn(User currentUser) {
     return OutlineButton.icon(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),

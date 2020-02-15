@@ -1,29 +1,46 @@
 import 'dart:async';
 
-import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
+import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
 import 'package:boba_explorer/ui/bloc_base.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoginBloc extends BlocBase {
-  final AuthRepository _loginRepo;
+  final GoogleLoginUseCase _googleLoginUseCase;
+  final FacebookLoginUseCase _facebookLoginUseCase;
+  final GuestLoginUseCase _guestLoginUseCase;
+  final GetCurrentUserUseCase _getCurrentUserUseCase;
+  final LogoutUseCase _logoutUseCase;
+
   final FavoriteRepository _favoriteRepo;
 
-  StreamSubscription<FirebaseUser> _onAuthChangedListener;
+  StreamSubscription<User> _onAuthChangedListener;
 
-  final BehaviorSubject<FirebaseUser> _currentUser = BehaviorSubject();
+  final BehaviorSubject<User> _currentUser = BehaviorSubject();
 
-  Stream<FirebaseUser> get currentUser => _currentUser.stream;
+  Stream<User> get currentUser => _currentUser.stream;
 
-  LoginBloc(this._loginRepo, this._favoriteRepo) {
+  LoginBloc(
+      this._googleLoginUseCase,
+      this._facebookLoginUseCase,
+      this._guestLoginUseCase,
+      this._getCurrentUserUseCase,
+      this._logoutUseCase,
+      this._favoriteRepo) {
+    _getCurrentUserUseCase.execute().then((currentUserStream) {
+      return currentUserStream.listen((user) => _currentUser.add(user));
+    });
+  }
+
+  /*LoginBloc(this._loginRepo, this._favoriteRepo) {
     _loginRepo.getCurrentUser().then((user) {
       _currentUser.add(user);
       _onAuthChangedListener = _loginRepo
           .getAuthChangedStream()
           .listen((user) => _currentUser.add(user));
     });
-  }
+  }*/
 
   @override
   void dispose() {
@@ -31,34 +48,39 @@ class LoginBloc extends BlocBase {
     _currentUser?.close();
   }
 
-  Future<FirebaseUser> googleLogin() async {
-    final user = _currentUser.value;
-    final newUser = await _loginRepo.googleLogin(user);
-    if (newUser != null) {
-      _currentUser.add(newUser);
-    }
-    return newUser;
+  Future<User> googleLogin() async {
+    return _googleLoginUseCase.execute().then((googleUserStream) {
+      return googleUserStream.first;
+    }).then((googleUser) {
+      _currentUser.add(googleUser);
+      return googleUser;
+    });
   }
 
-  Future<FirebaseUser> facebookLogin() async {
-    final user = _currentUser.value;
-    final newUser = await _loginRepo.facebookLogin(user);
-    if (newUser != null) {
-      _currentUser.add(newUser);
-    }
-    return newUser;
+  Future<User> facebookLogin() async {
+    return _facebookLoginUseCase.execute().then((facebookUserStream) {
+      return facebookUserStream.first;
+    }).then((facebookUser) {
+      _currentUser.add(facebookUser);
+      return facebookUser;
+    });
   }
 
-  Future<FirebaseUser> guestLogin() async {
-    final user = _currentUser.value;
+  Future<User> guestLogin() async {
+    /*final user = _currentUser.value;
     if (user != null) {
       return user;
-    }
-    return _loginRepo.guestLogin();
+    }*/
+    return _guestLoginUseCase.execute().then((guestUserStream) {
+      return guestUserStream.first;
+    }).then((guestUser) {
+      _currentUser.add(guestUser);
+      return guestUser;
+    });
   }
 
   Future<void> logout() {
-    return _loginRepo.logout();
+    return _logoutUseCase.execute().then((logoutStream) => logoutStream.first);
   }
 
   Future<void> deleteAllFavoriteShops() {
