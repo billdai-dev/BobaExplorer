@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:boba_explorer/ui/bloc_base.dart';
+import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/domain/entity/city_data.dart';
 import 'package:boba_explorer/data/repository/report/report_repository.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
-class ReportBloc extends BlocBase {
+class ReportBloc extends BaseBloc {
   final ReportRepository _reportRepo;
 
   final BehaviorSubject<FirebaseUser> _currentUser = BehaviorSubject();
@@ -63,6 +63,7 @@ class ReportBloc extends BlocBase {
 
   @override
   void dispose() {
+    super.dispose();
     _isLoadingController?.close();
     _currentUser?.close();
     _citiesController?.close();

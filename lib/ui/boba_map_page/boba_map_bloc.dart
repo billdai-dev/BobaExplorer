@@ -1,14 +1,14 @@
 import 'dart:async';
 
 import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
-import 'package:boba_explorer/ui/bloc_base.dart';
+import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:tuple/tuple.dart';
 
-class BobaMapBloc implements BlocBase {
+class BobaMapBloc extends BaseBloc {
   final TeaShopRepository _teaShopRepo;
   final FavoriteRepository _favoriteRepo;
   final AuthRepository _loginRepo;
@@ -122,6 +122,7 @@ class BobaMapBloc implements BlocBase {
 
   @override
   void dispose() {
+    super.dispose();
     _teaShopsController?.close();
     _favoriteShopsController?.close();
     _queryConfigController?.close();

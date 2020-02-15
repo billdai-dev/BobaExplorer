@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:boba_explorer/ui/bloc_base.dart';
+import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:package_info/package_info.dart';
 import 'package:rxdart/rxdart.dart';
 
-class AppBloc implements BlocBase {
+class AppBloc extends BaseBloc {
   final BehaviorSubject<List<Shop>> _supportedShopsController =
       BehaviorSubject();
 
@@ -56,6 +56,7 @@ class AppBloc implements BlocBase {
 
   @override
   void dispose() {
+    super.dispose();
     _supportedShopsController?.close();
     _checkAppVersionController?.close();
   }

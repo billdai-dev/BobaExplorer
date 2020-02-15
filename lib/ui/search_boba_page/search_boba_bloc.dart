@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:boba_explorer/ui/bloc_base.dart';
+import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/data/repository/mapper.dart';
 import 'package:boba_explorer/data/repository/search_boba/search_boba_repo.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
 import 'package:rxdart/rxdart.dart';
 
-class SearchBobaBloc extends BlocBase {
+class SearchBobaBloc extends BaseBloc {
   final SearchBobaRepository _searchBobaRepo;
 
   final TeaShopRepository _teaShopRepo;
@@ -38,6 +38,7 @@ class SearchBobaBloc extends BlocBase {
 
   @override
   void dispose() {
+    super.dispose();
     //_searchResultController?.close();
     _recentSearchController?.close();
   }

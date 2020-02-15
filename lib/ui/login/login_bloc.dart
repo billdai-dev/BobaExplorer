@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
-import 'package:boba_explorer/ui/bloc_base.dart';
+import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:rxdart/rxdart.dart';
 
-class LoginBloc extends BlocBase {
+class LoginBloc extends BaseBloc {
   final GoogleLoginUseCase _googleLoginUseCase;
   final FacebookLoginUseCase _facebookLoginUseCase;
   final GuestLoginUseCase _guestLoginUseCase;
@@ -44,6 +44,7 @@ class LoginBloc extends BlocBase {
 
   @override
   void dispose() {
+    super.dispose();
     _onAuthChangedListener?.cancel();
     _currentUser?.close();
   }
