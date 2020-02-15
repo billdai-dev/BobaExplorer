@@ -4,6 +4,7 @@ import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
+import 'package:boba_explorer/ui/event.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoginBloc extends BaseBloc {
@@ -49,39 +50,53 @@ class LoginBloc extends BaseBloc {
     _currentUser?.close();
   }
 
-  Future<User> googleLogin() async {
-    return _googleLoginUseCase.execute().then((googleUserStream) {
+  void googleLogin() async {
+    _googleLoginUseCase.execute().then((googleUserStream) {
       return googleUserStream.first;
     }).then((googleUser) {
+      var oldUser = _currentUser.value;
+      if (oldUser?.isAnonymous == true) {
+        eventSink.add(Event.showSyncDataDialog(googleUser));
+      }
+      eventSink.add(Event.userLogin(googleUser));
       _currentUser.add(googleUser);
-      return googleUser;
     });
   }
 
-  Future<User> facebookLogin() async {
-    return _facebookLoginUseCase.execute().then((facebookUserStream) {
+  void facebookLogin() async {
+    _facebookLoginUseCase.execute().then((facebookUserStream) {
       return facebookUserStream.first;
     }).then((facebookUser) {
+      var oldUser = _currentUser.value;
+      if (oldUser?.isAnonymous == true) {
+        eventSink.add(Event.showSyncDataDialog(facebookUser));
+      }
+      eventSink.add(Event.userLogin(facebookUser));
       _currentUser.add(facebookUser);
-      return facebookUser;
     });
   }
 
-  Future<User> guestLogin() async {
-    /*final user = _currentUser.value;
-    if (user != null) {
-      return user;
-    }*/
-    return _guestLoginUseCase.execute().then((guestUserStream) {
+  void guestLogin() async {
+    _guestLoginUseCase.execute().then((guestUserStream) {
       return guestUserStream.first;
     }).then((guestUser) {
+      eventSink.add(Event.userLogin(guestUser));
       _currentUser.add(guestUser);
-      return guestUser;
     });
   }
 
-  Future<void> logout() {
-    return _logoutUseCase.execute().then((logoutStream) => logoutStream.first);
+  void logout() {
+    var currentUser = _currentUser.value;
+    if (currentUser.isAnonymous == true) {
+      eventSink.add(Event.clearLocalFavoriteShop());
+      return;
+    }
+    _logoutUseCase.execute().then((logoutStream) {
+      return logoutStream.first;
+    }).then((_) {
+      eventSink.add(Event.userLogout());
+      _currentUser.add(null);
+    });
   }
 
   Future<void> deleteAllFavoriteShops() {

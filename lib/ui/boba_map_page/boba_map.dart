@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
+import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/remote_config_model.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/boba_map_page/shop_filter_dialog.dart';
@@ -25,7 +26,7 @@ import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-Future<FirebaseUser> showLoginDialog(BuildContext context) async {
+Future<User> showLoginDialog(BuildContext context) async {
   final user = await showDialog<FirebaseUser>(
     context: context,
     builder: (context) => LoginDialog(),

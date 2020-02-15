@@ -3,10 +3,11 @@ import 'dart:async';
 import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/custom_widget.dart';
+import 'package:boba_explorer/ui/event.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
+import 'package:boba_explorer/ui/login/login_event.dart';
 import 'package:boba_explorer/ui/report/report_dialog.dart';
 import 'package:boba_explorer/ui/web_view/web_view_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -20,16 +21,52 @@ class _LoginDialogState extends State<LoginDialog>
     with SingleTickerProviderStateMixin {
   AnimationController _dialogAnimController;
   LoginBloc loginBloc;
+  StreamSubscription<Event> eventSub;
 
   @override
   void initState() {
     super.initState();
     loginBloc = Provider.of<LoginBloc>(context, listen: false);
-    _dialogAnimController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 200),
-    );
-    _dialogAnimController.forward();
+    eventSub = loginBloc.eventStream.listen(_handleEvent);
+    _dialogAnimController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 200))
+          ..forward();
+    //_dialogAnimController.forward();
+  }
+
+  void _handleEvent(Event event) {
+    switch (event.runtimeType) {
+      case UserLoginEvent:
+        var newUser = (event as UserLoginEvent).newUser;
+        Navigator.maybePop(context, newUser);
+        break;
+      case ShowSyncDataDialogEvent:
+        var newUser = (event as ShowSyncDataDialogEvent).newUser;
+        showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => _buildSyncDataDialog());
+        loginBloc?.syncFavoriteShops();
+        Navigator.maybePop(context, newUser);
+        break;
+      case ClearLocalFavoriteShopEvent:
+        showDialog(
+          context: context,
+          builder: (context) => _buildClearDataRequestDialog(),
+        );
+        loginBloc?.deleteAllFavoriteShops();
+        break;
+      case UserLogoutEvent:
+        Navigator.popUntil(context, ModalRoute.withName(BobaMap.routeName));
+        break;
+    }
+  }
+
+  @override
+  void dispose() {
+    _dialogAnimController.dispose();
+    eventSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -205,12 +242,6 @@ class _LoginDialogState extends State<LoginDialog>
     );
   }
 
-  @override
-  void dispose() {
-    _dialogAnimController.dispose();
-    super.dispose();
-  }
-
   Widget _buildQuestionBtn() {
     return GestureDetector(
       onTap: () {
@@ -254,10 +285,7 @@ class _LoginDialogState extends State<LoginDialog>
     const Color fbBlue = Color.fromARGB(255, 66, 103, 178);
     String text = user == null ? "使用 Facebook 帳號登入" : "以 Facebook 帳號繼續";
     return InkWell(
-      onTap: () async {
-        final user = await loginBloc.facebookLogin();
-        Navigator.pop(context, user);
-      },
+      onTap: () async => loginBloc.facebookLogin(),
       child: Container(
         height: 42,
         decoration: ShapeDecoration(
@@ -297,24 +325,7 @@ class _LoginDialogState extends State<LoginDialog>
     const Color googleBlue = Color.fromARGB(255, 66, 133, 244);
     String text = user == null ? "使用 Google 帳號登入" : "以 Google 帳號繼續";
     return InkWell(
-      onTap: () async {
-        final googleUser = await loginBloc.googleLogin();
-        if (user?.isAnonymous == true) {
-          Completer isSyncCompleted = Completer();
-          showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) {
-                return _buildSyncDataDialog();
-              });
-          loginBloc
-              ?.syncFavoriteShops()
-              ?.whenComplete(() => isSyncCompleted.complete());
-          await isSyncCompleted.future;
-          Navigator.pop(context);
-        }
-        Navigator.pop(context, googleUser);
-      },
+      onTap: () async => loginBloc.googleLogin(),
       child: Container(
         height: 42,
         decoration: ShapeDecoration(
@@ -360,10 +371,7 @@ class _LoginDialogState extends State<LoginDialog>
     return Column(
       children: <Widget>[
         InkWell(
-          onTap: () async {
-            final user = await loginBloc.guestLogin();
-            Navigator.pop(context, user);
-          },
+          onTap: () async => loginBloc.guestLogin(),
           child: Container(
             padding: const EdgeInsets.only(left: 12),
             height: 40,
@@ -444,8 +452,8 @@ class _LoginDialogState extends State<LoginDialog>
           );
           return;
         }
-        Navigator.pop(context);
-        await loginBloc.logout();
+        //Navigator.pop(context);
+        loginBloc.logout();
       },
       icon: Icon(FontAwesomeIcons.signOutAlt),
       label: Text("登出"),
@@ -480,17 +488,13 @@ class _LoginDialogState extends State<LoginDialog>
           child: Text("不登出"),
         ),
         FlatButton(
-          onPressed: () async {
-            await loginBloc.logout();
-            Navigator.popUntil(context, ModalRoute.withName(BobaMap.routeName));
-          },
+          onPressed: () async => loginBloc.logout(),
           child: Text("否"),
         ),
         FlatButton(
           onPressed: () async {
             await loginBloc.deleteAllFavoriteShops();
-            await loginBloc.logout();
-            Navigator.popUntil(context, ModalRoute.withName(BobaMap.routeName));
+            loginBloc.logout();
           },
           child: Text("是"),
         ),

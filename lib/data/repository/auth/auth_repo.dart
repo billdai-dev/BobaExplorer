@@ -1,11 +1,6 @@
 import 'package:boba_explorer/data/remote/network.dart';
 import 'package:boba_explorer/domain/entity/user.dart';
-import 'package:boba_explorer/domain/entity/user.dart';
-import 'package:boba_explorer/domain/entity/user.dart';
-import 'package:boba_explorer/domain/entity/user.dart';
-import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/domain/repository/auth/auth_repository.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthRepository implements IAuthRepository {
   INetwork _network;

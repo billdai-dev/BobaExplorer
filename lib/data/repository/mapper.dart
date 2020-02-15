@@ -60,6 +60,7 @@ class Mapper {
       ..photoUrl = fireBaseUser.photoUrl
       ..phoneNumber = fireBaseUser.phoneNumber
       ..email = fireBaseUser.email
+      ..isAnonymous = fireBaseUser?.isAnonymous
       ..userData = fireBaseUser?.providerData?.map((provider) {
         return UserData()
           ..uid = provider.uid
