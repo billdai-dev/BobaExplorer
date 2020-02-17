@@ -8,6 +8,11 @@ class ReportRepository implements IReportRepository {
   ReportRepository(this._network);
 
   @override
+  Future<bool> report(Report report) {
+    return _network.sendReport(report);
+  }
+
+/*@override
   Future<bool> reportBug(String desc, int severity, {String uid}) {
     Report bugReport = Report.bug(desc, severity, uid: uid);
     return _network.sendReport(bugReport);
@@ -31,5 +36,5 @@ class ReportRepository implements IReportRepository {
   Future<bool> reportShop(String shopId, String shopName, {String uid}) {
     Report shopReport = Report.shop(shopId, shopName, uid: uid);
     return _network.sendReport(shopReport);
-  }
+  }*/
 }

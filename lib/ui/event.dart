@@ -1,5 +1,6 @@
 import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/ui/login/login_event.dart';
+import 'package:boba_explorer/ui/report/report_event.dart';
 
 abstract class Event {
   Event();
@@ -16,4 +17,7 @@ abstract class Event {
   factory Event.localFavoritesCleared() => LocalFavoritesClearedEvent();
 
   factory Event.remoteFavoritesSynced() => RemoteFavoritesSyncedEvent();
+
+  //Report
+  factory Event.onReported(bool isSuccess) => OnReportedEvent(isSuccess);
 }

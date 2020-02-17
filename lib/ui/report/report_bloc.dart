@@ -1,17 +1,19 @@
 import 'dart:convert';
 
+import 'package:boba_explorer/domain/entity/report.dart';
+import 'package:boba_explorer/domain/use_case/report/report_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/domain/entity/city_data.dart';
 import 'package:boba_explorer/data/repository/report/report_repository.dart';
+import 'package:boba_explorer/ui/event.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class ReportBloc extends BaseBloc {
-  final ReportRepository _reportRepo;
-
-  final BehaviorSubject<FirebaseUser> _currentUser = BehaviorSubject();
+  final ReportUseCase _reportUseCase;
 
   final PublishSubject<bool> _isLoadingController = PublishSubject();
 
@@ -21,43 +23,53 @@ class ReportBloc extends BaseBloc {
 
   Stream<List<City>> get cities => _citiesController.stream;
 
-  ReportBloc(BuildContext context, LoginBloc loginBloc, this._reportRepo) {
-    loginBloc.currentUser.listen(_currentUser.add);
-
-    DefaultAssetBundle.of(context).loadString("assets/city.json").then((json) {
+  ReportBloc(this._reportUseCase) {
+    rootBundle
+        .loadStructuredData("assets/city.json",
+            (json) async => CityData.fromJson(jsonDecode(json)).city)
+        .then(_citiesController.add);
+    /*DefaultAssetBundle.of(context).loadString("assets/city.json").then((json) {
       _citiesController.add(CityData.fromJson(jsonDecode(json)).city);
-    });
+    });*/
   }
 
-  Future<bool> reportBug(String desc, int severity) {
+  void reportBug(String desc, int severity) {
     _isLoadingController.add(true);
-    String uid = _currentUser.value?.uid;
-    return _reportRepo
-        .reportBug(desc, severity, uid: uid)
+    Report bugReport = Report.bug(desc, severity);
+    _reportUseCase
+        .execute(bugReport)
+        .then((resultStream) => resultStream.first)
+        .then((isSuccess) => eventSink.add(Event.onReported(isSuccess)))
         .whenComplete(() => _isLoadingController.add(false));
   }
 
-  Future<bool> reportRequest(String desc, {String city, String district}) {
+  void reportRequest(String desc, {String city, String district}) {
     _isLoadingController.add(true);
-    String uid = _currentUser.value?.uid;
-    return _reportRepo
-        .reportRequest(desc, uid: uid, city: city, district: district)
+    Report requestReport = Report.request(desc, city: city, district: district);
+    _reportUseCase
+        .execute(requestReport)
+        .then((resultStream) => resultStream.first)
+        .then((isSuccess) => eventSink.add(Event.onReported(isSuccess)))
         .whenComplete(() => _isLoadingController.add(false));
   }
 
-  Future<bool> reportOpinion(String desc) {
+  void reportOpinion(String desc) {
     _isLoadingController.add(true);
-    String uid = _currentUser.value?.uid;
-    return _reportRepo
-        .reportOpinion(desc, uid: uid)
+    Report opinionReport = Report.opinion(desc);
+    _reportUseCase
+        .execute(opinionReport)
+        .then((resultStream) => resultStream.first)
+        .then((isSuccess) => eventSink.add(Event.onReported(isSuccess)))
         .whenComplete(() => _isLoadingController.add(false));
   }
 
-  Future<bool> reportShop(String shopId, String reason) {
+  void reportShop(String shopId, String reason) {
     _isLoadingController.add(true);
-    String uid = _currentUser.value?.uid;
-    return _reportRepo
-        .reportShop(shopId, reason, uid: uid)
+    Report shopReport = Report.shop(shopId, reason);
+    _reportUseCase
+        .execute(shopReport)
+        .then((resultStream) => resultStream.first)
+        .then((isSuccess) => eventSink.add(Event.onReported(isSuccess)))
         .whenComplete(() => _isLoadingController.add(false));
   }
 

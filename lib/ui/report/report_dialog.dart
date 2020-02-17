@@ -1,14 +1,16 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:boba_explorer/domain/entity/city_data.dart';
-import 'package:boba_explorer/data/repository/report/report_repository.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/ui/custom_widget.dart';
-import 'package:boba_explorer/ui/login/login_bloc.dart';
+import 'package:boba_explorer/ui/event.dart';
 import 'package:boba_explorer/ui/report/report_bloc.dart';
+import 'package:boba_explorer/ui/report/report_event.dart';
 import 'package:boba_explorer/util.dart';
 import 'package:flutter/material.dart';
+import 'package:kiwi/kiwi.dart' as kiwi;
 import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
 
@@ -23,6 +25,7 @@ class ReportDialog extends StatefulWidget {
 
 class _ReportDialogState extends State<ReportDialog>
     with SingleTickerProviderStateMixin {
+  StreamSubscription eventSub;
   AnimationController dialogAnimController;
 
   ValueNotifier<ReportType> reportTypeNotifier;
@@ -91,13 +94,33 @@ class _ReportDialogState extends State<ReportDialog>
     super.dispose();
   }
 
+  void _handleEvent(Event event) {
+    switch (event.runtimeType) {
+      case OnReportedEvent:
+        var isSuccess = (event as OnReportedEvent).isSuccess;
+        if (isSuccess == true) {
+          Util.showIconTextToast(context, Icons.mail, "回報成功\n感謝您的回饋");
+        } else {
+          Util.showIconTextToast(context, Icons.sms_failed, "回報失敗\n請稍候再試");
+        }
+        Navigator.pop(context);
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     return Provider<ReportBloc>(
-      builder: (context) => ReportBloc(context,
-          Provider.of<LoginBloc>(context, listen: false), ReportRepository()),
-      dispose: (_, bloc) => bloc.dispose(),
+      builder: (context) {
+        var reportBloc = kiwi.Container().resolve<ReportBloc>();
+        eventSub = reportBloc.eventStream.listen(_handleEvent);
+        return reportBloc;
+      },
+      dispose: (_, bloc) {
+        eventSub?.cancel();
+        bloc.dispose();
+      },
       child: WillPopScope(
         onWillPop: () async {
           await dialogAnimController.reverse();
@@ -565,11 +588,7 @@ class _ReportDialogState extends State<ReportDialog>
                 onPressed = () async {
                   String desc = bugDescTextController.text;
                   int severity = bugSeverityNotifier.value.index;
-                  await reportBloc
-                      ?.reportBug(desc, severity)
-                      ?.then((isSuccess) =>
-                          isSuccess ? onSuccess() : onFailure(null))
-                      ?.catchError(onFailure);
+                  reportBloc?.reportBug(desc, severity);
                 };
                 break;
               case ReportType.wish:
@@ -578,22 +597,15 @@ class _ReportDialogState extends State<ReportDialog>
                   String desc = requestController.text;
                   String city = cityNotifier.value?.name;
                   String district = districtNotifier.value;
-                  await reportBloc
-                      ?.reportRequest(desc, city: city, district: district)
-                      ?.then((isSuccess) =>
-                          isSuccess ? onSuccess() : onFailure(null))
-                      ?.catchError(onFailure);
+                  reportBloc?.reportRequest(desc,
+                      city: city, district: district);
                 };
                 break;
               case ReportType.opinion:
                 notifier = isOpinionValidNotifier;
                 onPressed = () async {
                   String desc = opinionController.text;
-                  await reportBloc
-                      ?.reportOpinion(desc)
-                      ?.then((isSuccess) =>
-                          isSuccess ? onSuccess() : onFailure(null))
-                      ?.catchError(onFailure);
+                  reportBloc?.reportOpinion(desc);
                 };
                 break;
               default:
@@ -636,6 +648,7 @@ class ReportShopDialog extends StatefulWidget {
 class _ReportShopDialogState extends State<ReportShopDialog>
     with SingleTickerProviderStateMixin {
   AnimationController _dialogAnimController;
+  StreamSubscription<Event> eventSub;
   TextEditingController _shopNameController;
   TextEditingController _branchNameController;
   TextEditingController _cityController;
@@ -672,13 +685,33 @@ class _ReportShopDialogState extends State<ReportShopDialog>
     super.dispose();
   }
 
+  void _handleEvent(Event event) {
+    switch (event.runtimeType) {
+      case OnReportedEvent:
+        var isSuccess = (event as OnReportedEvent).isSuccess;
+        if (isSuccess == true) {
+          Util.showIconTextToast(context, Icons.mail, "回報成功\n感謝您的回饋");
+        } else {
+          Util.showIconTextToast(context, Icons.sms_failed, "回報失敗\n請稍候再試");
+        }
+        Navigator.pop(context);
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     return Provider<ReportBloc>(
-      builder: (context) => ReportBloc(context,
-          Provider.of<LoginBloc>(context, listen: false), ReportRepository()),
-      dispose: (_, bloc) => bloc.dispose(),
+      builder: (context) {
+        var reportBloc = kiwi.Container().resolve<ReportBloc>();
+        eventSub = reportBloc.eventStream.listen(_handleEvent);
+        return reportBloc;
+      },
+      dispose: (_, bloc) {
+        eventSub?.cancel();
+        bloc.dispose();
+      },
       child: WillPopScope(
         onWillPop: () async {
           await _dialogAnimController.reverse();
@@ -924,33 +957,20 @@ class _ReportShopDialogState extends State<ReportShopDialog>
         return ValueListenableBuilder<_ShopReportItem>(
           valueListenable: _reportItemNotifier,
           builder: (context, reportItem, child) {
-            var onSuccess = () async {
-              Util.showIconTextToast(context, Icons.mail, "回報成功\n感謝您的回饋");
-              Navigator.pop(context, true);
-            };
-            var onFailure = (_) async {
-              Util.showIconTextToast(context, Icons.sms_failed, "回報失敗\n請稍候再試");
-              Navigator.pop(context);
-            };
             return Container(
               width: double.infinity,
               child: RaisedButton(
-                disabledTextColor: Colors.grey.shade700,
-                disabledColor: Colors.grey.shade300,
-                shape: StadiumBorder(),
-                elevation: 8,
-                color: Theme.of(context).accentColor,
-                textColor: Colors.white,
-                child: Text("回報"),
-                onPressed: reportItem == null
-                    ? null
-                    : () => reportBloc
-                        ?.reportShop(widget._shop.docId,
-                            reportItem.toString()?.split(".")?.last)
-                        ?.then((isSuccess) =>
-                            isSuccess ? onSuccess() : onFailure(null))
-                        ?.catchError(onFailure),
-              ),
+                  disabledTextColor: Colors.grey.shade700,
+                  disabledColor: Colors.grey.shade300,
+                  shape: StadiumBorder(),
+                  elevation: 8,
+                  color: Theme.of(context).accentColor,
+                  textColor: Colors.white,
+                  child: Text("回報"),
+                  onPressed: reportItem == null
+                      ? null
+                      : () => reportBloc?.reportShop(widget._shop.docId,
+                          reportItem.toString()?.split(".")?.last)),
             );
           },
         );
