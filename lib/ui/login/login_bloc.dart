@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
+import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/ui/event.dart';
@@ -13,6 +14,8 @@ class LoginBloc extends BaseBloc {
   final GuestLoginUseCase _guestLoginUseCase;
   final GetCurrentUserUseCase _getCurrentUserUseCase;
   final LogoutUseCase _logoutUseCase;
+  final DeleteFavoriteShopsUseCase _deleteFavoriteShopsUseCase;
+  final SyncRemoteFavoriteShopUseCase _syncRemoteFavoriteShopUseCase;
 
   final FavoriteRepository _favoriteRepo;
 
@@ -28,7 +31,9 @@ class LoginBloc extends BaseBloc {
       this._guestLoginUseCase,
       this._getCurrentUserUseCase,
       this._logoutUseCase,
-      this._favoriteRepo) {
+      this._favoriteRepo,
+      this._deleteFavoriteShopsUseCase,
+      this._syncRemoteFavoriteShopUseCase) {
     _getCurrentUserUseCase.execute().then((currentUserStream) {
       return currentUserStream.listen((user) => _currentUser.add(user));
     });
@@ -88,7 +93,7 @@ class LoginBloc extends BaseBloc {
   void logout() {
     var currentUser = _currentUser.value;
     if (currentUser.isAnonymous == true) {
-      eventSink.add(Event.clearLocalFavoriteShop());
+      eventSink.add(Event.clearLocalFavorites());
       return;
     }
     _logoutUseCase.execute().then((logoutStream) {
@@ -99,15 +104,23 @@ class LoginBloc extends BaseBloc {
     });
   }
 
-  Future<void> deleteAllFavoriteShops() {
-    return _favoriteRepo.deleteFavoriteShops();
+  void clearLocalFavorites() {
+    var timeBeforeDeletion = DateTime.now();
+    _deleteFavoriteShopsUseCase
+        .execute()
+        .then((stream) => stream.first)
+        .then((_) {
+      var timeDifference = DateTime.now().difference(timeBeforeDeletion);
+      return timeDifference.inSeconds < 2
+          ? Future.delayed(timeDifference)
+          : null;
+    }).then((_) => eventSink.add(Event.localFavoritesCleared()));
   }
 
-  Future<void> syncFavoriteShops() async {
-    String uid = _currentUser.value?.uid;
-    if (uid == null) {
-      return null;
-    }
-    return _favoriteRepo.syncRemoteFavoriteShops(uid);
+  void syncFavoriteShops() {
+    _syncRemoteFavoriteShopUseCase
+        .execute()
+        .then((stream) => stream.first)
+        .then((_) => eventSink.add(Event.remoteFavoritesSynced()));
   }
 }

@@ -49,13 +49,17 @@ class _LoginDialogState extends State<LoginDialog>
         loginBloc?.syncFavoriteShops();
         Navigator.maybePop(context, newUser);
         break;
-      case ClearLocalFavoriteShopEvent:
+      case ClearLocalFavoritesEvent:
         showDialog(
           context: context,
           builder: (context) => _buildClearDataRequestDialog(),
         );
-        loginBloc?.deleteAllFavoriteShops();
+        loginBloc?.clearLocalFavorites();
         break;
+      case LocalFavoritesClearedEvent:
+        loginBloc?.logout();
+        break;
+      case RemoteFavoritesSyncedEvent:
       case UserLogoutEvent:
         Navigator.popUntil(context, ModalRoute.withName(BobaMap.routeName));
         break;
@@ -492,10 +496,7 @@ class _LoginDialogState extends State<LoginDialog>
           child: Text("否"),
         ),
         FlatButton(
-          onPressed: () async {
-            await loginBloc.deleteAllFavoriteShops();
-            loginBloc.logout();
-          },
+          onPressed: () async => loginBloc.clearLocalFavorites(),
           child: Text("是"),
         ),
       ],

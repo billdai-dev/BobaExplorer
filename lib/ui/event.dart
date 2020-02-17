@@ -11,5 +11,9 @@ abstract class Event {
 
   factory Event.userLogout() => UserLogoutEvent();
 
-  factory Event.clearLocalFavoriteShop() => ClearLocalFavoriteShopEvent();
+  factory Event.clearLocalFavorites() => ClearLocalFavoritesEvent();
+
+  factory Event.localFavoritesCleared() => LocalFavoritesClearedEvent();
+
+  factory Event.remoteFavoritesSynced() => RemoteFavoritesSyncedEvent();
 }

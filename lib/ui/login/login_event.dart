@@ -15,4 +15,8 @@ class ShowSyncDataDialogEvent extends Event {
 
 class UserLogoutEvent extends Event {}
 
-class ClearLocalFavoriteShopEvent extends Event {}
+class ClearLocalFavoritesEvent extends Event {}
+
+class LocalFavoritesClearedEvent extends Event {}
+
+class RemoteFavoritesSyncedEvent extends Event {}
