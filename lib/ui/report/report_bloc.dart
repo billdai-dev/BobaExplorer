@@ -1,16 +1,12 @@
 import 'dart:convert';
 
+import 'package:boba_explorer/domain/entity/city_data.dart';
 import 'package:boba_explorer/domain/entity/report.dart';
 import 'package:boba_explorer/domain/use_case/report/report_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
-import 'package:boba_explorer/domain/entity/city_data.dart';
-import 'package:boba_explorer/data/repository/report/report_repository.dart';
 import 'package:boba_explorer/ui/event.dart';
-import 'package:boba_explorer/ui/login/login_bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:rxdart/rxdart.dart';
 
 class ReportBloc extends BaseBloc {
   final ReportUseCase _reportUseCase;
@@ -77,7 +73,6 @@ class ReportBloc extends BaseBloc {
   void dispose() {
     super.dispose();
     _isLoadingController?.close();
-    _currentUser?.close();
     _citiesController?.close();
   }
 }

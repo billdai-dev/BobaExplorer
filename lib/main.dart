@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
 import 'package:rate_my_app/rate_my_app.dart';
+import 'package:kiwi/kiwi.dart' as kiwi;
 
 void main() => runApp(
       MultiProvider(
@@ -21,7 +22,7 @@ void main() => runApp(
             dispose: (_, appBloc) => appBloc.dispose(),
           ),
           Provider<LoginBloc>(
-            builder: (_) => LoginBloc(AuthRepository(), FavoriteRepository()),
+            builder: (_) => kiwi.Container().resolve<LoginBloc>(),
             dispose: (_, loginBloc) => loginBloc.dispose(),
           ),
         ],
