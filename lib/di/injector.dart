@@ -5,7 +5,7 @@ import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/data/repository/report/report_repository.dart';
 import 'package:boba_explorer/data/repository/search_boba/search_boba_repo.dart';
-import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
+import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
 import 'package:boba_explorer/data/service/exception_handler.dart';
 import 'package:boba_explorer/domain/repository/auth/auth_repository.dart';
 import 'package:boba_explorer/domain/repository/favorite/favorite_repository.dart';
@@ -16,6 +16,8 @@ import 'package:boba_explorer/domain/service/exception_handler.dart';
 import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
 import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
 import 'package:boba_explorer/domain/use_case/report/report_use_case.dart';
+import 'package:boba_explorer/domain/use_case/tea_shop/tea_shop_use_case.dart';
+import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/report/report_bloc.dart';
 import 'package:kiwi/kiwi.dart';
@@ -44,8 +46,10 @@ abstract class Injector {
   @Register.factory(DeleteFavoriteShopsUseCase)
   @Register.factory(SyncRemoteFavoriteShopUseCase)
   @Register.factory(ReportUseCase)
+  @Register.factory(FindTeaShopUseCase)
   @Register.factory(LoginBloc)
   @Register.factory(ReportBloc)
+  @Register.factory(BobaMapBloc)
 /*@Register.factory(GetBannerUseCase)
   @Register.factory(AppBloc)
   @Register.factory(MealDetailBloc)

@@ -4,7 +4,7 @@ import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/data/repository/mapper.dart';
 import 'package:boba_explorer/data/repository/search_boba/search_boba_repo.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
-import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
+import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
 import 'package:rxdart/rxdart.dart';
 
 class SearchBobaBloc extends BaseBloc {

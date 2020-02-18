@@ -1,7 +1,7 @@
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
-import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
+import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
@@ -227,8 +227,7 @@ class _MyAppState extends State<MyApp> {
         switch (lastRoute) {
           case BobaMap.routeName:
             return Provider<BobaMapBloc>(
-              builder: (_) => BobaMapBloc(
-                  TeaShopRepository(), FavoriteRepository(), AuthRepository()),
+              builder: (_) => kiwi.Container().resolve<BobaMapBloc>(),
               dispose: (_, bloc) => bloc.dispose(),
               child: BobaMap(),
             );

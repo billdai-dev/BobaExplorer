@@ -52,6 +52,8 @@ class _$Injector extends Injector {
         c<IExceptionHandler>()));
     container.registerFactory((c) => ReportUseCase(c<IReportRepository>(),
         c<GetCurrentUserUseCase>(), c<IExceptionHandler>()));
+    container.registerFactory((c) =>
+        FindTeaShopUseCase(c<ITeaShopRepository>(), c<IExceptionHandler>()));
     container.registerFactory((c) => LoginBloc(
         c<GoogleLoginUseCase>(),
         c<FacebookLoginUseCase>(),
@@ -62,5 +64,10 @@ class _$Injector extends Injector {
         c<DeleteFavoriteShopsUseCase>(),
         c<SyncRemoteFavoriteShopUseCase>()));
     container.registerFactory((c) => ReportBloc(c<ReportUseCase>()));
+    container.registerFactory((c) => BobaMapBloc(
+        c<FindTeaShopUseCase>(),
+        c<SetFavoriteShopUseCase>(),
+        c<GetFavoriteShopsStreamUseCase>(),
+        c<GetUserChangedStreamUseCase>()));
   }
 }

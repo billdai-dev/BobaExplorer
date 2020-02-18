@@ -77,5 +77,5 @@ class SetFavoriteShopParam {
   bool isFavorite;
   String uid;
 
-  SetFavoriteShopParam(this.teaShop, this.isFavorite, this.uid);
+  SetFavoriteShopParam(this.teaShop, this.isFavorite);
 }

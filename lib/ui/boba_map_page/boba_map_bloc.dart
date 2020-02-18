@@ -1,17 +1,18 @@
 import 'dart:async';
 
-import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
-import 'package:boba_explorer/ui/base_bloc.dart';
-import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
-import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repo.dart';
+import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
+import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
+import 'package:boba_explorer/domain/use_case/tea_shop/tea_shop_use_case.dart';
+import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:tuple/tuple.dart';
 
 class BobaMapBloc extends BaseBloc {
-  final TeaShopRepository _teaShopRepo;
-  final FavoriteRepository _favoriteRepo;
-  final AuthRepository _loginRepo;
+  final FindTeaShopUseCase _findTeaShopUseCase;
+  final SetFavoriteShopUseCase _setFavoriteShopUseCase;
+  final GetFavoriteShopsStreamUseCase _getFavoriteShopsStreamUseCase;
+  final GetUserChangedStreamUseCase _getUserChangedStreamUseCase;
 
   final BehaviorSubject<List<TeaShop>> _teaShopsController =
       BehaviorSubject(seedValue: []);
@@ -45,16 +46,22 @@ class BobaMapBloc extends BaseBloc {
   final BehaviorSubject<Tuple2<Set<String>, Set<String>>> _prevCurFilters =
       BehaviorSubject();
 
-  BobaMapBloc(this._teaShopRepo, this._favoriteRepo, this._loginRepo) {
+  BobaMapBloc(this._findTeaShopUseCase, this._setFavoriteShopUseCase,
+      this._getFavoriteShopsStreamUseCase, this._getUserChangedStreamUseCase) {
     _queryConfigController.switchMap((config) {
       Set<String> filteredShops = _filterListController.value;
-      return _teaShopRepo.getTeaShops(
+      return _findTeaShopUseCase
+          .execute(FindTeaShopParam(config.lat, config.lng,
+              radius: config.radius, shopNames: filteredShops))
+          .asStream();
+      /*return _teaShopRepo.getTeaShops(
           lat: config.lat,
           lng: config.lng,
           radius: config.radius,
-          shopNames: filteredShops);
-    }).listen((shops) {
-      _teaShopsController.add(shops);
+          shopNames: filteredShops);*/
+    }).listen((teaShopsStream) {
+      teaShopsStream.pipe(_teaShopsController);
+      //_teaShopsController.add(shops);
     });
     //=============================================================
     _prevCurFilters.doOnData((filtersTuple) {
@@ -97,27 +104,43 @@ class BobaMapBloc extends BaseBloc {
       }
       //Result is null => No need to search more shops
       if (result == null) {
-        return Observable.error(
-            ArgumentError.notNull("Old and new filters can't be both null"));
+        return Stream<Stream<List<TeaShop>>>.empty();
+        /*return Observable.error(
+            ArgumentError.notNull("Old and new filters can't be both null"));*/
       }
       //Do query/queries for those new added filters
       final config = _queryConfigController.value;
-      return _teaShopRepo
+      return _findTeaShopUseCase
+          .execute(FindTeaShopParam(config.lat, config.lng,
+              radius: config.radius, shopNames: result))
+          .then((teaShopsStream) => teaShopsStream
+              .map((teaShops) => teaShops..addAll(intersectionData)))
+          .asStream();
+
+      /*return _teaShopRepo
           .getTeaShops(
-              lat: config?.lat,
-              lng: config?.lng,
-              radius: config?.radius,
-              shopNames: result)
-          .map((shops) => shops..addAll(intersectionData));
-    }).listen((shops) => _teaShopsController.add(shops),
-        onError: (e) => print(e));
+          lat: config?.lat,
+          lng: config?.lng,
+          radius: config?.radius,
+          shopNames: result)
+          .map((shops) => shops..addAll(intersectionData));*/
+    }).listen((teaShopsStream) {
+      teaShopsStream?.pipe(_teaShopsController);
+      //_teaShopsController.add(shops);
+    }, onError: (e) => print(e));
     //=============================================================
 
-    _favoriteShopsController.addStream(
+    _getUserChangedStreamUseCase.execute().then((userChangedStream) {
+      userChangedStream.listen((_) => _getFavoriteShopsStreamUseCase
+          .execute()
+          .then((favoritesStream) =>
+              favoritesStream.listen(_favoriteShopsController.add)));
+    });
+    /*_favoriteShopsController.addStream(
         Observable(_loginRepo.getAuthChangedStream()).switchMap((user) {
-      String uid = user == null || user.isAnonymous ? null : user.uid;
-      return _favoriteRepo.getFavoriteShops(uid: uid);
-    }));
+          String uid = user == null || user.isAnonymous ? null : user.uid;
+          return _favoriteRepo.getFavoriteShops(uid: uid);
+        }));*/
   }
 
   @override
@@ -146,9 +169,7 @@ class BobaMapBloc extends BaseBloc {
     Set<String> newFilter;
     if (shop != null) {
       newFilter = Set.of(_filterListController.value);
-      if (newFilter.contains(shop)) {
-        newFilter.remove(shop);
-      } else {
+      if (!newFilter.remove(shop)) {
         newFilter.add(shop);
       }
     } else {
@@ -158,10 +179,11 @@ class BobaMapBloc extends BaseBloc {
     _prevCurFilters.add(Tuple2(oldFiltersTuple.item2, newFilter));
   }
 
-  Future<void> setFavoriteShop(bool isFavorite, TeaShop shop) async {
-    var user = await _loginRepo.getCurrentUser();
-    String uid = user == null || user.isAnonymous ? null : user.uid;
-    return _favoriteRepo.setFavoriteShop(isFavorite, shop, uid: uid);
+  void setFavoriteShop(bool isFavorite, TeaShop shop) async {
+    _setFavoriteShopUseCase.execute(SetFavoriteShopParam(shop, isFavorite));
+    //var user = await _loginRepo.getCurrentUser();
+    //String uid = user == null || user.isAnonymous ? null : user.uid;
+    //return _favoriteRepo.setFavoriteShop(isFavorite, shop, uid: uid);
   }
 
   void searchSingleShop(TeaShop shop) {

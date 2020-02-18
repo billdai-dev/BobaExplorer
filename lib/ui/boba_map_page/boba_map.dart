@@ -27,12 +27,12 @@ import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 Future<User> showLoginDialog(BuildContext context) async {
-  final user = await showDialog<FirebaseUser>(
+  final user = await showDialog<User>(
     context: context,
     builder: (context) => LoginDialog(),
   );
   if (user != null) {
-    String userName = user.displayName ?? "";
+    String userName = user.name ?? "";
     Scaffold.of(context).showSnackBar(SnackBar(
       content: Text("歡迎，$userName，現在您可以收藏店家囉"),
     ));
@@ -225,7 +225,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                         style: TextStyle(color: Colors.grey, fontSize: 16),
                       ),
                     ),
-                    StreamBuilder<FirebaseUser>(
+                    StreamBuilder<User>(
                       stream: loginBloc.currentUser,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.none) {
@@ -255,8 +255,8 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
     );
   }
 
-  StreamBuilder<FirebaseUser> _buildAvatar(LoginBloc loginBloc) {
-    return StreamBuilder<FirebaseUser>(
+  StreamBuilder<User> _buildAvatar(LoginBloc loginBloc) {
+    return StreamBuilder<User>(
       stream: loginBloc.currentUser,
       builder: (context, snapshot) {
         final user = snapshot.data;
@@ -282,7 +282,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
             ),
           );
         } else if (user.photoUrl == null) {
-          child = Text(user.displayName ?? "");
+          child = Text(user.name ?? "");
         } else {
           avatar = CachedNetworkImageProvider(user.photoUrl);
         }
@@ -660,9 +660,8 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
                     ),
                     Spacer(),
                     InkWell(
-                      onTap: () async {
-                        await bobaMapBloc.setFavoriteShop(false, shop);
-                      },
+                      onTap: () async =>
+                          bobaMapBloc.setFavoriteShop(false, shop),
                       child: Icon(
                         Icons.favorite,
                         color: Colors.redAccent,
@@ -1038,7 +1037,7 @@ class _FavoriteCheckboxState extends State<FavoriteCheckbox> {
   Widget build(BuildContext context) {
     return Consumer<LoginBloc>(
       builder: (context, loginBloc, child) {
-        return StreamBuilder<FirebaseUser>(
+        return StreamBuilder<User>(
           stream: loginBloc.currentUser,
           builder: (context, snapshot) {
             final user = snapshot.data;
