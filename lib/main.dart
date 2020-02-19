@@ -2,6 +2,7 @@ import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
 import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
+import 'package:boba_explorer/di/injector.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
@@ -14,21 +15,24 @@ import 'package:provider/provider.dart';
 import 'package:rate_my_app/rate_my_app.dart';
 import 'package:kiwi/kiwi.dart' as kiwi;
 
-void main() => runApp(
-      MultiProvider(
-        providers: [
-          Provider<AppBloc>(
-            builder: (_) => AppBloc(),
-            dispose: (_, appBloc) => appBloc.dispose(),
-          ),
-          Provider<LoginBloc>(
-            builder: (_) => kiwi.Container().resolve<LoginBloc>(),
-            dispose: (_, loginBloc) => loginBloc.dispose(),
-          ),
-        ],
-        child: MyApp(),
-      ),
-    );
+void main() {
+  inject();
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<AppBloc>(
+          builder: (_) => AppBloc(),
+          dispose: (_, appBloc) => appBloc.dispose(),
+        ),
+        Provider<LoginBloc>(
+          builder: (_) => kiwi.Container().resolve<LoginBloc>(),
+          dispose: (_, loginBloc) => loginBloc.dispose(),
+        ),
+      ],
+      child: MyApp(),
+    ),
+  );
+}
 
 class MyApp extends StatefulWidget {
   @override

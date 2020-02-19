@@ -131,10 +131,12 @@ class BobaMapBloc extends BaseBloc {
     //=============================================================
 
     _getUserChangedStreamUseCase.execute().then((userChangedStream) {
-      userChangedStream.listen((_) => _getFavoriteShopsStreamUseCase
-          .execute()
-          .then((favoritesStream) =>
-              favoritesStream.listen(_favoriteShopsController.add)));
+      userChangedStream.listen((_) {
+        return _getFavoriteShopsStreamUseCase.execute().then((favoritesStream) {
+          return favoritesStream
+              .listen((favorites) => _favoriteShopsController.add(favorites));
+        });
+      });
     });
     /*_favoriteShopsController.addStream(
         Observable(_loginRepo.getAuthChangedStream()).switchMap((user) {

@@ -53,22 +53,25 @@ class Mapper {
   }
 
   static User fireBaseUserToUser(FirebaseUser fireBaseUser) {
+    if (fireBaseUser == null) {
+      return null;
+    }
     return User()
-      ..uid = fireBaseUser.uid
-      ..providerId = fireBaseUser.providerId
-      ..name = fireBaseUser.displayName
-      ..photoUrl = fireBaseUser.photoUrl
-      ..phoneNumber = fireBaseUser.phoneNumber
-      ..email = fireBaseUser.email
+      ..uid = fireBaseUser?.uid
+      ..providerId = fireBaseUser?.providerId
+      ..name = fireBaseUser?.displayName
+      ..photoUrl = fireBaseUser?.photoUrl
+      ..phoneNumber = fireBaseUser?.phoneNumber
+      ..email = fireBaseUser?.email
       ..isAnonymous = fireBaseUser?.isAnonymous
       ..userData = fireBaseUser?.providerData?.map((provider) {
         return UserData()
-          ..uid = provider.uid
-          ..providerId = provider.providerId
-          ..name = provider.displayName
-          ..photoUrl = provider.photoUrl
-          ..phoneNumber = provider.phoneNumber
-          ..email = provider.email;
-      });
+          ..uid = provider?.uid
+          ..providerId = provider?.providerId
+          ..name = provider?.displayName
+          ..photoUrl = provider?.photoUrl
+          ..phoneNumber = provider?.phoneNumber
+          ..email = provider?.email;
+      })?.toList();
   }
 }

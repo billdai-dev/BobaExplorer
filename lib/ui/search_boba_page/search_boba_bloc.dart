@@ -1,16 +1,15 @@
 import 'dart:async';
 
+import 'package:boba_explorer/domain/use_case/search/search_use_case.dart';
+import 'package:boba_explorer/domain/use_case/tea_shop/tea_shop_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
-import 'package:boba_explorer/data/repository/mapper.dart';
-import 'package:boba_explorer/data/repository/search_boba/search_boba_repo.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
-import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
 import 'package:rxdart/rxdart.dart';
 
 class SearchBobaBloc extends BaseBloc {
-  final SearchBobaRepository _searchBobaRepo;
-
-  final TeaShopRepository _teaShopRepo;
+  final GetRecentSearchUseCase _getRecentSearchUseCase;
+  final AddRecentSearchUseCase _addRecentSearchUseCase;
+  final FindTeaShopUseCase _findTeaShopUseCase;
 
   /*final BehaviorSubject<List<TeaShop>> _searchResultController =
       BehaviorSubject();
@@ -22,10 +21,13 @@ class SearchBobaBloc extends BaseBloc {
 
   Stream<List<String>> get recentSearch => _recentSearchController.stream;
 
-  SearchBobaBloc(this._searchBobaRepo, this._teaShopRepo) {
-    _searchBobaRepo
+  SearchBobaBloc(this._getRecentSearchUseCase, this._addRecentSearchUseCase,
+      this._findTeaShopUseCase) {
+    _getRecentSearchUseCase.execute().then((searchResultStream) =>
+        searchResultStream.listen(_recentSearchController.add));
+    /*_searchBobaRepo
         .getRecentSearch()
-        .then((shops) => _recentSearchController.add(shops));
+        .then((shops) => _recentSearchController.add(shops));*/
 
     /*_favoriteRepo.getFavoriteShops().then((shops) {
       return shops.map((json) {
@@ -43,15 +45,18 @@ class SearchBobaBloc extends BaseBloc {
     _recentSearchController?.close();
   }
 
-  Future<void> addRecentSearch(String shop) {
-    return _searchBobaRepo.addRecentSearch(shop);
+  void addRecentSearch(String shop) {
+    _addRecentSearchUseCase.execute(shop);
   }
 
   Future<List<TeaShop>> searchTeaShop(String name,
       {double lat, double lng, double radius}) {
-    return _teaShopRepo
+    return _findTeaShopUseCase
+        .execute(FindTeaShopParam(lat, lng, radius: radius, shopNames: {name}))
+        .then((teaShopsStream) => teaShopsStream.first);
+    /*return _teaShopRepo
         .getTeaShops(lat: lat, lng: lng, radius: radius, shopNames: {name})
         .first
-        .timeout(Duration(seconds: 20));
+        .timeout(Duration(seconds: 20));*/
   }
 }

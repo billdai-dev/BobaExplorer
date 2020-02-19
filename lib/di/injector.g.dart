@@ -16,8 +16,6 @@ class _$Injector extends Injector {
         (c) => ExceptionHandler());
     container.registerFactory<IFavoriteRepository, FavoriteRepository>(
         (c) => FavoriteRepository(c<INetwork>(), c<IDatabase>()));
-    container.registerFactory<IFavoriteRepository, FavoriteRepository>(
-        (c) => FavoriteRepository(c<INetwork>(), c<IDatabase>()));
     container.registerFactory<IAuthRepository, AuthRepository>(
         (c) => AuthRepository(c<INetwork>()));
     container.registerFactory<IReportRepository, ReportRepository>(
@@ -39,7 +37,9 @@ class _$Injector extends Injector {
     container.registerFactory(
         (c) => LogoutUseCase(c<IAuthRepository>(), c<IExceptionHandler>()));
     container.registerFactory((c) => GetFavoriteShopsStreamUseCase(
-        c<IFavoriteRepository>(), c<IExceptionHandler>()));
+        c<GetCurrentUserUseCase>(),
+        c<IFavoriteRepository>(),
+        c<IExceptionHandler>()));
     container.registerFactory((c) => SetFavoriteShopUseCase(
         c<GetCurrentUserUseCase>(),
         c<IFavoriteRepository>(),
@@ -54,13 +54,16 @@ class _$Injector extends Injector {
         c<GetCurrentUserUseCase>(), c<IExceptionHandler>()));
     container.registerFactory((c) =>
         FindTeaShopUseCase(c<ITeaShopRepository>(), c<IExceptionHandler>()));
+    container.registerFactory((c) => GetRecentSearchUseCase(
+        c<ISearchBobaRepository>(), c<IExceptionHandler>()));
+    container.registerFactory((c) => AddRecentSearchUseCase(
+        c<ISearchBobaRepository>(), c<IExceptionHandler>()));
     container.registerFactory((c) => LoginBloc(
         c<GoogleLoginUseCase>(),
         c<FacebookLoginUseCase>(),
         c<GuestLoginUseCase>(),
         c<GetCurrentUserUseCase>(),
         c<LogoutUseCase>(),
-        c<FavoriteRepository>(),
         c<DeleteFavoriteShopsUseCase>(),
         c<SyncRemoteFavoriteShopUseCase>()));
     container.registerFactory((c) => ReportBloc(c<ReportUseCase>()));
@@ -69,5 +72,7 @@ class _$Injector extends Injector {
         c<SetFavoriteShopUseCase>(),
         c<GetFavoriteShopsStreamUseCase>(),
         c<GetUserChangedStreamUseCase>()));
+    container.registerFactory((c) => SearchBobaBloc(c<GetRecentSearchUseCase>(),
+        c<AddRecentSearchUseCase>(), c<FindTeaShopUseCase>()));
   }
 }

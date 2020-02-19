@@ -4,8 +4,8 @@ import 'package:boba_explorer/data/remote/network.dart';
 import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/data/repository/report/report_repository.dart';
-import 'package:boba_explorer/data/repository/search_boba/search_boba_repo.dart';
 import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
+import 'package:boba_explorer/data/repository/search_boba/search_boba_repository.dart';
 import 'package:boba_explorer/data/service/exception_handler.dart';
 import 'package:boba_explorer/domain/repository/auth/auth_repository.dart';
 import 'package:boba_explorer/domain/repository/favorite/favorite_repository.dart';
@@ -18,8 +18,10 @@ import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
 import 'package:boba_explorer/domain/use_case/report/report_use_case.dart';
 import 'package:boba_explorer/domain/use_case/tea_shop/tea_shop_use_case.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
+import 'package:boba_explorer/domain/use_case/search/search_use_case.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/report/report_bloc.dart';
+import 'package:boba_explorer/ui/search_boba_page/search_boba_bloc.dart';
 import 'package:kiwi/kiwi.dart';
 
 part 'injector.g.dart';
@@ -29,7 +31,6 @@ abstract class Injector {
   @Register.singleton(IPreference, from: Preference)
   @Register.singleton(IDatabase, from: BobaDatabase)
   @Register.factory(IExceptionHandler, from: ExceptionHandler)
-  @Register.factory(IFavoriteRepository, from: FavoriteRepository)
   @Register.factory(IFavoriteRepository, from: FavoriteRepository)
   @Register.factory(IAuthRepository, from: AuthRepository)
   @Register.factory(IReportRepository, from: ReportRepository)
@@ -47,9 +48,12 @@ abstract class Injector {
   @Register.factory(SyncRemoteFavoriteShopUseCase)
   @Register.factory(ReportUseCase)
   @Register.factory(FindTeaShopUseCase)
+  @Register.factory(GetRecentSearchUseCase)
+  @Register.factory(AddRecentSearchUseCase)
   @Register.factory(LoginBloc)
   @Register.factory(ReportBloc)
   @Register.factory(BobaMapBloc)
+  @Register.factory(SearchBobaBloc)
 /*@Register.factory(GetBannerUseCase)
   @Register.factory(AppBloc)
   @Register.factory(MealDetailBloc)

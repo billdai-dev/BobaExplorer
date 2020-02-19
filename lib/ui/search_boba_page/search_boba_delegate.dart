@@ -1,6 +1,6 @@
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/data/repository/mapper.dart';
-import 'package:boba_explorer/data/repository/search_boba/search_boba_repo.dart';
+import 'package:boba_explorer/data/repository/search_boba/search_boba_repository.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_bloc.dart';
@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
+import 'package:kiwi/kiwi.dart' as kiwi;
 
 class SearchBobaDelegate extends SearchDelegate {
   final double _lat;
@@ -47,10 +48,7 @@ class SearchBobaDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     return Provider<SearchBobaBloc>(
-      builder: (_) => SearchBobaBloc(
-        SearchBobaRepository(),
-        TeaShopRepository(),
-      ),
+      builder: (_) => kiwi.Container().resolve<SearchBobaBloc>(),
       dispose: (_, bloc) => bloc.dispose(),
       child: Consumer<AppBloc>(
         builder: (context, appBloc, child) {
@@ -146,10 +144,7 @@ class SearchBobaDelegate extends SearchDelegate {
   Widget buildResults(BuildContext context) {
     return Provider<SearchBobaBloc>(
       builder: (_) {
-        final bloc = SearchBobaBloc(
-          SearchBobaRepository(),
-          TeaShopRepository(),
-        );
+        var bloc = kiwi.Container().resolve<SearchBobaBloc>();
         if (query.isNotEmpty) {
           bloc.addRecentSearch(query);
         }

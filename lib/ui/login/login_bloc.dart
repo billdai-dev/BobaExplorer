@@ -4,7 +4,6 @@ import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
 import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
-import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/ui/event.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -16,9 +15,6 @@ class LoginBloc extends BaseBloc {
   final LogoutUseCase _logoutUseCase;
   final DeleteFavoriteShopsUseCase _deleteFavoriteShopsUseCase;
   final SyncRemoteFavoriteShopUseCase _syncRemoteFavoriteShopUseCase;
-
-  final FavoriteRepository _favoriteRepo;
-
   StreamSubscription<User> _onAuthChangedListener;
 
   final BehaviorSubject<User> _currentUser = BehaviorSubject();
@@ -31,7 +27,6 @@ class LoginBloc extends BaseBloc {
       this._guestLoginUseCase,
       this._getCurrentUserUseCase,
       this._logoutUseCase,
-      this._favoriteRepo,
       this._deleteFavoriteShopsUseCase,
       this._syncRemoteFavoriteShopUseCase) {
     _getCurrentUserUseCase.execute().then((currentUserStream) {
@@ -91,11 +86,11 @@ class LoginBloc extends BaseBloc {
   }
 
   void logout() {
-    var currentUser = _currentUser.value;
+    /*var currentUser = _currentUser.value;
     if (currentUser.isAnonymous == true) {
       eventSink.add(Event.clearLocalFavorites());
       return;
-    }
+    }*/
     _logoutUseCase.execute().then((logoutStream) {
       return logoutStream.first;
     }).then((_) {

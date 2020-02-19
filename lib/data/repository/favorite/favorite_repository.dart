@@ -19,17 +19,15 @@ class FavoriteRepository implements IFavoriteRepository {
   }
 
   @override
-  Future<void> setFavoriteShop(SetFavoriteShopParam param) {
-    String uid = param.uid;
-    bool isFavorite = param.isFavorite;
+  Future<void> setFavoriteShop(TeaShop teaShop, bool isFavorite, {String uid}) {
     if (uid == null) {
       if (isFavorite) {
-        return _database.addFavoriteShop(param.teaShop);
+        return _database.addFavoriteShop(teaShop);
       } else {
-        return _database.deleteFavoriteShop(param.teaShop?.docId);
+        return _database.deleteFavoriteShop(teaShop?.docId);
       }
     }
-    return _network.setFavoriteShop(isFavorite, param.teaShop?.docId, uid);
+    return _network.setFavoriteShop(isFavorite, teaShop?.docId, uid);
   }
 
   @override

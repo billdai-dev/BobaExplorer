@@ -194,7 +194,9 @@ class Network implements INetwork {
         .collection(_collectionTeaShop)
         .where(_fieldFavoriteUid, arrayContains: uid)
         .snapshots()
-        .map((querySnapshot) => Mapper.docsToTeaShops(querySnapshot.documents));
+        .map((querySnapshot) {
+      return Mapper.docsToTeaShops(querySnapshot.documents);
+    });
   }
 
   @override

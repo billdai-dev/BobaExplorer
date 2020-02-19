@@ -13,7 +13,9 @@ class GoogleLoginUseCase extends UseCase<User> {
 
   @override
   Future buildUseCaseFuture(StreamController<User> outputStream) {
-    return _authRepository.googleLogin().then((user) => outputStream.add(user));
+    return _authRepository.googleLogin().then((user) {
+      outputStream.add(user);
+    });
   }
 }
 
@@ -51,8 +53,8 @@ class GetUserChangedStreamUseCase extends UseCase<User> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<User> outputStream) {
-    return outputStream.addStream(_authRepository.getAuthChangedStream());
+  Future buildUseCaseFuture(StreamController<User> outputStream) async {
+    return _authRepository.getAuthChangedStream();
   }
 }
 
