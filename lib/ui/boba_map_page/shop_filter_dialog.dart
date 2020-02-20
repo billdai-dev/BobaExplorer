@@ -60,8 +60,8 @@ class _ShopFilterDialogState extends State<ShopFilterDialog>
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: StreamBuilder<List<String>>(
-                stream: appBloc.supportedShops
-                    .map((shops) => Mapper.rcShopToStrings(shops)),
+                stream: appBloc.supportedShops.map(
+                    (shops) => Mapper.remoteConfigShopToSupportedShop(shops)),
                 builder: (context, supportedShopsData) {
                   List<String> supportedShops = supportedShopsData.hasData
                       ? supportedShopsData.data.toList()

@@ -1,9 +1,15 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:boba_explorer/data/remote/model.dart';
 import 'package:boba_explorer/data/repository/mapper.dart';
 import 'package:boba_explorer/domain/entity/report.dart';
+import 'package:boba_explorer/domain/entity/supported_shop.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
@@ -11,6 +17,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rxdart/rxdart.dart';
 
 abstract class INetwork {
+  Future<List<SupportedShop>> getSupportedShop();
+
+  Future<RemoteConfigAppVersionInfo> getAppVersionInfo();
+
   Future<User> googleLogin();
 
   Future<User> facebookLogin();
@@ -51,7 +61,46 @@ class Network implements INetwork {
   final Firestore _firestore = Firestore.instance;
   final Geoflutterfire _geoFlutterFire = Geoflutterfire();
 
+  final Completer<RemoteConfig> _remoteConfig = Completer()
+    ..complete(RemoteConfig.instance.then((rc) async {
+      final defaults = <String, dynamic>{
+        "supportedShops": "{'shops':[]}",
+        "latestAppVersion": "1.0.0",
+        "minAppVersion": "1.0.0"
+      };
+      await rc.setDefaults(defaults);
+      bool isDebugMode = false;
+      assert(() {
+        isDebugMode = true;
+        return true;
+      }());
+      await rc.setConfigSettings(RemoteConfigSettings(debugMode: isDebugMode));
+      await rc.fetch(expiration: Duration(minutes: isDebugMode ? 0 : 15));
+      await rc.activateFetched();
+      return rc;
+    }));
+
   Network();
+
+  @override
+  Future<List<SupportedShop>> getSupportedShop() {
+    return _remoteConfig.future.then((remoteConfig) {
+      String shopsJson = remoteConfig.getString("supportedShops");
+      Map<String, dynamic> decoded = jsonDecode(shopsJson);
+      List<RemoteConfigShop> shops = List<RemoteConfigShop>.from(
+          decoded["shops"].map((it) => RemoteConfigShop.fromJsonMap(it)));
+      return Mapper.remoteConfigShopToSupportedShop(shops);
+    });
+  }
+
+  @override
+  Future<RemoteConfigAppVersionInfo> getAppVersionInfo() {
+    return _remoteConfig.future.then((remoteConfig) {
+      String minVersion = remoteConfig.getString("minAppVersion");
+      String latestVersion = remoteConfig.getString("latestAppVersion");
+      return RemoteConfigAppVersionInfo(minVersion, latestVersion);
+    });
+  }
 
   @override
   Future<User> googleLogin() async {
