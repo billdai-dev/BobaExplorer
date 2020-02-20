@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:boba_explorer/app_bloc.dart';
+import 'package:boba_explorer/app_event.dart';
 import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
 import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
 import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
 import 'package:boba_explorer/di/injector.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
+import 'package:boba_explorer/ui/event.dart';
 import 'package:boba_explorer/ui/login/login_bloc.dart';
 import 'package:boba_explorer/ui/report/report_dialog.dart';
 import 'package:boba_explorer/ui/web_view/web_view_page.dart';
@@ -42,6 +46,39 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _appVersionChecked = false;
   final navigatorKey = GlobalKey<NavigatorState>();
+  StreamSubscription<Event> eventSub;
+
+  @override
+  void initState() {
+    super.initState();
+    final appBloc = Provider.of<AppBloc>(context, listen: false);
+    eventSub = appBloc.eventStream.listen((event) {
+      switch (event.runtimeType) {
+        case UpdateAppEvent:
+          var event = event as UpdateAppEvent;
+          final navigatorContext = navigatorKey?.currentState?.overlay?.context;
+          showDialog<bool>(
+            context: navigatorContext,
+            barrierDismissible: !event.isForceUpdate,
+            builder: (context) {
+              return WillPopScope(
+                onWillPop: () async => !event.isForceUpdate,
+                child: _AppUpdateDialog(
+                    event.isForceUpdate, event.requiredAppVersion),
+              );
+            },
+          );
+          break;
+      }
+    });
+    appBloc.checkAppVersion();
+  }
+
+  @override
+  void dispose() {
+    eventSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +103,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<bool> _checkAppVersion(BuildContext context) async {
+  /*Future<bool> _checkAppVersion(BuildContext context) async {
     if (_appVersionChecked) {
       return null;
     }
@@ -88,7 +125,7 @@ class _MyAppState extends State<MyApp> {
         },
       );
     });
-  }
+  }*/
 
   void _initRateMyApp() {
     RateMyApp rateMyApp = RateMyApp(
@@ -162,61 +199,6 @@ class _MyAppState extends State<MyApp> {
           );
         },
       );
-/*
-      return rateMyApp.showStarRateDialog(
-        context,
-        title: '幫找茶評個分 d(`･∀･)b',
-        message: '如果你覺得找茶有幫助到你的話，給我們打個分數當作鼓勵吧\n⁽⁽ ◟(∗ ˊωˋ ∗)◞ ⁾⁾',
-        onRatingChanged: (stars) {
-          return [
-            FlatButton(
-              child: Text('我評好了 🤩🤩'),
-              onPressed: () {
-                rateMyApp.doNotOpenAgain = true;
-                rateMyApp.save().then((_) => Navigator.pop(context));
-              },
-            ),
-            if (stars < 4)
-              FlatButton(
-                child: Text('我還有話想說 💬'),
-                onPressed: () {
-                  rateMyApp.doNotOpenAgain = true;
-                  rateMyApp.save().then((_) {
-                    Navigator.pop(context);
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) {
-                        return ReportDialog(reportType: ReportType.opinion);
-                      },
-                    );
-                  });
-                },
-              ),
-            FlatButton(
-              child: Text('稍後再說'),
-              onPressed: () {
-                rateMyApp.save().then((_) => Navigator.pop(context));
-              },
-            ),
-            FlatButton(
-              child: Text('別再要我打分數啦'),
-              onPressed: () {
-                rateMyApp.doNotOpenAgain = true;
-                rateMyApp.save().then((_) => Navigator.pop(context));
-              },
-            ),
-          ];
-        },
-        ignoreIOS: false,
-        dialogStyle: DialogStyle(
-          titleAlign: TextAlign.center,
-          messageAlign: TextAlign.center,
-          messagePadding: EdgeInsets.only(bottom: 12),
-        ),
-        starRatingOptions: StarRatingOptions(),
-      );
-*/
     });
   }
 

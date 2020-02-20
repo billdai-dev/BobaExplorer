@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:boba_explorer/app_bloc.dart';
+import 'package:boba_explorer/domain/entity/supported_shop.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/remote_config_model.dart';
@@ -323,10 +324,10 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
           Expanded(
             child: Consumer<AppBloc>(
               builder: (_, appBloc, child) {
-                return StreamBuilder<List<Shop>>(
+                return StreamBuilder<List<SupportedShop>>(
                   stream: appBloc.supportedShops,
                   builder: (context, snapshot) {
-                    List<Shop> shops = snapshot.data ?? [];
+                    List<SupportedShop> shops = snapshot.data ?? [];
                     return ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: shops.length,
@@ -622,7 +623,7 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {},
       confirmDismiss: (direction) async {
-        await bobaMapBloc.setFavoriteShop(false, shop);
+        bobaMapBloc.setFavoriteShop(false, shop);
         return true;
       },
       child: Card(
@@ -682,7 +683,7 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
 }
 
 class ShopFilterButton extends StatefulWidget {
-  final Shop _shop;
+  final SupportedShop _shop;
 
   ShopFilterButton(this._shop, {Key key}) : super(key: key);
 
@@ -714,8 +715,8 @@ class _ShopFilterButtonState extends State<ShopFilterButton>
   Widget build(BuildContext context) {
     super.build(context);
     BobaMapBloc bloc = Provider.of<BobaMapBloc>(context, listen: false);
-    Color color = Color.fromARGB(widget._shop.color.a, widget._shop.color.r,
-        widget._shop.color.g, widget._shop.color.b);
+    Color color = Color.fromARGB(widget._shop.argb[0], widget._shop.argb[1],
+        widget._shop.argb[2], widget._shop.argb[3]);
     double brightness = Util.getGrayLevel(color: color);
     return Padding(
       padding: const EdgeInsets.only(right: 8),

@@ -1,6 +1,7 @@
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/data/repository/mapper.dart';
 import 'package:boba_explorer/data/repository/search_boba/search_boba_repository.dart';
+import 'package:boba_explorer/domain/entity/supported_shop.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_bloc.dart';
@@ -54,7 +55,7 @@ class SearchBobaDelegate extends SearchDelegate {
         builder: (context, appBloc, child) {
           return StreamBuilder<List<String>>(
             stream: appBloc.supportedShops
-                .map((shops) => Mapper.remoteConfigShopToSupportedShop(shops)),
+                .map((shops) => shops.map((shop) => shop.name)),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return Container();
@@ -155,7 +156,7 @@ class SearchBobaDelegate extends SearchDelegate {
         builder: (context, appBloc, child) {
           return StreamBuilder<List<String>>(
             stream: appBloc.supportedShops
-                .map((shops) => Mapper.remoteConfigShopToSupportedShop(shops)),
+                .map((shops) => shops.map((shop) => shop.name)),
             builder: (context, snapshot) {
               final supportedShops = snapshot.data ?? [];
 
