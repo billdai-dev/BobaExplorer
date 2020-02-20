@@ -12,10 +12,8 @@ class GoogleLoginUseCase extends UseCase<User> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<User> outputStream) {
-    return _authRepository.googleLogin().then((user) {
-      outputStream.add(user);
-    });
+  Future buildUseCaseFuture() {
+    return _authRepository.googleLogin();
   }
 }
 
@@ -26,10 +24,8 @@ class FacebookLoginUseCase extends UseCase<User> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<User> outputStream) {
-    return _authRepository
-        .facebookLogin()
-        .then((user) => outputStream.add(user));
+  Future buildUseCaseFuture() {
+    return _authRepository.facebookLogin();
   }
 }
 
@@ -40,8 +36,8 @@ class GuestLoginUseCase extends UseCase<User> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<User> outputStream) {
-    return _authRepository.guestLogin().then((user) => outputStream.add(user));
+  Future buildUseCaseFuture() {
+    return _authRepository.guestLogin();
   }
 }
 
@@ -53,7 +49,7 @@ class GetUserChangedStreamUseCase extends UseCase<User> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<User> outputStream) async {
+  Future buildUseCaseFuture() async {
     return _authRepository.getAuthChangedStream();
   }
 }
@@ -66,10 +62,8 @@ class GetCurrentUserUseCase extends UseCase<User> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<User> outputStream) {
-    return _authRepository
-        .getCurrentUser()
-        .then((user) => outputStream.add(user));
+  Future buildUseCaseFuture() {
+    return _authRepository.getCurrentUser();
   }
 }
 
@@ -80,7 +74,7 @@ class LogoutUseCase extends UseCase<User> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<User> outputStream) {
-    return _authRepository.logout().then((user) => outputStream.add(null));
+  Future buildUseCaseFuture() {
+    return _authRepository.logout();
   }
 }

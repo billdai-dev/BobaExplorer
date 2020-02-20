@@ -12,8 +12,8 @@ class GetRecentSearchUseCase extends UseCase<List<String>> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<List<String>> outputStream) {
-    return _searchBobaRepository.getRecentSearch().then(outputStream.add);
+  Future buildUseCaseFuture() {
+    return _searchBobaRepository.getRecentSearch();
   }
 }
 
@@ -25,7 +25,7 @@ class AddRecentSearchUseCase extends ParamUseCase<String, bool> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(String param, StreamController<bool> outputStream) {
-    return _searchBobaRepository.addRecentSearch(param).then(outputStream.add);
+  Future buildUseCaseFuture(String param) {
+    return _searchBobaRepository.addRecentSearch(param);
   }
 }

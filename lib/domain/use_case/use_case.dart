@@ -17,9 +17,11 @@ abstract class UseCase<R> {
     _sub?.cancel();
     _sub = null;
 
-    buildUseCaseFuture(_sc).then((value) {
+    buildUseCaseFuture().then((value) {
       if (value is Stream) {
         _sub = value.listen(_sc.add);
+      } else {
+        _sc.add(value);
       }
     }).catchError((e) {
       if (!_sc.isClosed) {
@@ -30,7 +32,7 @@ abstract class UseCase<R> {
   }
 
   @protected
-  Future buildUseCaseFuture(StreamController<R> outputStream);
+  Future buildUseCaseFuture();
 }
 
 abstract class ParamUseCase<P, R> {
@@ -47,9 +49,11 @@ abstract class ParamUseCase<P, R> {
     _sub?.cancel();
     _sub = null;
 
-    buildUseCaseFuture(param, _sc).then((value) {
+    buildUseCaseFuture(param).then((value) {
       if (value is Stream) {
         _sub = value.listen(_sc.add);
+      } else {
+        _sc.add(value);
       }
     }).catchError((e) {
       _sc.addError(_exceptionHandler.parse(e));
@@ -61,7 +65,7 @@ abstract class ParamUseCase<P, R> {
   }
 
   @protected
-  Future buildUseCaseFuture(P param, StreamController<R> outputStream);
+  Future buildUseCaseFuture(P param);
 }
 
 /*abstract class WatchUseCase<R> {

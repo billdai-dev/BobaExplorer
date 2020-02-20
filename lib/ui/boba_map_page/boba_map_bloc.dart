@@ -60,7 +60,7 @@ class BobaMapBloc extends BaseBloc {
           radius: config.radius,
           shopNames: filteredShops);*/
     }).listen((teaShopsStream) {
-      teaShopsStream.pipe(_teaShopsController);
+      teaShopsStream.listen(_teaShopsController.add);
       //_teaShopsController.add(shops);
     });
     //=============================================================
@@ -125,7 +125,7 @@ class BobaMapBloc extends BaseBloc {
           shopNames: result)
           .map((shops) => shops..addAll(intersectionData));*/
     }).listen((teaShopsStream) {
-      teaShopsStream?.pipe(_teaShopsController);
+      teaShopsStream.listen(_teaShopsController.add);
       //_teaShopsController.add(shops);
     }, onError: (e) => print(e));
     //=============================================================

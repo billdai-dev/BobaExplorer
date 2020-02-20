@@ -15,13 +15,11 @@ class GetFavoriteShopsStreamUseCase extends UseCase<List<TeaShop>> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<List<TeaShop>> outputStream) {
+  Future buildUseCaseFuture() {
     return _getCurrentUserUseCase
         .execute()
         .then((userStream) => userStream.first)
-        .then((user) {
-      return _favoriteRepository.getFavoriteShops(uid: user?.uid);
-    });
+        .then((user) => _favoriteRepository.getFavoriteShops(uid: user?.uid));
   }
 }
 
@@ -34,15 +32,13 @@ class SetFavoriteShopUseCase extends ParamUseCase<SetFavoriteShopParam, void> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(
-      SetFavoriteShopParam param, StreamController<void> outputStream) {
+  Future buildUseCaseFuture(SetFavoriteShopParam param) {
     return _getCurrentUserUseCase
         .execute()
         .then((userStream) => userStream.first)
-        .then((user) {
-      return _favoriteRepository
-          .setFavoriteShop(param?.teaShop, param?.isFavorite, uid: user?.uid);
-    }).then((_) => outputStream.add(null));
+        .then((user) => _favoriteRepository.setFavoriteShop(
+            param?.teaShop, param?.isFavorite,
+            uid: user?.uid));
   }
 }
 
@@ -54,10 +50,8 @@ class DeleteFavoriteShopsUseCase extends UseCase<void> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<void> outputStream) {
-    return _favoriteRepository
-        .deleteFavoriteShops()
-        .then((_) => outputStream.add(null));
+  Future buildUseCaseFuture() {
+    return _favoriteRepository.deleteFavoriteShops();
   }
 }
 
@@ -70,12 +64,11 @@ class SyncRemoteFavoriteShopUseCase extends UseCase<void> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(StreamController<void> outputStream) {
+  Future buildUseCaseFuture() {
     return _getCurrentUserUseCase
         .execute()
         .then((userStream) => userStream.first)
-        .then((user) => _favoriteRepository.syncRemoteFavoriteShops(user?.uid))
-        .then((_) => outputStream.add(null));
+        .then((user) => _favoriteRepository.syncRemoteFavoriteShops(user?.uid));
   }
 }
 

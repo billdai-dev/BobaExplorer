@@ -13,8 +13,7 @@ class FindTeaShopUseCase extends ParamUseCase<FindTeaShopParam, List<TeaShop>> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(
-      FindTeaShopParam param, StreamController<List> outputStream) async {
+  Future buildUseCaseFuture(FindTeaShopParam param) async {
     return _teaShopRepository.getTeaShops(
         lat: param.lat,
         lng: param.lng,

@@ -15,12 +15,11 @@ class ReportUseCase extends ParamUseCase<Report, bool> {
       : super(exceptionHandler);
 
   @override
-  Future buildUseCaseFuture(Report param, StreamController<bool> outputStream) {
+  Future buildUseCaseFuture(Report param) {
     return _getCurrentUserUseCase
         .execute()
         .then((getUserStream) => getUserStream.first)
         .then(
-            (user) => _reportRepository.report(param..reporterUid = user?.uid))
-        .then(outputStream.add);
+            (user) => _reportRepository.report(param..reporterUid = user?.uid));
   }
 }
