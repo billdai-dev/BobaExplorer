@@ -10,6 +10,8 @@ abstract class Event {
   factory Event.updateApp(bool forceUpdate, String requiredVersion) =>
       UpdateAppEvent(forceUpdate, requiredVersion);
 
+  factory Event.remindRating() => RemindRatingEvent();
+
   factory Event.userLogin(User newUser) => UserLoginEvent(newUser);
 
   factory Event.showSyncDataDialog(User newUser) =>

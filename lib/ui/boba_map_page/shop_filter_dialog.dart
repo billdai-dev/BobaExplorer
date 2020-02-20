@@ -1,5 +1,4 @@
 import 'package:boba_explorer/app_bloc.dart';
-import 'package:boba_explorer/data/repository/mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

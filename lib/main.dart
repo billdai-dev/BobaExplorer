@@ -2,9 +2,6 @@ import 'dart:async';
 
 import 'package:boba_explorer/app_bloc.dart';
 import 'package:boba_explorer/app_event.dart';
-import 'package:boba_explorer/data/repository/favorite/favorite_repository.dart';
-import 'package:boba_explorer/data/repository/auth/auth_repo.dart';
-import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
 import 'package:boba_explorer/di/injector.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map.dart';
 import 'package:boba_explorer/ui/boba_map_page/boba_map_bloc.dart';
@@ -14,10 +11,9 @@ import 'package:boba_explorer/ui/report/report_dialog.dart';
 import 'package:boba_explorer/ui/web_view/web_view_page.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:kiwi/kiwi.dart' as kiwi;
 import 'package:launch_review/launch_review.dart';
 import 'package:provider/provider.dart';
-import 'package:rate_my_app/rate_my_app.dart';
-import 'package:kiwi/kiwi.dart' as kiwi;
 
 void main() {
   inject();
@@ -44,34 +40,43 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _appVersionChecked = false;
   final navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<Event> eventSub;
+  AppBloc appBloc;
 
   @override
   void initState() {
     super.initState();
-    final appBloc = Provider.of<AppBloc>(context, listen: false);
-    eventSub = appBloc.eventStream.listen((event) {
-      switch (event.runtimeType) {
-        case UpdateAppEvent:
-          var event = event as UpdateAppEvent;
-          final navigatorContext = navigatorKey?.currentState?.overlay?.context;
-          showDialog<bool>(
-            context: navigatorContext,
-            barrierDismissible: !event.isForceUpdate,
-            builder: (context) {
-              return WillPopScope(
-                onWillPop: () async => !event.isForceUpdate,
-                child: _AppUpdateDialog(
-                    event.isForceUpdate, event.requiredAppVersion),
-              );
-            },
-          );
-          break;
-      }
-    });
+    appBloc = Provider.of<AppBloc>(context, listen: false);
+    eventSub = appBloc.eventStream.listen(_handleEvent);
     appBloc.checkAppVersion();
+  }
+
+  void _handleEvent(Event event) {
+    final navigatorContext = navigatorKey?.currentState?.overlay?.context;
+    switch (event.runtimeType) {
+      case UpdateAppEvent:
+        var event = event as UpdateAppEvent;
+        showDialog<bool>(
+          context: navigatorContext,
+          barrierDismissible: !event.isForceUpdate,
+          builder: (context) {
+            return WillPopScope(
+              onWillPop: () async => !event.isForceUpdate,
+              child: _AppUpdateDialog(
+                  event.isForceUpdate, event.requiredAppVersion),
+            );
+          },
+        ).then((willingToUpdate) {
+          if (!willingToUpdate) {
+            appBloc?.checkAppVersion();
+          }
+        });
+        break;
+      case RemindRatingEvent:
+        showRemindRatingDialog(navigatorContext);
+        break;
+    }
   }
 
   @override
@@ -88,46 +93,11 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         onGenerateRoute: _routeGenerator,
         navigatorObservers: [BotToastNavigatorObserver()],
-        builder: (context, child) {
-          if (!_appVersionChecked) {
-            _checkAppVersion(context).then((shouldUpdateApp) {
-              if (shouldUpdateApp == null) {
-                return _initRateMyApp();
-              }
-              return null;
-            });
-          }
-          return child;
-        },
       ),
     );
   }
 
-  /*Future<bool> _checkAppVersion(BuildContext context) async {
-    if (_appVersionChecked) {
-      return null;
-    }
-    _appVersionChecked = true;
-    AppBloc appBloc = Provider.of<AppBloc>(context, listen: false);
-    return appBloc.appVersion.first.then((event) {
-      if (!event.shouldUpdate) {
-        return null;
-      }
-      final navigatorContext = navigatorKey?.currentState?.overlay?.context;
-      return showDialog<bool>(
-        context: navigatorContext,
-        barrierDismissible: !event.forceUpdate,
-        builder: (context) {
-          return WillPopScope(
-            onWillPop: () async => !event.forceUpdate,
-            child: _AppUpdateDialog(event.forceUpdate, event.requiredVersion),
-          );
-        },
-      );
-    });
-  }*/
-
-  void _initRateMyApp() {
+  /*void _initRateMyApp() {
     RateMyApp rateMyApp = RateMyApp(
       preferencesPrefix: 'rateMyApp_',
       minDays: 0,
@@ -140,66 +110,57 @@ class _MyAppState extends State<MyApp> {
         return null;
       }
       final navigatorContext = navigatorKey?.currentState?.overlay?.context;
-      return showDialog(
-        context: navigatorContext,
-        builder: (context) {
-          var buttonTextStyle = Theme.of(context).textTheme.subhead;
-          return SimpleDialog(
-            titlePadding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
-            contentPadding: const EdgeInsets.only(top: 8, bottom: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            title: Text('願意幫找茶評個分嗎 (✪ω✪)'),
-            children: <Widget>[
-              SimpleDialogOption(
-                onPressed: () {
-                  rateMyApp.doNotOpenAgain = true;
-                  rateMyApp.save().then((_) {
-                    Navigator.pop(context);
-                    LaunchReview.launch();
-                  });
-                },
-                child: Text('好的 🤩🤩', style: buttonTextStyle),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context);
-                  return showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (context) =>
-                        ReportDialog(reportType: ReportType.opinion),
-                  ).then((isReportSent) {
-                    if (isReportSent == true) {
-                      rateMyApp.doNotOpenAgain = true;
-                      return rateMyApp.save();
-                    } else {
-                      rateMyApp.baseLaunchDate = rateMyApp.baseLaunchDate
-                          .add(Duration(days: rateMyApp.remindDays));
-                      rateMyApp.launches -= rateMyApp.remindLaunches;
-                      return rateMyApp
-                          .save()
-                          .then((v) => Navigator.pop(context));
-                    }
-                  });
-                },
-                child: Text('我有些建議.. 💬', style: buttonTextStyle),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  rateMyApp.baseLaunchDate = rateMyApp.baseLaunchDate
-                      .add(Duration(days: rateMyApp.remindDays));
-                  rateMyApp.launches -= rateMyApp.remindLaunches;
-                  return rateMyApp.save().then((v) => Navigator.pop(context));
-                },
-                child: Text('稍後再說囉', style: buttonTextStyle),
-              )
-            ],
-          );
-        },
-      );
+      showRemindRatingDialog(navigatorContext, rateMyApp);
     });
+  }*/
+
+  void showRemindRatingDialog(BuildContext navigatorContext) {
+    showDialog(
+      context: navigatorContext,
+      builder: (context) {
+        var buttonTextStyle = Theme.of(context).textTheme.subhead;
+        return SimpleDialog(
+          titlePadding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+          contentPadding: const EdgeInsets.only(top: 8, bottom: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          title: Text('願意幫找茶評個分嗎 (✪ω✪)'),
+          children: <Widget>[
+            SimpleDialogOption(
+              onPressed: () {
+                appBloc?.answerRatingReminder(true);
+                Navigator.pop(context);
+                LaunchReview.launch();
+              },
+              child: Text('好的 🤩🤩', style: buttonTextStyle),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context);
+                return showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) =>
+                      ReportDialog(reportType: ReportType.opinion),
+                ).then((isReportSent) {
+                  appBloc?.answerRatingReminder(isReportSent);
+                  Navigator.pop(context);
+                });
+              },
+              child: Text('我有些建議.. 💬', style: buttonTextStyle),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                appBloc?.answerRatingReminder(false);
+                Navigator.pop(context);
+              },
+              child: Text('稍後再說 🤔', style: buttonTextStyle),
+            )
+          ],
+        );
+      },
+    );
   }
 
   Route<dynamic> _routeGenerator(RouteSettings routeSetting) {
@@ -246,6 +207,11 @@ class _AppUpdateDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<Widget> options = [
+      if (_forceUpdate)
+        FlatButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text("稍後"),
+        ),
       FlatButton(
         onPressed: () {
           LaunchReview.launch(writeReview: false);
@@ -253,24 +219,14 @@ class _AppUpdateDialog extends StatelessWidget {
             Navigator.pop(context, true);
           }
         },
-        child: Text("Sure"),
+        child: Text("前往更新"),
       )
     ];
-    if (!_forceUpdate) {
-      options.insert(
-        0,
-        FlatButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text("Later"),
-        ),
-      );
-    }
     return AlertDialog(
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(8))),
-      title: Text("Version update"),
-      content: Text(
-          "A new version $_requiredVersion is available for you. Update the app now :)"),
+      title: Text("版本更新"),
+      content: Text("新版本 $_requiredVersion 已經可以下載囉 :)"),
       actions: options,
     );
   }

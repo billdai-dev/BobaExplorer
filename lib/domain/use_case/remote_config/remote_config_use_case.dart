@@ -1,7 +1,7 @@
 import 'package:boba_explorer/domain/entity/supported_shop.dart';
 import 'package:boba_explorer/domain/repository/remote_config/remote_config_repository.dart';
 import 'package:boba_explorer/domain/service/exception_handler.dart';
-import 'package:boba_explorer/domain/use_case/service/device/device_info.dart';
+import 'package:boba_explorer/domain/use_case/service/device/device_info_use_case.dart';
 import 'package:boba_explorer/domain/use_case/use_case.dart';
 
 class GetSupportedShopUseCase extends UseCase<List<SupportedShop>> {

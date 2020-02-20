@@ -103,7 +103,7 @@ class _ReportDialogState extends State<ReportDialog>
         } else {
           Util.showIconTextToast(context, Icons.sms_failed, "回報失敗\n請稍候再試");
         }
-        Navigator.pop(context);
+        Navigator.pop(context, isSuccess);
         break;
     }
   }
@@ -694,7 +694,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
         } else {
           Util.showIconTextToast(context, Icons.sms_failed, "回報失敗\n請稍候再試");
         }
-        Navigator.pop(context);
+        Navigator.pop(context, isSuccess);
         break;
     }
   }

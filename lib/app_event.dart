@@ -10,3 +10,5 @@ class UpdateAppEvent extends Event {
 
   bool get isForceUpdate => _isForceUpdate;
 }
+
+class RemindRatingEvent extends Event {}

@@ -2,7 +2,6 @@ import 'package:boba_explorer/data/local/moor_db.dart';
 import 'package:boba_explorer/data/remote/network.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/domain/repository/favorite/favorite_repository.dart';
-import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
 
 class FavoriteRepository implements IFavoriteRepository {
   INetwork _network;

@@ -3,7 +3,6 @@ import 'package:boba_explorer/data/remote/model.dart';
 import 'package:boba_explorer/domain/entity/supported_shop.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/domain/entity/user.dart';
-import 'package:boba_explorer/remote_config_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
