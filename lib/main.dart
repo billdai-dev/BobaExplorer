@@ -21,7 +21,7 @@ void main() {
     MultiProvider(
       providers: [
         Provider<AppBloc>(
-          builder: (_) => AppBloc(),
+          builder: (_) => kiwi.Container().resolve<AppBloc>(),
           dispose: (_, appBloc) => appBloc.dispose(),
         ),
         Provider<LoginBloc>(
@@ -56,20 +56,20 @@ class _MyAppState extends State<MyApp> {
     final navigatorContext = navigatorKey?.currentState?.overlay?.context;
     switch (event.runtimeType) {
       case UpdateAppEvent:
-        var event = event as UpdateAppEvent;
+        var updateAppEvent = event as UpdateAppEvent;
         showDialog<bool>(
           context: navigatorContext,
-          barrierDismissible: !event.isForceUpdate,
+          barrierDismissible: !updateAppEvent.isForceUpdate,
           builder: (context) {
             return WillPopScope(
-              onWillPop: () async => !event.isForceUpdate,
-              child: _AppUpdateDialog(
-                  event.isForceUpdate, event.requiredAppVersion),
+              onWillPop: () async => !updateAppEvent.isForceUpdate,
+              child: _AppUpdateDialog(updateAppEvent.isForceUpdate,
+                  updateAppEvent.requiredAppVersion),
             );
           },
         ).then((willingToUpdate) {
           if (!willingToUpdate) {
-            appBloc?.checkAppVersion();
+            appBloc?.checkRatingReminder();
           }
         });
         break;

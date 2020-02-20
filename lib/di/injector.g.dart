@@ -24,6 +24,22 @@ class _$Injector extends Injector {
         (c) => SearchBobaRepository(c<IPreference>()));
     container.registerFactory<ITeaShopRepository, TeaShopRepository>(
         (c) => TeaShopRepository(c<INetwork>()));
+    container.registerFactory<IRemoteConfigRepository, RemoteConfigRepository>(
+        (c) => RemoteConfigRepository(c<INetwork>()));
+    container
+        .registerFactory<IDeviceManager, DeviceManager>((c) => DeviceManager());
+    container.registerFactory((c) => GetSupportedShopUseCase(
+        c<IRemoteConfigRepository>(), c<IExceptionHandler>()));
+    container.registerFactory((c) =>
+        GetAppVersionUseCase(c<IDeviceManager>(), c<IExceptionHandler>()));
+    container.registerFactory((c) => CheckAppVersionUseCase(
+        c<GetAppVersionUseCase>(),
+        c<IRemoteConfigRepository>(),
+        c<IExceptionHandler>()));
+    container.registerFactory((c) => CheckRatingReminderUseCase(
+        c<IDeviceManager>(), c<IExceptionHandler>()));
+    container.registerFactory((c) => AnswerRatingReminderUseCase(
+        c<IDeviceManager>(), c<IExceptionHandler>()));
     container.registerFactory((c) =>
         GoogleLoginUseCase(c<IAuthRepository>(), c<IExceptionHandler>()));
     container.registerFactory((c) =>
@@ -58,6 +74,11 @@ class _$Injector extends Injector {
         c<ISearchBobaRepository>(), c<IExceptionHandler>()));
     container.registerFactory((c) => AddRecentSearchUseCase(
         c<ISearchBobaRepository>(), c<IExceptionHandler>()));
+    container.registerFactory((c) => AppBloc(
+        c<GetSupportedShopUseCase>(),
+        c<CheckAppVersionUseCase>(),
+        c<CheckRatingReminderUseCase>(),
+        c<AnswerRatingReminderUseCase>()));
     container.registerFactory((c) => LoginBloc(
         c<GoogleLoginUseCase>(),
         c<FacebookLoginUseCase>(),
