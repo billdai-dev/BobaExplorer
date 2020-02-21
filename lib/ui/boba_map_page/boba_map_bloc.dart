@@ -5,6 +5,7 @@ import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
 import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
 import 'package:boba_explorer/domain/use_case/tea_shop/tea_shop_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
+import 'package:boba_explorer/ui/event.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:tuple/tuple.dart';
 
@@ -49,19 +50,15 @@ class BobaMapBloc extends BaseBloc {
   BobaMapBloc(this._findTeaShopUseCase, this._setFavoriteShopUseCase,
       this._getFavoriteShopsStreamUseCase, this._getUserChangedStreamUseCase) {
     _queryConfigController.switchMap((config) {
+      eventSink.add(Event.changeLoading(true));
       Set<String> filteredShops = _filterListController.value;
       return _findTeaShopUseCase
           .execute(FindTeaShopParam(config.lat, config.lng,
               radius: config.radius, shopNames: filteredShops))
           .asStream();
-      /*return _teaShopRepo.getTeaShops(
-          lat: config.lat,
-          lng: config.lng,
-          radius: config.radius,
-          shopNames: filteredShops);*/
     }).listen((teaShopsStream) {
+      eventSink.add(Event.changeLoading(false));
       teaShopsStream.listen(_teaShopsController.add);
-      //_teaShopsController.add(shops);
     });
     //=============================================================
     _prevCurFilters.doOnData((filtersTuple) {
@@ -110,23 +107,16 @@ class BobaMapBloc extends BaseBloc {
       }
       //Do query/queries for those new added filters
       final config = _queryConfigController.value;
+      eventSink.add(Event.changeLoading(true));
       return _findTeaShopUseCase
           .execute(FindTeaShopParam(config.lat, config.lng,
               radius: config.radius, shopNames: result))
           .then((teaShopsStream) => teaShopsStream
               .map((teaShops) => teaShops..addAll(intersectionData)))
           .asStream();
-
-      /*return _teaShopRepo
-          .getTeaShops(
-          lat: config?.lat,
-          lng: config?.lng,
-          radius: config?.radius,
-          shopNames: result)
-          .map((shops) => shops..addAll(intersectionData));*/
     }).listen((teaShopsStream) {
+      eventSink.add(Event.changeLoading(false));
       teaShopsStream.listen(_teaShopsController.add);
-      //_teaShopsController.add(shops);
     }, onError: (e) => print(e));
     //=============================================================
 
@@ -183,9 +173,6 @@ class BobaMapBloc extends BaseBloc {
 
   void setFavoriteShop(bool isFavorite, TeaShop shop) async {
     _setFavoriteShopUseCase.execute(SetFavoriteShopParam(shop, isFavorite));
-    //var user = await _loginRepo.getCurrentUser();
-    //String uid = user == null || user.isAnonymous ? null : user.uid;
-    //return _favoriteRepo.setFavoriteShop(isFavorite, shop, uid: uid);
   }
 
   void searchSingleShop(TeaShop shop) {

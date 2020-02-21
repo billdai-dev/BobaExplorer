@@ -12,3 +12,11 @@ class UpdateAppEvent extends Event {
 }
 
 class RemindRatingEvent extends Event {}
+
+class ChangeLoadingEvent extends Event {
+  final bool _isLoading;
+
+  ChangeLoadingEvent(this._isLoading);
+
+  bool get isLoading => _isLoading;
+}

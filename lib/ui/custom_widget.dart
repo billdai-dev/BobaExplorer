@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:lottie/lottie.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoadingWidget extends StatefulWidget {
@@ -27,7 +27,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
     _isLoadingStreamSub =
         widget.isLoadingStream?.listen(_isLoadingController.add);
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800));
+        vsync: this, duration: const Duration(milliseconds: 500));
   }
 
   @override
@@ -55,22 +55,58 @@ class _LoadingWidgetState extends State<LoadingWidget>
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<bool>(
-      stream: _isLoadingController.stream.switchMap((isLoading) =>
-          Observable.timer(
-              isLoading, Duration(milliseconds: isLoading ? 300 : 300))),
+      stream: _isLoadingController.stream.switchMap((isLoading) {
+        return Stream.value(isLoading);
+        /*return Observable.timer(
+            isLoading, Duration(milliseconds: isLoading ? 300 : 300));*/
+      }),
       builder: (context, snapshot) {
         return Center(
           child: Visibility(
-            visible: snapshot.data ?? false,
-            child: Container(
-              child: SpinKitRotatingCircle(
-                color: Colors.blueAccent,
-                size: 30,
-                controller: _controller,
+            visible: snapshot?.data ?? false,
+            child: FractionallySizedBox(
+              widthFactor: 0.38,
+              heightFactor: 0.2,
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                color: Colors.black54,
+                child: Lottie.asset('assets/lottie/jumpingCup.json'),
               ),
             ),
           ),
         );
+
+        /*return Center(
+          child: Visibility(
+            visible: snapshot.data ?? false,
+            child: Container(
+              width: 100,
+              height: 300,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+              ),
+              child: Lottie.asset(
+                'assets/lottie/jumpingCup.json',
+                controller: _controller,
+                onLoaded: (composition) {
+                  // Configure the AnimationController with the duration of the
+                  // Lottie file and start the animation.
+                  _controller
+                    ..duration = composition.duration
+                    ..forward();
+                },
+              ),
+              */ /*child: SpinKitRotatingCircle(
+                color: Colors.blueAccent,
+                size: 30,
+                controller: _controller,
+              ),*/ /*
+            ),
+          ),
+        );*/
       },
     );
   }

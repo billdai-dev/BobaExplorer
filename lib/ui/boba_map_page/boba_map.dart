@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:boba_explorer/app_bloc.dart';
+import 'package:boba_explorer/app_event.dart';
 import 'package:boba_explorer/domain/entity/supported_shop.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/domain/entity/user.dart';
@@ -25,7 +26,7 @@ import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-Future<User> showLoginDialog(BuildContext context) async {
+Future<User> _showLoginDialog(BuildContext context) async {
   final user = await showDialog<User>(
     context: context,
     builder: (context) => LoginDialog(),
@@ -52,7 +53,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
   static const _tw101 = const LatLng(25.0339639, 121.5622835);
   BobaMapBloc _bobaMapBloc;
 
-  ValueNotifier<bool> _isMapCreatedNotifier = ValueNotifier(false);
+  //ValueNotifier<bool> _isMapCreatedNotifier = ValueNotifier(false);
   GoogleMapController _mapController;
   CameraPosition _cameraPos;
   Set<Marker> _markers;
@@ -168,10 +169,16 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
             ],
           ),
         ),
-        ValueListenableBuilder<bool>(
-          valueListenable: _isMapCreatedNotifier,
-          builder: (context, isMapCreated, child) =>
-              LoadingWidget(isLoading: !isMapCreated),
+        StreamBuilder<bool>(
+          initialData: true,
+          stream: _bobaMapBloc?.eventStream
+              ?.where((event) => event is ChangeLoadingEvent)
+              ?.cast<ChangeLoadingEvent>()
+              ?.distinct((prev, next) => prev.isLoading == next.isLoading)
+              ?.map((event) => event.isLoading),
+          builder: (context, snapshot) {
+            return LoadingWidget(isLoading: snapshot?.data ?? false);
+          },
         ),
       ],
     );
@@ -214,7 +221,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                   children: <Widget>[
                     SizedBox(width: 12),
                     GestureDetector(
-                      onTap: () => showLoginDialog(context),
+                      onTap: () => _showLoginDialog(context),
                       child: _buildAvatar(loginBloc),
                     ),
                     SizedBox(width: 12),
@@ -234,7 +241,7 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                           icon: Icon(Icons.favorite, color: Colors.redAccent),
                           onPressed: () async {
                             if (snapshot.data == null) {
-                              final newUser = await showLoginDialog(context);
+                              final newUser = await _showLoginDialog(context);
                               if (newUser == null) {
                                 return;
                               }
@@ -427,9 +434,8 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                 pos == null ? null : LatLng(pos.latitude, pos.longitude))
             .catchError((err) {});
         LatLng pos = _userLocation ?? _tw101;
-        controller
-            .animateCamera(CameraUpdate.newLatLng(pos))
-            .then((_) => _isMapCreatedNotifier.value = true);
+        controller.animateCamera(CameraUpdate.newLatLng(pos));
+        //.then((_) => _isMapCreatedNotifier.value = true);
         _bobaMapBloc.seekBoba(lat: pos.latitude, lng: pos.longitude);
       },
       markers: markers,
@@ -1043,7 +1049,7 @@ class _FavoriteCheckboxState extends State<FavoriteCheckbox> {
             return GestureDetector(
               onTap: () async {
                 if (user == null) {
-                  final newUser = await showLoginDialog(context);
+                  final newUser = await _showLoginDialog(context);
                   if (newUser == null) {
                     return;
                   }
