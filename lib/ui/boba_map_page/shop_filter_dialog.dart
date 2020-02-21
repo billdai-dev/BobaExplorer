@@ -71,7 +71,7 @@ class _ShopFilterDialogState extends State<ShopFilterDialog>
                       Container(
                         child: Text(
                           "選擇你想找的飲料店",
-                          style: Theme.of(context).textTheme.title,
+                          style: Theme.of(context).textTheme.headline6,
                         ),
                       ),
                       Divider(height: 16),

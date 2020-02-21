@@ -1,16 +1,12 @@
 import 'package:boba_explorer/app_bloc.dart';
-import 'package:boba_explorer/data/repository/mapper.dart';
-import 'package:boba_explorer/data/repository/search_boba/search_boba_repository.dart';
-import 'package:boba_explorer/domain/entity/supported_shop.dart';
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
-import 'package:boba_explorer/data/repository/tea_shop/tea_shop_repository.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_bloc.dart';
 import 'package:boba_explorer/util.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:kiwi/kiwi.dart' as kiwi;
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
-import 'package:kiwi/kiwi.dart' as kiwi;
 
 class SearchBobaDelegate extends SearchDelegate {
   final double _lat;
@@ -178,7 +174,7 @@ class SearchBobaDelegate extends SearchDelegate {
                         "查無相關店家",
                         style: Theme.of(context)
                             .textTheme
-                            .headline
+                            .headline5
                             .copyWith(color: Colors.grey),
                       ),
                     ],
@@ -285,8 +281,10 @@ class SearchBobaDelegate extends SearchDelegate {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
           child: Text(
             "搜尋結果",
-            style:
-                Theme.of(context).textTheme.body2.copyWith(color: Colors.grey),
+            style: Theme.of(context)
+                .textTheme
+                .bodyText1
+                .copyWith(color: Colors.grey),
           ),
         ),
         Expanded(
@@ -326,7 +324,7 @@ class SearchBobaDelegate extends SearchDelegate {
                     children: <Widget>[
                       Text(
                         shop.shopName,
-                        style: Theme.of(context).textTheme.subhead,
+                        style: Theme.of(context).textTheme.subtitle1,
                       ),
                       Spacer(),
                       Container(
@@ -341,7 +339,7 @@ class SearchBobaDelegate extends SearchDelegate {
                           branchName,
                           style: Theme.of(context)
                               .textTheme
-                              .body2
+                              .bodyText1
                               .copyWith(color: Colors.brown),
                         ),
                       ),
@@ -352,7 +350,7 @@ class SearchBobaDelegate extends SearchDelegate {
                     address,
                     style: Theme.of(context)
                         .textTheme
-                        .body1
+                        .bodyText2
                         .copyWith(color: Colors.grey),
                   ),
                 ],

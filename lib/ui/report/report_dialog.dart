@@ -152,7 +152,7 @@ class _ReportDialogState extends State<ReportDialog>
                               children: <Widget>[
                                 Text(
                                   "作者悄悄話  ( ～'ω')～",
-                                  style: Theme.of(context).textTheme.title,
+                                  style: Theme.of(context).textTheme.headline6,
                                 ),
                                 Spacer(),
                                 CloseButton(),
@@ -168,8 +168,9 @@ class _ReportDialogState extends State<ReportDialog>
                                     children: <Widget>[
                                       Text(
                                         "問題類型",
-                                        style:
-                                            Theme.of(context).textTheme.subhead,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .subtitle1,
                                       ),
                                       SizedBox(height: 4),
                                       _buildSuggestionDropdown(),
@@ -240,7 +241,7 @@ class _ReportDialogState extends State<ReportDialog>
                 "選擇問題類型",
                 style: Theme.of(context)
                     .textTheme
-                    .body1
+                    .bodyText2
                     .copyWith(color: Colors.grey),
               ),
             ),
@@ -263,7 +264,7 @@ class _ReportDialogState extends State<ReportDialog>
                   padding: const EdgeInsets.only(left: 8),
                   child: Text(
                     text,
-                    style: Theme.of(context).textTheme.body1,
+                    style: Theme.of(context).textTheme.bodyText2,
                   ),
                 ),
                 value: option,
@@ -292,7 +293,7 @@ class _ReportDialogState extends State<ReportDialog>
           children: <Widget>[
             Text(
               "錯誤簡述*",
-              style: Theme.of(context).textTheme.subhead,
+              style: Theme.of(context).textTheme.subtitle1,
             ),
             TextFormField(
               controller: bugDescTextController,
@@ -303,16 +304,16 @@ class _ReportDialogState extends State<ReportDialog>
                 hintText: "簡單描述您遇到的問題",
                 hintStyle: Theme.of(context)
                     .textTheme
-                    .body1
+                    .bodyText2
                     .copyWith(color: Colors.grey),
                 helperText: "ex: App 閃退？功能出錯？畫面跑版？",
               ),
-              style: Theme.of(context).textTheme.body1,
+              style: Theme.of(context).textTheme.bodyText2,
             ),
             SizedBox(height: 12),
             Text(
               "嚴重程度",
-              style: Theme.of(context).textTheme.subhead,
+              style: Theme.of(context).textTheme.subtitle1,
             ),
             SizedBox(height: 20),
             ValueListenableBuilder<_BugSeverity>(
@@ -367,12 +368,12 @@ class _ReportDialogState extends State<ReportDialog>
           children: <Widget>[
             Text(
               "我的願望*",
-              style: Theme.of(context).textTheme.subhead,
+              style: Theme.of(context).textTheme.subtitle1,
             ),
             TextFormField(
               controller: requestController,
               validator: (value) => value.trim().isNotEmpty ? null : "必填",
-              style: Theme.of(context).textTheme.body1,
+              style: Theme.of(context).textTheme.bodyText2,
               decoration: InputDecoration(
                 hintText: "填寫希望增加的店家資料 / 功能",
               ),
@@ -390,7 +391,7 @@ class _ReportDialogState extends State<ReportDialog>
                         children: <Widget>[
                           Text(
                             "縣市",
-                            style: Theme.of(context).textTheme.subhead,
+                            style: Theme.of(context).textTheme.subtitle1,
                           ),
                           SizedBox(height: 4),
                           Container(
@@ -412,8 +413,9 @@ class _ReportDialogState extends State<ReportDialog>
                                       child: DropdownButton<City>(
                                         hint: Text(
                                           "選擇縣市",
-                                          style:
-                                              Theme.of(context).textTheme.body1,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText2,
                                         ),
                                         value: city,
                                         items:
@@ -445,7 +447,7 @@ class _ReportDialogState extends State<ReportDialog>
                         children: <Widget>[
                           Text(
                             "地區",
-                            style: Theme.of(context).textTheme.subhead,
+                            style: Theme.of(context).textTheme.subtitle1,
                           ),
                           SizedBox(height: 4),
                           Container(
@@ -467,8 +469,9 @@ class _ReportDialogState extends State<ReportDialog>
                                       child: DropdownButton<String>(
                                         hint: Text(
                                           "選擇地區",
-                                          style:
-                                              Theme.of(context).textTheme.body1,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText2,
                                         ),
                                         value: district,
                                         items: city?.zone?.map((zone) {
@@ -526,11 +529,11 @@ class _ReportDialogState extends State<ReportDialog>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text("我的想法", style: Theme.of(context).textTheme.subhead),
+            Text("我的想法", style: Theme.of(context).textTheme.subtitle1),
             TextFormField(
               controller: opinionController,
               validator: (value) => value.trim().isNotEmpty ? null : "必填",
-              style: Theme.of(context).textTheme.body1,
+              style: Theme.of(context).textTheme.bodyText2,
               decoration: InputDecoration(
                 hintStyle: TextStyle(fontSize: 14),
                 hintText: "寫下想法、心得、任何你想告訴作者的話!",
@@ -543,7 +546,7 @@ class _ReportDialogState extends State<ReportDialog>
               textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme
-                  .body2
+                  .bodyText1
                   .copyWith(color: Colors.grey),
             ),
             SizedBox(height: Platform.isAndroid ? 4 : 12),
@@ -574,14 +577,6 @@ class _ReportDialogState extends State<ReportDialog>
           builder: (context, suggestionType, child) {
             ValueNotifier<bool> notifier;
             VoidCallback onPressed;
-            var onSuccess = () async {
-              Util.showIconTextToast(context, Icons.mail, "回報成功\n感謝您的回饋");
-              Navigator.pop(context);
-            };
-            var onFailure = (_) async {
-              Util.showIconTextToast(context, Icons.sms_failed, "回報失敗\n請稍候再試");
-              Navigator.pop(context);
-            };
             switch (suggestionType) {
               case ReportType.bugReport:
                 notifier = isBugReportValidNotifier;
@@ -764,7 +759,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
           children: <Widget>[
             Text(
               "店家資料勘誤",
-              style: Theme.of(context).textTheme.title,
+              style: Theme.of(context).textTheme.headline6,
             ),
             Spacer(),
             CloseButton(),
@@ -779,7 +774,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                 children: <Widget>[
                   Text(
                     "店家名稱",
-                    style: Theme.of(context).textTheme.subhead,
+                    style: Theme.of(context).textTheme.subtitle1,
                   ),
                   TextField(
                     controller: _shopNameController,
@@ -788,13 +783,13 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                     enableInteractiveSelection: false,
                     style: Theme.of(context)
                         .textTheme
-                        .body1
+                        .bodyText2
                         .copyWith(color: Colors.grey),
                   ),
                   SizedBox(height: 4),
                   Text(
                     "門市據點",
-                    style: Theme.of(context).textTheme.subhead,
+                    style: Theme.of(context).textTheme.subtitle1,
                   ),
                   TextField(
                     controller: _branchNameController,
@@ -803,7 +798,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                     enableInteractiveSelection: false,
                     style: Theme.of(context)
                         .textTheme
-                        .body1
+                        .bodyText2
                         .copyWith(color: Colors.grey),
                   ),
                   SizedBox(height: 4),
@@ -817,7 +812,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                           children: <Widget>[
                             Text(
                               "縣市",
-                              style: Theme.of(context).textTheme.subhead,
+                              style: Theme.of(context).textTheme.subtitle1,
                             ),
                             TextField(
                               controller: _cityController,
@@ -826,7 +821,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                               enableInteractiveSelection: false,
                               style: Theme.of(context)
                                   .textTheme
-                                  .body1
+                                  .bodyText2
                                   .copyWith(color: Colors.grey),
                             ),
                           ],
@@ -840,7 +835,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                           children: <Widget>[
                             Text(
                               "地區",
-                              style: Theme.of(context).textTheme.subhead,
+                              style: Theme.of(context).textTheme.subtitle1,
                             ),
                             TextField(
                               controller: _districtController,
@@ -849,7 +844,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                               enableInteractiveSelection: false,
                               style: Theme.of(context)
                                   .textTheme
-                                  .body1
+                                  .bodyText2
                                   .copyWith(color: Colors.grey),
                             ),
                           ],
@@ -860,7 +855,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                   SizedBox(height: 4),
                   Text(
                     "回報項目",
-                    style: Theme.of(context).textTheme.subhead,
+                    style: Theme.of(context).textTheme.subtitle1,
                   ),
                   SizedBox(height: 4),
                   ValueListenableBuilder(
@@ -884,7 +879,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                             "選擇回報項目",
                             style: Theme.of(context)
                                 .textTheme
-                                .body1
+                                .bodyText2
                                 .copyWith(color: Colors.grey),
                           ),
                           validator: (value) => value == null ? "必填" : null,
@@ -893,14 +888,14 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                               value: _ShopReportItem.location,
                               child: Text(
                                 "位置不準確",
-                                style: Theme.of(context).textTheme.body1,
+                                style: Theme.of(context).textTheme.bodyText2,
                               ),
                             ),
                             DropdownMenuItem(
                               value: _ShopReportItem.data,
                               child: Text(
                                 "店家資料錯誤",
-                                style: Theme.of(context).textTheme.body1,
+                                style: Theme.of(context).textTheme.bodyText2,
                               ),
                             ),
                           ],

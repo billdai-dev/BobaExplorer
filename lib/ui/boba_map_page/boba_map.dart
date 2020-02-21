@@ -565,7 +565,7 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
                       "收藏列表",
                       style: Theme.of(context)
                           .textTheme
-                          .subhead
+                          .subtitle1
                           .copyWith(color: Colors.white),
                     ),
                   ),
@@ -598,7 +598,7 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
         color: Colors.grey.shade300,
         child: Text(
           shopName,
-          style: Theme.of(context).textTheme.subhead,
+          style: Theme.of(context).textTheme.subtitle1,
         ),
       ),
       sliver: SliverList(
@@ -653,7 +653,7 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
                         branchName,
                         style: Theme.of(context)
                             .textTheme
-                            .subtitle
+                            .subtitle2
                             .copyWith(color: Colors.brown),
                       ),
                     ),
@@ -828,7 +828,7 @@ class _ShopItemState extends State<_ShopItem> {
                             children: <Widget>[
                               Text(
                                 shopName,
-                                style: Theme.of(context).textTheme.title,
+                                style: Theme.of(context).textTheme.headline6,
                               ),
                               Spacer(),
                               _buildBranchTag(branchName),

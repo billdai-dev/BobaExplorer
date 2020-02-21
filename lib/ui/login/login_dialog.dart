@@ -133,7 +133,8 @@ class _LoginDialogState extends State<LoginDialog>
                                 Expanded(
                                   child: Text(
                                     title,
-                                    style: Theme.of(context).textTheme.subhead,
+                                    style:
+                                        Theme.of(context).textTheme.subtitle1,
                                   ),
                                 ),
                                 InkWell(

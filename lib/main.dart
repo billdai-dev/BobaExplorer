@@ -118,7 +118,7 @@ class _MyAppState extends State<MyApp> {
     showDialog(
       context: navigatorContext,
       builder: (context) {
-        var buttonTextStyle = Theme.of(context).textTheme.subhead;
+        var buttonTextStyle = Theme.of(context).textTheme.subtitle1;
         return SimpleDialog(
           titlePadding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
           contentPadding: const EdgeInsets.only(top: 8, bottom: 16),

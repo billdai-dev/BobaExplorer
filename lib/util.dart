@@ -51,7 +51,7 @@ class Util {
                   textAlign: TextAlign.center,
                   style: Theme.of(context)
                       .textTheme
-                      .subhead
+                      .subtitle1
                       .copyWith(color: Colors.white),
                 ),
               ],
