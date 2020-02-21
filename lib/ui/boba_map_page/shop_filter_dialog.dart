@@ -60,7 +60,7 @@ class _ShopFilterDialogState extends State<ShopFilterDialog>
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: StreamBuilder<List<String>>(
                 stream: appBloc.supportedShops
-                    .map((shops) => shops.map((shop) => shop.name)),
+                    .map((shops) => shops.map((shop) => shop.name).toList()),
                 builder: (context, supportedShopsData) {
                   List<String> supportedShops = supportedShopsData.hasData
                       ? supportedShopsData.data.toList()

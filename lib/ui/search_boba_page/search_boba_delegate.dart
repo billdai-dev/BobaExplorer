@@ -55,7 +55,7 @@ class SearchBobaDelegate extends SearchDelegate {
         builder: (context, appBloc, child) {
           return StreamBuilder<List<String>>(
             stream: appBloc.supportedShops
-                .map((shops) => shops.map((shop) => shop.name)),
+                .map((shops) => shops.map((shop) => shop.name).toList()),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return Container();
@@ -156,7 +156,7 @@ class SearchBobaDelegate extends SearchDelegate {
         builder: (context, appBloc, child) {
           return StreamBuilder<List<String>>(
             stream: appBloc.supportedShops
-                .map((shops) => shops.map((shop) => shop.name)),
+                .map((shops) => shops.map((shop) => shop.name).toList()),
             builder: (context, snapshot) {
               final supportedShops = snapshot.data ?? [];
 
