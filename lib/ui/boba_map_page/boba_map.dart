@@ -239,7 +239,8 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                           return Container();
                         }
                         return IconButton(
-                          icon: Icon(Icons.favorite, color: Colors.redAccent),
+                          icon: Icon(Icons.bookmark,
+                              color: Color.fromARGB(255, 110, 220, 218)),
                           onPressed: () async {
                             if (snapshot.data == null) {
                               final newUser = await _showLoginDialog(context);
@@ -672,9 +673,9 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
                       onTap: () async =>
                           bobaMapBloc.setFavoriteShop(false, shop),
                       child: Icon(
-                        Icons.favorite,
-                        color: Colors.redAccent,
-                        size: 22,
+                        Icons.bookmark,
+                        color: Color.fromARGB(255, 110, 220, 218),
+                        //size: 22,
                       ),
                     ),
                   ],
