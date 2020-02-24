@@ -74,7 +74,7 @@ class _MyAppState extends State<MyApp> {
         });
         break;
       case RemindRatingEvent:
-        showRemindRatingDialog(navigatorContext);
+        _showRemindRatingDialog(navigatorContext);
         break;
     }
   }
@@ -97,24 +97,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  /*void _initRateMyApp() {
-    RateMyApp rateMyApp = RateMyApp(
-      preferencesPrefix: 'rateMyApp_',
-      minDays: 0,
-      minLaunches: 5,
-      remindDays: 1,
-      remindLaunches: 5,
-    );
-    rateMyApp.init().then((_) {
-      if (!rateMyApp.shouldOpenDialog) {
-        return null;
-      }
-      final navigatorContext = navigatorKey?.currentState?.overlay?.context;
-      showRemindRatingDialog(navigatorContext, rateMyApp);
-    });
-  }*/
-
-  void showRemindRatingDialog(BuildContext navigatorContext) {
+  void _showRemindRatingDialog(BuildContext navigatorContext) {
     showDialog(
       context: navigatorContext,
       builder: (context) {
@@ -145,15 +128,14 @@ class _MyAppState extends State<MyApp> {
                       ReportDialog(reportType: ReportType.opinion),
                 ).then((isReportSent) {
                   appBloc?.answerRatingReminder(isReportSent);
-                  Navigator.pop(context);
                 });
               },
               child: Text('我有些建議.. 💬', style: buttonTextStyle),
             ),
             SimpleDialogOption(
               onPressed: () {
-                appBloc?.answerRatingReminder(false);
                 Navigator.pop(context);
+                appBloc?.answerRatingReminder(false);
               },
               child: Text('稍後再說 🤔', style: buttonTextStyle),
             )

@@ -21,12 +21,8 @@ class AppBloc extends BaseBloc {
 
   AppBloc(this._getSupportedShopUseCase, this._checkAppVersionUseCase,
       this._checkRatingReminderUseCase, this._answerRatingReminderUseCase) {
-    _getSupportedShopUseCase
-        .execute()
-        .then((supportedShopStream) => supportedShopStream.listen((a) {
-              print(a);
-              _supportedShopsController.add(a);
-            }));
+    _getSupportedShopUseCase.execute().then((supportedShopStream) =>
+        supportedShopStream.listen(_supportedShopsController.add));
   }
 
   void checkAppVersion() {

@@ -20,21 +20,25 @@ class DeviceManager implements IDeviceManager {
   }
 
   @override
-  Future<Function> answerRatingReminder(bool rated) {
+  Future<void> answerRatingReminder(bool rated) {
     RateMyApp rateMyApp = RateMyApp(
         preferencesPrefix: 'rateMyApp_',
         minDays: 0,
         minLaunches: 5,
         remindDays: 1,
         remindLaunches: 5);
-    if (rated == true) {
-      rateMyApp.doNotOpenAgain = true;
-    } else {
-      rateMyApp
-        ..baseLaunchDate =
-            rateMyApp.baseLaunchDate.add(Duration(days: rateMyApp.remindDays))
-        ..launches -= rateMyApp.remindLaunches;
-    }
-    return rateMyApp.save();
+    return rateMyApp.init().then((_) {
+      rateMyApp.launches -= 1; //To deny "launches" + 1 in init()
+      if (rated == true) {
+        rateMyApp.doNotOpenAgain = true;
+      } else {
+        var nextLaunchDate =
+            DateTime.now().add(Duration(days: rateMyApp.remindDays));
+        rateMyApp
+          ..baseLaunchDate = nextLaunchDate
+          ..launches = 0;
+      }
+      return rateMyApp.save();
+    });
   }
 }
