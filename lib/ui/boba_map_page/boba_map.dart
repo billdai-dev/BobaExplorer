@@ -21,8 +21,8 @@ import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:lottie/lottie.dart';
 import 'package:mark922_flutter_lottie/mark922_flutter_lottie.dart';
-import 'package:path_drawing/path_drawing.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -505,9 +505,13 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
             itemCount: shops?.length ?? 0,
             itemBuilder: (context, index) {
               TeaShop shop = shops[index];
-              return _ShopItem(shop, () {
-                _moveCamera(shop.position.latitude, shop.position.longitude);
-              });
+              return _ShopItem(
+                shop,
+                () {
+                  _moveCamera(shop.position.latitude, shop.position.longitude);
+                },
+                key: ValueKey(shop.docId),
+              );
             },
           ),
         ),
@@ -770,7 +774,7 @@ class _ShopItem extends StatefulWidget {
   final TeaShop _shop;
   final VoidCallback _onTap;
 
-  _ShopItem(this._shop, this._onTap);
+  _ShopItem(this._shop, this._onTap, {Key key}) : super(key: key);
 
   @override
   _ShopItemState createState() => _ShopItemState();
@@ -824,6 +828,7 @@ class _ShopItemState extends State<_ShopItem> {
                     onViewCreated: null,
                     autoPlay: true,
                     loop: true,
+                    key: ValueKey(widget._shop.docId),
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -923,7 +928,7 @@ class _ShopItemState extends State<_ShopItem> {
                             Container(
                               width: 54,
                               child: FavoriteCheckbox(
-                                key: UniqueKey(),
+                                key: ValueKey(widget._shop.docId),
                                 isFavorite: widget._shop.isFavorite,
                                 onFavoriteChanged: (isFavorite) {
                                   bloc.setFavoriteShop(
@@ -1004,7 +1009,7 @@ class _ShopItemState extends State<_ShopItem> {
 
 enum _ShopOverflowOption { share, report }
 
-class _FavoriteStampCustomPainter extends CustomPainter {
+/*class _FavoriteStampCustomPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint();
@@ -1023,7 +1028,7 @@ class _FavoriteStampCustomPainter extends CustomPainter {
   bool shouldRepaint(CustomPainter oldDelegate) {
     return false;
   }
-}
+}*/
 
 class FavoriteCheckbox extends StatefulWidget {
   final bool _isFavorite;
@@ -1039,13 +1044,23 @@ class FavoriteCheckbox extends StatefulWidget {
   _FavoriteCheckboxState createState() => _FavoriteCheckboxState();
 }
 
-class _FavoriteCheckboxState extends State<FavoriteCheckbox> {
+class _FavoriteCheckboxState extends State<FavoriteCheckbox>
+    with SingleTickerProviderStateMixin {
   bool isFavorite;
+  LottieController lottieController;
+  AnimationController animController;
 
   @override
   void initState() {
     super.initState();
     isFavorite = widget._isFavorite;
+    animController = AnimationController(vsync: this);
+  }
+
+  @override
+  void dispose() {
+    animController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -1064,19 +1079,23 @@ class _FavoriteCheckboxState extends State<FavoriteCheckbox> {
                     return;
                   }
                 }
+                bool wasFavorite = isFavorite;
                 isFavorite = !isFavorite;
+                if (wasFavorite) {
+                  animController?.value = 0;
+                } else {
+                  await animController?.forward(from: 0);
+                }
                 widget._onFavoriteChanged(isFavorite);
-                setState(() {});
               },
-              child: CustomPaint(
-                painter: _FavoriteStampCustomPainter(),
-                child: Container(
-                  alignment: Alignment.bottomRight,
-                  child: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: Colors.redAccent.shade200,
-                  ),
-                ),
+              child: Lottie.asset(
+                'assets/lottie/bookmark.json',
+                controller: animController,
+                onLoaded: (composition) {
+                  animController
+                    ..duration = composition.duration
+                    ..value = isFavorite ? 1 : 0;
+                },
               ),
             );
           },
