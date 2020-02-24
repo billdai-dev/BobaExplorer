@@ -33,7 +33,7 @@ Future<User> _showLoginDialog(BuildContext context) async {
     builder: (context) => LoginDialog(),
   );
   if (user != null) {
-    String userName = user.name ?? "";
+    String userName = user.name ?? "訪客";
     Scaffold.of(context).showSnackBar(SnackBar(
       content: Text("歡迎，$userName，現在您可以收藏店家囉"),
     ));
