@@ -183,6 +183,10 @@ PODS:
   - launch_review (0.0.1):
     - Flutter
   - leveldb-library (1.22)
+  - lottie-ios (3.1.6)
+  - mark922_flutter_lottie (0.0.1):
+    - Flutter
+    - lottie-ios
   - nanopb (0.3.9011):
     - nanopb/decode (= 0.3.9011)
     - nanopb/encode (= 0.3.9011)
@@ -223,6 +227,7 @@ DEPENDENCIES:
   - google_maps_flutter (from `.symlinks/plugins/google_maps_flutter/ios`)
   - google_sign_in (from `.symlinks/plugins/google_sign_in/ios`)
   - launch_review (from `.symlinks/plugins/launch_review/ios`)
+  - mark922_flutter_lottie (from `.symlinks/plugins/mark922_flutter_lottie/ios`)
   - package_info (from `.symlinks/plugins/package_info/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
@@ -258,6 +263,7 @@ SPEC REPOS:
     - gRPC-Core
     - GTMSessionFetcher
     - leveldb-library
+    - lottie-ios
     - nanopb
     - Protobuf
 
@@ -288,6 +294,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/google_sign_in/ios"
   launch_review:
     :path: ".symlinks/plugins/launch_review/ios"
+  mark922_flutter_lottie:
+    :path: ".symlinks/plugins/mark922_flutter_lottie/ios"
   package_info:
     :path: ".symlinks/plugins/package_info/ios"
   path_provider:
@@ -344,6 +352,8 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: cea130bbfe5a7edc8d06d3f0d17288c32ffe9925
   launch_review: 75d5a956ba8eaa493e9c9d4bf4c05e505e8d5ed0
   leveldb-library: 55d93ee664b4007aac644a782d11da33fba316f7
+  lottie-ios: 85ce835dd8c53e02509f20729fc7d6a4e6645a0a
+  mark922_flutter_lottie: 0b49b26f6677004aa45c3fc1cdeada619e36a04a
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
   package_info: 48b108e75b8802c2d5e126f208ef540561c98aef
   path_provider: fb74bd0465e96b594bb3b5088ee4a4e7bb1f2a9d

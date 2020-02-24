@@ -21,6 +21,7 @@ import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mark922_flutter_lottie/mark922_flutter_lottie.dart';
 import 'package:path_drawing/path_drawing.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
@@ -499,7 +500,6 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
             controller: _shopInfoPageController,
             onPageChanged: (index) {
               TeaShop shop = shops[index];
-              //GeoPoint position = shops[index].data["position"]["geopoint"];
               _moveCamera(shop.position.latitude, shop.position.longitude);
             },
             itemCount: shops?.length ?? 0,
@@ -782,9 +782,6 @@ class _ShopItemState extends State<_ShopItem> {
   @override
   Widget build(BuildContext context) {
     BobaMapBloc bloc = Provider.of<BobaMapBloc>(context, listen: false);
-    /*Color color = _hue == null
-        ? Colors.redAccent
-        : HSVColor.fromAHSV(1, _hue.toDouble(), 1, 1).toColor();*/
     String shopName = widget._shop.shopName;
     String branchName = widget._shop.branchName;
     branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
@@ -820,111 +817,124 @@ class _ShopItemState extends State<_ShopItem> {
                   ],
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Flexible(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          SizedBox(height: 8),
-                          Row(
+              child: Stack(
+                children: [
+                  LottieView.fromFile(
+                    filePath: "assets/lottie/arisingBubble.json",
+                    onViewCreated: null,
+                    autoPlay: true,
+                    loop: true,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Text(
-                                shopName,
-                                style: Theme.of(context).textTheme.headline6,
+                              SizedBox(height: 8),
+                              Row(
+                                children: <Widget>[
+                                  Text(
+                                    shopName,
+                                    style:
+                                        Theme.of(context).textTheme.headline6,
+                                  ),
+                                  Spacer(),
+                                  _buildBranchTag(branchName),
+                                  SizedBox(width: 4),
+                                  PopupMenuButton<_ShopOverflowOption>(
+                                    offset: Offset(0, -20),
+                                    child: Icon(Icons.more_vert),
+                                    onSelected: (option) =>
+                                        _handleOverflowAction(option,
+                                            shopName: shopName,
+                                            branchName: branchName,
+                                            address: "$city$district$address",
+                                            teaShop: widget._shop),
+                                    itemBuilder: (context) {
+                                      return <
+                                          PopupMenuEntry<_ShopOverflowOption>>[
+                                        PopupMenuItem(
+                                          value: _ShopOverflowOption.share,
+                                          child: buildPopupMenuButton(
+                                            "分享",
+                                            icon: Icons.share,
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: _ShopOverflowOption.report,
+                                          child: buildPopupMenuButton(
+                                            "回報",
+                                            icon: Icons.report_problem,
+                                          ),
+                                        ),
+                                      ];
+                                    },
+                                  ),
+                                ],
                               ),
-                              Spacer(),
-                              _buildBranchTag(branchName),
-                              SizedBox(width: 4),
-                              PopupMenuButton<_ShopOverflowOption>(
-                                offset: Offset(0, -20),
-                                child: Icon(Icons.more_vert),
-                                onSelected: (option) => _handleOverflowAction(
-                                    option,
-                                    shopName: shopName,
-                                    branchName: branchName,
-                                    address: "$city$district$address",
-                                    teaShop: widget._shop),
-                                itemBuilder: (context) {
-                                  return <PopupMenuEntry<_ShopOverflowOption>>[
-                                    PopupMenuItem(
-                                      value: _ShopOverflowOption.share,
-                                      child: buildPopupMenuButton(
-                                        "分享",
-                                        icon: Icons.share,
-                                      ),
+                              SizedBox(height: 4),
+                              Text("地址"),
+                              SizedBox(height: 2),
+                              Flexible(
+                                child: ListView(
+                                  shrinkWrap: true,
+                                  children: <Widget>[
+                                    Text(
+                                      "$city$district$address",
+                                      style: TextStyle(),
                                     ),
-                                    PopupMenuItem(
-                                      value: _ShopOverflowOption.report,
-                                      child: buildPopupMenuButton(
-                                        "回報",
-                                        icon: Icons.report_problem,
-                                      ),
-                                    ),
-                                  ];
-                                },
+                                  ],
+                                ),
                               ),
+                              SizedBox(height: 4),
                             ],
                           ),
-                          SizedBox(height: 4),
-                          Text("地址"),
-                          SizedBox(height: 2),
-                          Flexible(
-                            child: ListView(
-                              shrinkWrap: true,
-                              children: <Widget>[
-                                Text(
-                                  "$city$district$address",
-                                  style: TextStyle(),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  Container(
-                    height: 45,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        Expanded(
-                          child: FlatButton.icon(
-                            padding: EdgeInsets.zero,
-                            onPressed: () => _launchDial(phone),
-                            icon: Icon(Icons.phone),
-                            label: Text("撥號至店家"),
-                          ),
-                        ),
-                        Expanded(
-                          child: FlatButton.icon(
-                            padding: EdgeInsets.zero,
-                            onPressed: () =>
-                                Util.launchMap("$city$district$address"),
-                            icon: Icon(
-                              FontAwesomeIcons.locationArrow,
-                              size: 18,
+                      Container(
+                        height: 45,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            Expanded(
+                              child: FlatButton.icon(
+                                padding: EdgeInsets.zero,
+                                onPressed: () => _launchDial(phone),
+                                icon: Icon(Icons.phone),
+                                label: Text("撥號至店家"),
+                              ),
                             ),
-                            label: Text("在地圖上查看"),
-                          ),
+                            Expanded(
+                              child: FlatButton.icon(
+                                padding: EdgeInsets.zero,
+                                onPressed: () =>
+                                    Util.launchMap("$city$district$address"),
+                                icon: Icon(
+                                  FontAwesomeIcons.locationArrow,
+                                  size: 18,
+                                ),
+                                label: Text("在地圖上查看"),
+                              ),
+                            ),
+                            Container(
+                              width: 54,
+                              child: FavoriteCheckbox(
+                                key: UniqueKey(),
+                                isFavorite: widget._shop.isFavorite,
+                                onFavoriteChanged: (isFavorite) {
+                                  bloc.setFavoriteShop(
+                                      isFavorite, widget._shop);
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                        Container(
-                          width: 54,
-                          child: FavoriteCheckbox(
-                            key: UniqueKey(),
-                            isFavorite: widget._shop.isFavorite,
-                            onFavoriteChanged: (isFavorite) {
-                              bloc.setFavoriteShop(isFavorite, widget._shop);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),

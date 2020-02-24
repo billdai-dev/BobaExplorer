@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+import 'package:mark922_flutter_lottie/mark922_flutter_lottie.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoadingWidget extends StatefulWidget {
@@ -18,7 +18,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
     with SingleTickerProviderStateMixin {
   BehaviorSubject<bool> _isLoadingController;
   StreamSubscription<bool> _isLoadingStreamSub;
-  AnimationController _controller;
+  //AnimationController _controller;
 
   @override
   void initState() {
@@ -26,8 +26,8 @@ class _LoadingWidgetState extends State<LoadingWidget>
     _isLoadingController = BehaviorSubject(seedValue: widget.isLoading);
     _isLoadingStreamSub =
         widget.isLoadingStream?.listen(_isLoadingController.add);
-    _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
+    /*_controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));*/
   }
 
   @override
@@ -48,7 +48,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
   void dispose() {
     _isLoadingStreamSub?.cancel();
     _isLoadingController?.close();
-    _controller?.dispose();
+    //_controller?.dispose();
     super.dispose();
   }
 
@@ -57,8 +57,6 @@ class _LoadingWidgetState extends State<LoadingWidget>
     return StreamBuilder<bool>(
       stream: _isLoadingController.stream.switchMap((isLoading) {
         return Stream.value(isLoading);
-        /*return Observable.timer(
-            isLoading, Duration(milliseconds: isLoading ? 300 : 300));*/
       }),
       builder: (context, snapshot) {
         return Center(
@@ -72,41 +70,16 @@ class _LoadingWidgetState extends State<LoadingWidget>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 color: Colors.black54,
-                child: Lottie.asset('assets/lottie/jumpingCup.json'),
+                child: LottieView.fromFile(
+                  onViewCreated: null,
+                  filePath: 'assets/lottie/jumpingCup.json',
+                  loop: true,
+                  autoPlay: true,
+                ),
               ),
             ),
           ),
         );
-
-        /*return Center(
-          child: Visibility(
-            visible: snapshot.data ?? false,
-            child: Container(
-              width: 100,
-              height: 300,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.white,
-              ),
-              child: Lottie.asset(
-                'assets/lottie/jumpingCup.json',
-                controller: _controller,
-                onLoaded: (composition) {
-                  // Configure the AnimationController with the duration of the
-                  // Lottie file and start the animation.
-                  _controller
-                    ..duration = composition.duration
-                    ..forward();
-                },
-              ),
-              */ /*child: SpinKitRotatingCircle(
-                color: Colors.blueAccent,
-                size: 30,
-                controller: _controller,
-              ),*/ /*
-            ),
-          ),
-        );*/
       },
     );
   }
