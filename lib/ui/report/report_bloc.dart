@@ -11,10 +11,6 @@ import 'package:rxdart/rxdart.dart';
 class ReportBloc extends BaseBloc {
   final ReportUseCase _reportUseCase;
 
-  final PublishSubject<bool> _isLoadingController = PublishSubject();
-
-  Stream<bool> get isLoading => _isLoadingController.stream;
-
   final BehaviorSubject<List<City>> _citiesController = BehaviorSubject();
 
   Stream<List<City>> get cities => _citiesController.stream;
@@ -30,49 +26,48 @@ class ReportBloc extends BaseBloc {
   }
 
   void reportBug(String desc, int severity) {
-    _isLoadingController.add(true);
+    eventSink.add(Event.changeLoading(true));
     Report bugReport = Report.bug(desc, severity);
     _reportUseCase
         .execute(bugReport)
         .then((resultStream) => resultStream.first)
         .then((isSuccess) => eventSink.add(Event.onReported(isSuccess)))
-        .whenComplete(() => _isLoadingController.add(false));
+        .whenComplete(() => eventSink.add(Event.changeLoading(false)));
   }
 
   void reportRequest(String desc, {String city, String district}) {
-    _isLoadingController.add(true);
+    eventSink.add(Event.changeLoading(true));
     Report requestReport = Report.request(desc, city: city, district: district);
     _reportUseCase
         .execute(requestReport)
         .then((resultStream) => resultStream.first)
         .then((isSuccess) => eventSink.add(Event.onReported(isSuccess)))
-        .whenComplete(() => _isLoadingController.add(false));
+        .whenComplete(() => eventSink.add(Event.changeLoading(false)));
   }
 
   void reportOpinion(String desc) {
-    _isLoadingController.add(true);
+    eventSink.add(Event.changeLoading(true));
     Report opinionReport = Report.opinion(desc);
     _reportUseCase
         .execute(opinionReport)
         .then((resultStream) => resultStream.first)
         .then((isSuccess) => eventSink.add(Event.onReported(isSuccess)))
-        .whenComplete(() => _isLoadingController.add(false));
+        .whenComplete(() => eventSink.add(Event.changeLoading(false)));
   }
 
   void reportShop(String shopId, String reason) {
-    _isLoadingController.add(true);
+    eventSink.add(Event.changeLoading(true));
     Report shopReport = Report.shop(shopId, reason);
     _reportUseCase
         .execute(shopReport)
         .then((resultStream) => resultStream.first)
         .then((isSuccess) => eventSink.add(Event.onReported(isSuccess)))
-        .whenComplete(() => _isLoadingController.add(false));
+        .whenComplete(() => eventSink.add(Event.changeLoading(false)));
   }
 
   @override
   void dispose() {
     super.dispose();
-    _isLoadingController?.close();
     _citiesController?.close();
   }
 }

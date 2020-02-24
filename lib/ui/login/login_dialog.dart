@@ -10,6 +10,7 @@ import 'package:boba_explorer/ui/report/report_dialog.dart';
 import 'package:boba_explorer/ui/web_view/web_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mark922_flutter_lottie/mark922_flutter_lottie.dart';
 import 'package:provider/provider.dart';
 
 class LoginDialog extends StatefulWidget {
@@ -31,7 +32,6 @@ class _LoginDialogState extends State<LoginDialog>
     _dialogAnimController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 200))
           ..forward();
-    //_dialogAnimController.forward();
   }
 
   void _handleEvent(Event event) {
@@ -42,12 +42,12 @@ class _LoginDialogState extends State<LoginDialog>
         break;
       case ShowSyncDataDialogEvent:
         var newUser = (event as ShowSyncDataDialogEvent).newUser;
+        Navigator.maybePop(context, newUser);
         showDialog(
             context: context,
             barrierDismissible: false,
             builder: (context) => _buildSyncDataDialog());
         loginBloc?.syncFavoriteShops();
-        Navigator.maybePop(context, newUser);
         break;
       case ClearLocalFavoritesEvent:
         showDialog(
@@ -85,164 +85,185 @@ class _LoginDialogState extends State<LoginDialog>
         await _dialogAnimController.reverse();
         return true;
       },
-      child: ScaleTransition(
-        scale: Tween(begin: 0.0, end: 1.0).animate(
-          CurvedAnimation(
-            parent: _dialogAnimController,
-            curve: Curves.fastOutSlowIn,
-          ),
-        ),
-        child: Container(
-          alignment: Alignment.topCenter,
-          margin: EdgeInsets.symmetric(
-            horizontal: widthMargin,
-            vertical: heightMargin,
-          ),
-          child: Dialog(
-            insetAnimationDuration: Duration(milliseconds: 1),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        children: [
+          ScaleTransition(
+            scale: Tween(begin: 0.0, end: 1.0).animate(
+              CurvedAnimation(
+                parent: _dialogAnimController,
+                curve: Curves.fastOutSlowIn,
+              ),
             ),
             child: Container(
-              padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
-              constraints: BoxConstraints.expand(),
-              child: ListView(
-                children: <Widget>[
-                  StreamBuilder<User>(
-                    stream: loginBloc.currentUser,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.none) {
-                        return LoadingWidget(isLoading: true);
-                      }
-                      final currentUser = snapshot.data;
-                      String title;
-                      if (currentUser == null) {
-                        title = "歡迎！\n您可以透過以下方式登入";
-                      } else if (currentUser.isAnonymous) {
-                        title = "哈囉, 訪客！您可以連結社群帳號以同步資料至雲端";
-                      } else {
-                        title = "哈囉！${currentUser.name ?? ""}，需要什麼服務嗎？";
-                      }
-                      return Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Expanded(
-                                  child: Text(
-                                    title,
-                                    style:
-                                        Theme.of(context).textTheme.subtitle1,
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    await _dialogAnimController.reverse();
-                                    Navigator.pop(context);
-                                  },
-                                  child: Icon(Icons.close),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Row(
+              alignment: Alignment.topCenter,
+              margin: EdgeInsets.symmetric(
+                horizontal: widthMargin,
+                vertical: heightMargin,
+              ),
+              child: Dialog(
+                insetAnimationDuration: Duration(milliseconds: 1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
+                  constraints: BoxConstraints.expand(),
+                  child: ListView(
+                    children: <Widget>[
+                      StreamBuilder<User>(
+                        stream: loginBloc.currentUser,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.none) {
+                            return LoadingWidget(isLoading: true);
+                          }
+                          final currentUser = snapshot.data;
+                          String title;
+                          if (currentUser == null) {
+                            title = "歡迎！\n您可以透過以下方式登入";
+                          } else if (currentUser.isAnonymous) {
+                            title = "哈囉, 訪客！您可以連結社群帳號以同步資料至雲端";
+                          } else {
+                            title = "哈囉！${currentUser.name ?? ""}，需要什麼服務嗎？";
+                          }
+                          return Column(
                             children: <Widget>[
-                              SizedBox(width: 20),
-                              Expanded(
-                                child: Container(
-                                    height: 1, color: Colors.grey.shade200),
-                              ),
-                              SizedBox(width: 20),
-                              _buildQuestionBtn(),
-                            ],
-                          ),
-                          SizedBox(height: 12),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
-                                    _buildFbLoginBtn(currentUser),
-                                    SizedBox(height: 12),
-                                    _buildGoogleLoginBtn(currentUser),
-                                    SizedBox(height: 12),
-                                    if (currentUser == null)
-                                      _buildGuestLoginBtn()
-                                    else
-                                      _buildLogoutBtn(currentUser),
-                                    SizedBox(height: 16),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                    Expanded(
+                                      child: Text(
+                                        title,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .subtitle1,
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () async {
+                                        await _dialogAnimController.reverse();
+                                        Navigator.pop(context);
+                                      },
+                                      child: Icon(Icons.close),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                children: <Widget>[
+                                  SizedBox(width: 20),
+                                  Expanded(
+                                    child: Container(
+                                        height: 1, color: Colors.grey.shade200),
+                                  ),
+                                  SizedBox(width: 20),
+                                  _buildQuestionBtn(),
+                                ],
+                              ),
+                              SizedBox(height: 12),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
                                       children: <Widget>[
-                                        GestureDetector(
-                                          onTap: () {
-                                            Navigator.pushNamed(
-                                              context,
-                                              WebViewPage.routeName,
-                                              arguments: {
-                                                WebViewPage.arg_title: "隱私權政策",
-                                                WebViewPage.arg_url:
-                                                    "https://docs.google.com/document/d/18mrDnkAZFtfpJfdLwX2aqqBzH9sMJ_oKPE2IqDcauag"
+                                        _buildFbLoginBtn(currentUser),
+                                        SizedBox(height: 12),
+                                        _buildGoogleLoginBtn(currentUser),
+                                        SizedBox(height: 12),
+                                        if (currentUser == null)
+                                          _buildGuestLoginBtn()
+                                        else
+                                          _buildLogoutBtn(currentUser),
+                                        SizedBox(height: 16),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: <Widget>[
+                                            GestureDetector(
+                                              onTap: () {
+                                                Navigator.pushNamed(
+                                                  context,
+                                                  WebViewPage.routeName,
+                                                  arguments: {
+                                                    WebViewPage.arg_title:
+                                                        "隱私權政策",
+                                                    WebViewPage.arg_url:
+                                                        "https://docs.google.com/document/d/18mrDnkAZFtfpJfdLwX2aqqBzH9sMJ_oKPE2IqDcauag"
+                                                  },
+                                                );
                                               },
-                                            );
-                                          },
-                                          child: Text(
-                                            "隱私權政策",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .caption
-                                                .copyWith(
-                                                  decoration:
-                                                      TextDecoration.underline,
-                                                ),
-                                          ),
-                                        ),
-                                        GestureDetector(
-                                          onTap: () {
-                                            Navigator.pushNamed(
-                                              context,
-                                              WebViewPage.routeName,
-                                              arguments: {
-                                                WebViewPage.arg_title: "使用聲明",
-                                                WebViewPage.arg_url:
-                                                    "https://docs.google.com/document/d/1floIDQcxrAhbaF4uhJPHkGdxxSCbKhNQwPFtt0sz9VE"
+                                              child: Text(
+                                                "隱私權政策",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .caption
+                                                    .copyWith(
+                                                      decoration: TextDecoration
+                                                          .underline,
+                                                    ),
+                                              ),
+                                            ),
+                                            GestureDetector(
+                                              onTap: () {
+                                                Navigator.pushNamed(
+                                                  context,
+                                                  WebViewPage.routeName,
+                                                  arguments: {
+                                                    WebViewPage.arg_title:
+                                                        "使用聲明",
+                                                    WebViewPage.arg_url:
+                                                        "https://docs.google.com/document/d/1floIDQcxrAhbaF4uhJPHkGdxxSCbKhNQwPFtt0sz9VE"
+                                                  },
+                                                );
                                               },
-                                            );
-                                          },
-                                          child: Text(
-                                            "使用聲明",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .caption
-                                                .copyWith(
-                                                  decoration:
-                                                      TextDecoration.underline,
-                                                ),
-                                          ),
+                                              child: Text(
+                                                "使用聲明",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .caption
+                                                    .copyWith(
+                                                      decoration: TextDecoration
+                                                          .underline,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+          Positioned.fill(
+            child: LoadingWidget(isLoadingStream: loginBloc.loadingEventStream),
+            /*child: StreamBuilder<ChangeLoadingEvent>(
+              stream: loginBloc.loadingEventStream,
+              builder: (context, snapshot) {
+                return LoadingWidget(
+                  isLoading: snapshot.data?.isLoading ?? false,
+                );
+              },
+            ),*/
+          ),
+        ],
       ),
     );
   }
@@ -471,12 +492,24 @@ class _LoginDialogState extends State<LoginDialog>
         borderRadius: BorderRadius.circular(12),
       ),
       child: Container(
+        width: 240,
+        height: 180,
         child: Column(
           children: <Widget>[
-            Text("雲端資料同步中..."),
-            SizedBox(height: 12),
-            //TODO: Syncing data animation
-            Placeholder(),
+            Expanded(
+              child: LottieView.fromFile(
+                onViewCreated: null,
+                filePath: 'assets/lottie/dataTransfer.json',
+                autoPlay: true,
+                loop: true,
+              ),
+            ),
+            //SizedBox(height: 12),
+            Text(
+              "雲端資料同步中...",
+              style: Theme.of(context).textTheme.subtitle1,
+            ),
+            SizedBox(height: 16),
           ],
         ),
       ),

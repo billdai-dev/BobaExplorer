@@ -205,7 +205,7 @@ class _ReportDialogState extends State<ReportDialog>
                           child: Consumer<ReportBloc>(
                             builder: (context, bloc, child) {
                               return LoadingWidget(
-                                isLoadingStream: bloc.isLoading,
+                                isLoadingStream: bloc.loadingEventStream,
                               );
                             },
                           ),
@@ -736,7 +736,7 @@ class _ReportShopDialogState extends State<ReportShopDialog>
                         child: Consumer<ReportBloc>(
                           builder: (context, bloc, child) {
                             return LoadingWidget(
-                              isLoadingStream: bloc.isLoading,
+                              isLoadingStream: bloc.loadingEventStream,
                             );
                           },
                         ),

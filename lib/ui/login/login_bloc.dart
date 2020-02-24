@@ -54,9 +54,12 @@ class LoginBloc extends BaseBloc {
     _googleLoginUseCase.execute().then((googleUserStream) {
       return googleUserStream.first;
     }).then((googleUser) {
+      eventSink.add(Event.changeLoading(false));
       var oldUser = _currentUser.value;
       if (oldUser?.isAnonymous == true) {
         eventSink.add(Event.showSyncDataDialog(googleUser));
+        _currentUser.add(googleUser);
+        return;
       }
       eventSink.add(Event.userLogin(googleUser));
       _currentUser.add(googleUser);
@@ -64,12 +67,16 @@ class LoginBloc extends BaseBloc {
   }
 
   void facebookLogin() async {
+    eventSink.add(Event.changeLoading(true));
     _facebookLoginUseCase.execute().then((facebookUserStream) {
       return facebookUserStream.first;
     }).then((facebookUser) {
+      eventSink.add(Event.changeLoading(false));
       var oldUser = _currentUser.value;
       if (oldUser?.isAnonymous == true) {
         eventSink.add(Event.showSyncDataDialog(facebookUser));
+        _currentUser.add(facebookUser);
+        return;
       }
       eventSink.add(Event.userLogin(facebookUser));
       _currentUser.add(facebookUser);
@@ -77,9 +84,11 @@ class LoginBloc extends BaseBloc {
   }
 
   void guestLogin() async {
+    eventSink.add(Event.changeLoading(true));
     _guestLoginUseCase.execute().then((guestUserStream) {
       return guestUserStream.first;
     }).then((guestUser) {
+      eventSink.add(Event.changeLoading(false));
       eventSink.add(Event.userLogin(guestUser));
       _currentUser.add(guestUser);
     });
@@ -107,15 +116,21 @@ class LoginBloc extends BaseBloc {
         .then((_) {
       var timeDifference = DateTime.now().difference(timeBeforeDeletion);
       return timeDifference.inSeconds < 2
-          ? Future.delayed(timeDifference)
+          ? Future.delayed(Duration(seconds: 2 - timeDifference.inSeconds))
           : null;
     }).then((_) => eventSink.add(Event.localFavoritesCleared()));
   }
 
   void syncFavoriteShops() {
+    var timeBeforeDeletion = DateTime.now();
     _syncRemoteFavoriteShopUseCase
         .execute()
         .then((stream) => stream.first)
-        .then((_) => eventSink.add(Event.remoteFavoritesSynced()));
+        .then((_) {
+      var timeDifference = DateTime.now().difference(timeBeforeDeletion);
+      return timeDifference.inSeconds < 3
+          ? Future.delayed(Duration(seconds: 3 - timeDifference.inSeconds))
+          : null;
+    }).then((value) => eventSink.add(Event.remoteFavoritesSynced()));
   }
 }

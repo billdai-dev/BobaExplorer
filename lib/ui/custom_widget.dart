@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:boba_explorer/app_event.dart';
 import 'package:flutter/material.dart';
 import 'package:mark922_flutter_lottie/mark922_flutter_lottie.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoadingWidget extends StatefulWidget {
   final bool isLoading;
-  final Stream<bool> isLoadingStream;
+  final Stream<ChangeLoadingEvent> isLoadingStream;
 
   LoadingWidget({this.isLoading, this.isLoadingStream});
 
@@ -18,14 +19,16 @@ class _LoadingWidgetState extends State<LoadingWidget>
     with SingleTickerProviderStateMixin {
   BehaviorSubject<bool> _isLoadingController;
   StreamSubscription<bool> _isLoadingStreamSub;
+
   //AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
     _isLoadingController = BehaviorSubject(seedValue: widget.isLoading);
-    _isLoadingStreamSub =
-        widget.isLoadingStream?.listen(_isLoadingController.add);
+    _isLoadingStreamSub = widget.isLoadingStream
+        ?.map((event) => event.isLoading)
+        ?.listen(_isLoadingController.add);
     /*_controller = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500));*/
   }
@@ -40,8 +43,9 @@ class _LoadingWidgetState extends State<LoadingWidget>
       return;
     }
     _isLoadingStreamSub?.cancel();
-    _isLoadingStreamSub =
-        widget.isLoadingStream?.listen((isLoading) => _isLoadingController.add);
+    _isLoadingStreamSub = widget.isLoadingStream
+        ?.map((event) => event.isLoading)
+        ?.listen((isLoading) => _isLoadingController.add);
   }
 
   @override
