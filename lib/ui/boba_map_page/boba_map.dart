@@ -14,6 +14,7 @@ import 'package:boba_explorer/ui/report/report_dialog.dart';
 import 'package:boba_explorer/ui/search_boba_page/search_boba_delegate.dart';
 import 'package:boba_explorer/util.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -583,11 +584,36 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
                   Expanded(
                     child: Container(
                       color: Colors.blueGrey.shade600,
-                      child: CustomScrollView(
-                        slivers: favoriteMap.keys
-                            .map((name) =>
-                                _buildHeader(context, name, favoriteMap[name]))
-                            .toList(),
+                      child: Visibility(
+                        visible: favoriteMap.isNotEmpty,
+                        replacement: Container(
+                          alignment: Alignment(0, -0.2),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Lottie.asset(
+                                'assets/lottie/bookmarkPlaceholder.json',
+                                width: 150,
+                                height: 150,
+                                animate: true,
+                                repeat: true,
+                              ),
+                              Text(
+                                '還沒有收藏任何店家哦',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .subtitle1
+                                    .copyWith(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                        child: CustomScrollView(
+                          slivers: favoriteMap.keys
+                              .map((name) => _buildHeader(
+                                  context, name, favoriteMap[name]))
+                              .toList(),
+                        ),
                       ),
                     ),
                   ),
