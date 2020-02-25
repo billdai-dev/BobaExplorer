@@ -794,7 +794,7 @@ class _ShopItemState extends State<_ShopItem> {
 
   @override
   Widget build(BuildContext context) {
-    BobaMapBloc bloc = Provider.of<BobaMapBloc>(context, listen: false);
+    BobaMapBloc bloc = Provider.of<BobaMapBloc>(context);
     String shopName = widget._shop.shopName;
     String branchName = widget._shop.branchName;
     branchName = branchName.endsWith("店") && !branchName.endsWith("新店")
@@ -949,12 +949,25 @@ class _ShopItemState extends State<_ShopItem> {
                             ),
                             Container(
                               width: 48,
-                              child: FavoriteCheckbox(
-                                key: ValueKey(widget._shop.docId),
-                                isFavorite: widget._shop.isFavorite,
-                                onFavoriteChanged: (isFavorite) {
-                                  bloc.setFavoriteShop(
-                                      isFavorite, widget._shop);
+                              child: Consumer<LoginBloc>(
+                                builder: (context, loginBloc, child) {
+                                  return StreamBuilder<User>(
+                                    stream: loginBloc.currentUser,
+                                    builder: (context, snapshot) {
+                                      var user = snapshot.data;
+                                      return FavoriteCheckbox(
+                                        key: ValueKey(
+                                            '${user?.uid ?? ""}_${widget._shop.docId}'),
+                                        isFavorite: user == null
+                                            ? false
+                                            : widget._shop.isFavorite,
+                                        onFavoriteChanged: (isFavorite) {
+                                          bloc.setFavoriteShop(
+                                              isFavorite, widget._shop);
+                                        },
+                                      );
+                                    },
+                                  );
                                 },
                               ),
                             ),
@@ -1030,27 +1043,6 @@ class _ShopItemState extends State<_ShopItem> {
 }
 
 enum _ShopOverflowOption { share, report }
-
-/*class _FavoriteStampCustomPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint paint = Paint();
-    paint.color = Colors.grey;
-    paint.strokeWidth = 1.2;
-    paint.style = PaintingStyle.stroke;
-
-    var dash = Path()
-      ..moveTo(size.width, 0)
-      ..lineTo(0, size.height);
-    canvas.drawPath(
-        dashPath(dash, dashArray: CircularIntervalList([4, 6])), paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return false;
-  }
-}*/
 
 class FavoriteCheckbox extends StatefulWidget {
   final bool _isFavorite;
