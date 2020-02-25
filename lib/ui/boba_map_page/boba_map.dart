@@ -512,7 +512,6 @@ class _BobaMapState extends State<BobaMap> with SingleTickerProviderStateMixin {
                 () {
                   _moveCamera(shop.position.latitude, shop.position.longitude);
                 },
-                key: ValueKey(shop.docId),
               );
             },
           ),
@@ -1086,14 +1085,12 @@ class FavoriteCheckbox extends StatefulWidget {
 
 class _FavoriteCheckboxState extends State<FavoriteCheckbox>
     with SingleTickerProviderStateMixin {
-  bool isFavorite;
   LottieController lottieController;
   AnimationController animController;
 
   @override
   void initState() {
     super.initState();
-    isFavorite = widget._isFavorite;
     animController = AnimationController(vsync: this);
   }
 
@@ -1105,6 +1102,9 @@ class _FavoriteCheckboxState extends State<FavoriteCheckbox>
 
   @override
   Widget build(BuildContext context) {
+    var isFavorite = widget._isFavorite;
+    animController.value = isFavorite ? 1 : 0;
+
     return Consumer<LoginBloc>(
       builder: (context, loginBloc, child) {
         return StreamBuilder<User>(
@@ -1131,11 +1131,8 @@ class _FavoriteCheckboxState extends State<FavoriteCheckbox>
               child: Lottie.asset(
                 'assets/lottie/bookmark.json',
                 controller: animController,
-                onLoaded: (composition) {
-                  animController
-                    ..duration = composition.duration
-                    ..value = isFavorite ? 1 : 0;
-                },
+                onLoaded: (composition) =>
+                    animController.duration = composition.duration,
               ),
             );
           },
