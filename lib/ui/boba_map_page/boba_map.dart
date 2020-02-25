@@ -672,14 +672,15 @@ class _FavoriteDrawerState extends State<FavoriteDrawer> {
             widget.onFavoriteItemClick(shop);
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Row(
                   children: <Widget>[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 2, horizontal: 10),
                       decoration: ShapeDecoration(
                         shape: StadiumBorder(
                           side: BorderSide(color: Colors.brown, width: 0.5),
