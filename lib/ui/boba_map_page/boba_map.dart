@@ -783,6 +783,14 @@ class _ShopItem extends StatefulWidget {
 
 class _ShopItemState extends State<_ShopItem> {
   final ValueNotifier<bool> isCardTappingNotifier = ValueNotifier(false);
+  final ValueNotifier<bool> isBubbleAnimationReady = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    isCardTappingNotifier.dispose();
+    isBubbleAnimationReady.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -824,12 +832,25 @@ class _ShopItemState extends State<_ShopItem> {
               ),
               child: Stack(
                 children: [
-                  LottieView.fromFile(
-                    filePath: "assets/lottie/arisingBubble.json",
-                    onViewCreated: null,
-                    autoPlay: true,
-                    loop: true,
-                    key: ValueKey(widget._shop.docId),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: isBubbleAnimationReady,
+                    builder: (context, isReady, child) {
+                      return Visibility(
+                        visible: isReady,
+                        maintainState: true,
+                        child: LottieView.fromFile(
+                          filePath: "assets/lottie/arisingBubble.json",
+                          onViewCreated: (controller) {
+                            //Add delay to deny blinking black screen
+                            return Future.delayed(Duration(milliseconds: 500),
+                                () => isBubbleAnimationReady.value = true);
+                          },
+                          autoPlay: true,
+                          loop: true,
+                          key: ValueKey(widget._shop.docId),
+                        ),
+                      );
+                    },
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -927,7 +948,7 @@ class _ShopItemState extends State<_ShopItem> {
                               ),
                             ),
                             Container(
-                              width: 54,
+                              width: 48,
                               child: FavoriteCheckbox(
                                 key: ValueKey(widget._shop.docId),
                                 isFavorite: widget._shop.isFavorite,
