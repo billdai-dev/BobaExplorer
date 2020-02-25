@@ -52,6 +52,12 @@ class _MyAppState extends State<MyApp> {
     appBloc.checkAppVersion();
   }
 
+  @override
+  void dispose() {
+    eventSub?.cancel();
+    super.dispose();
+  }
+
   void _handleEvent(Event event) {
     final navigatorContext = navigatorKey?.currentState?.overlay?.context;
     switch (event.runtimeType) {
@@ -68,7 +74,7 @@ class _MyAppState extends State<MyApp> {
             );
           },
         ).then((willingToUpdate) {
-          if (!willingToUpdate) {
+          if (willingToUpdate != true) {
             appBloc?.checkRatingReminder();
           }
         });
@@ -80,12 +86,6 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
-  void dispose() {
-    eventSub?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return BotToastInit(
       child: MaterialApp(
@@ -94,6 +94,40 @@ class _MyAppState extends State<MyApp> {
         onGenerateRoute: _routeGenerator,
         navigatorObservers: [BotToastNavigatorObserver()],
       ),
+    );
+  }
+
+  Route<dynamic> _routeGenerator(RouteSettings routeSetting) {
+    String routeName = routeSetting.name;
+    Map<String, dynamic> args = routeSetting.arguments is Map<String, dynamic>
+        ? routeSetting.arguments as Map<String, dynamic>
+        : null;
+    String lastRoute = routeName.substring(routeSetting.name.lastIndexOf("/"));
+    return MaterialPageRoute(
+      builder: (context) {
+        switch (lastRoute) {
+          case BobaMap.routeName:
+            return Provider<BobaMapBloc>(
+              builder: (_) => kiwi.Container().resolve<BobaMapBloc>(),
+              dispose: (_, bloc) => bloc.dispose(),
+              child: BobaMap(),
+            );
+          case WebViewPage.routeName:
+            String title = args[WebViewPage.arg_title];
+            String url = args[WebViewPage.arg_url];
+            return WebViewPage(title, url);
+          default:
+            return Container(
+              alignment: Alignment.center,
+              child: Scaffold(
+                body: Center(
+                  child: Text("Page not found"),
+                ),
+              ),
+            );
+        }
+      },
+      settings: routeSetting,
     );
   }
 
@@ -144,40 +178,6 @@ class _MyAppState extends State<MyApp> {
       },
     );
   }
-
-  Route<dynamic> _routeGenerator(RouteSettings routeSetting) {
-    String routeName = routeSetting.name;
-    Map<String, dynamic> args = routeSetting.arguments is Map<String, dynamic>
-        ? routeSetting.arguments as Map<String, dynamic>
-        : null;
-    String lastRoute = routeName.substring(routeSetting.name.lastIndexOf("/"));
-    return MaterialPageRoute(
-      builder: (context) {
-        switch (lastRoute) {
-          case BobaMap.routeName:
-            return Provider<BobaMapBloc>(
-              builder: (_) => kiwi.Container().resolve<BobaMapBloc>(),
-              dispose: (_, bloc) => bloc.dispose(),
-              child: BobaMap(),
-            );
-          case WebViewPage.routeName:
-            String title = args[WebViewPage.arg_title];
-            String url = args[WebViewPage.arg_url];
-            return WebViewPage(title, url);
-          default:
-            return Container(
-              alignment: Alignment.center,
-              child: Scaffold(
-                body: Center(
-                  child: Text("Page not found"),
-                ),
-              ),
-            );
-        }
-      },
-      settings: routeSetting,
-    );
-  }
 }
 
 class _AppUpdateDialog extends StatelessWidget {
@@ -189,7 +189,7 @@ class _AppUpdateDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<Widget> options = [
-      if (_forceUpdate)
+      if (!_forceUpdate)
         FlatButton(
           onPressed: () => Navigator.of(context).pop(false),
           child: Text("稍後"),
@@ -208,7 +208,7 @@ class _AppUpdateDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(8))),
       title: Text("版本更新"),
-      content: Text("新版本 $_requiredVersion 已經可以下載囉 :)"),
+      content: Text("新版本 $_requiredVersion 已經可以下載囉 🎉🎉"),
       actions: options,
     );
   }
