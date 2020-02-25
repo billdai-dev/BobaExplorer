@@ -53,6 +53,7 @@ dependencies:
   kiwi: ^0.2.0
   lottie: ^0.2.2
   mark922_flutter_lottie: ^0.2.5
+  maps_toolkit: ^1.0.1+3
 
 dev_dependencies:
   flutter_test:

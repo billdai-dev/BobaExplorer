@@ -6,6 +6,7 @@ import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
 import 'package:boba_explorer/domain/use_case/tea_shop/tea_shop_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/ui/event.dart';
+import 'package:maps_toolkit/maps_toolkit.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:tuple/tuple.dart';
 
@@ -55,6 +56,13 @@ class BobaMapBloc extends BaseBloc {
       return _findTeaShopUseCase
           .execute(FindTeaShopParam(config.lat, config.lng,
               radius: config.radius, shopNames: filteredShops))
+          .then((teaShopStream) => teaShopStream.map((teaShops) {
+                teaShops.sort((shop1, shop2) {
+                  return _compareTeaShopByDistance(
+                      config.lat, config.lng, shop1, shop2);
+                });
+                return teaShops;
+              }))
           .asStream();
     }).listen((teaShopsStream) {
       eventSink.add(Event.changeLoading(false));
@@ -111,8 +119,14 @@ class BobaMapBloc extends BaseBloc {
       return _findTeaShopUseCase
           .execute(FindTeaShopParam(config.lat, config.lng,
               radius: config.radius, shopNames: result))
-          .then((teaShopsStream) => teaShopsStream
-              .map((teaShops) => teaShops..addAll(intersectionData)))
+          .then((teaShopsStream) => teaShopsStream.map((teaShops) {
+                return teaShops
+                  ..addAll(intersectionData)
+                  ..sort((shop1, shop2) {
+                    return _compareTeaShopByDistance(
+                        config.lat, config.lng, shop1, shop2);
+                  });
+              }))
           .asStream();
     }).listen((teaShopsStream) {
       eventSink.add(Event.changeLoading(false));
@@ -128,11 +142,6 @@ class BobaMapBloc extends BaseBloc {
         });
       });
     });
-    /*_favoriteShopsController.addStream(
-        Observable(_loginRepo.getAuthChangedStream()).switchMap((user) {
-          String uid = user == null || user.isAnonymous ? null : user.uid;
-          return _favoriteRepo.getFavoriteShops(uid: uid);
-        }));*/
   }
 
   @override
@@ -180,6 +189,18 @@ class BobaMapBloc extends BaseBloc {
       _teaShopsController.add([shop]);
       _filterListController.add({shop.shopName});
     }
+  }
+
+  int _compareTeaShopByDistance(
+      double lat, double lng, TeaShop shop1, TeaShop shop2) {
+    if (lat == null || lng == null) {
+      return -1;
+    }
+    var distanceToShop1 = SphericalUtil.computeDistanceBetween(LatLng(lat, lng),
+        LatLng(shop1.position?.latitude, shop1.position?.longitude));
+    var distanceToShop2 = SphericalUtil.computeDistanceBetween(LatLng(lat, lng),
+        LatLng(shop2.position?.latitude, shop2.position?.longitude));
+    return (distanceToShop1 - distanceToShop2).toInt();
   }
 }
 
