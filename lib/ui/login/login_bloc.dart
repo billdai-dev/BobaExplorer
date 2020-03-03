@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:boba_explorer/domain/entity/user.dart';
 import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
-import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
+import 'package:boba_explorer/domain/use_case/favorite/favorite_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/ui/event.dart';
 import 'package:rxdart/rxdart.dart';
@@ -110,27 +110,25 @@ class LoginBloc extends BaseBloc {
 
   void clearLocalFavorites() {
     var timeBeforeDeletion = DateTime.now();
-    _deleteFavoriteShopsUseCase
-        .execute()
-        .then((stream) => stream.first)
-        .then((_) {
-      var timeDifference = DateTime.now().difference(timeBeforeDeletion);
-      return timeDifference.inSeconds < 2
-          ? Future.delayed(Duration(seconds: 2 - timeDifference.inSeconds))
-          : null;
+    _deleteFavoriteShopsUseCase.execute().then((stream) {
+      return stream.asyncMap((_) {
+        var timeDifference = DateTime.now().difference(timeBeforeDeletion);
+        return timeDifference.inSeconds < 2
+            ? Future.delayed(Duration(seconds: 2 - timeDifference.inSeconds))
+            : null;
+      });
     }).then((_) => eventSink.add(Event.localFavoritesCleared()));
   }
 
   void syncFavoriteShops() {
     var timeBeforeDeletion = DateTime.now();
-    _syncRemoteFavoriteShopUseCase
-        .execute()
-        .then((stream) => stream.first)
-        .then((_) {
-      var timeDifference = DateTime.now().difference(timeBeforeDeletion);
-      return timeDifference.inSeconds < 3
-          ? Future.delayed(Duration(seconds: 3 - timeDifference.inSeconds))
-          : null;
+    _syncRemoteFavoriteShopUseCase.execute().then((stream) {
+      return stream.asyncMap((_) {
+        var timeDifference = DateTime.now().difference(timeBeforeDeletion);
+        return timeDifference.inSeconds < 3
+            ? Future.delayed(Duration(seconds: 3 - timeDifference.inSeconds))
+            : null;
+      });
     }).then((value) => eventSink.add(Event.remoteFavoritesSynced()));
   }
 }

@@ -11,11 +11,6 @@ class SearchBobaBloc extends BaseBloc {
   final AddRecentSearchUseCase _addRecentSearchUseCase;
   final FindTeaShopUseCase _findTeaShopUseCase;
 
-  /*final BehaviorSubject<List<TeaShop>> _searchResultController =
-      BehaviorSubject();
-
-  Stream<List<TeaShop>> get searchResult => _searchResultController.stream;*/
-
   final BehaviorSubject<List<String>> _recentSearchController =
       BehaviorSubject();
 
@@ -25,23 +20,11 @@ class SearchBobaBloc extends BaseBloc {
       this._findTeaShopUseCase) {
     _getRecentSearchUseCase.execute().then((searchResultStream) =>
         searchResultStream.listen(_recentSearchController.add));
-    /*_searchBobaRepo
-        .getRecentSearch()
-        .then((shops) => _recentSearchController.add(shops));*/
-
-    /*_favoriteRepo.getFavoriteShops().then((shops) {
-      return shops.map((json) {
-        return TeaShop.fromJson(jsonDecode(json));
-      });
-    }).then((shops) {
-      _favoriteShopController.add(shops);
-    });*/
   }
 
   @override
   void dispose() {
     super.dispose();
-    //_searchResultController?.close();
     _recentSearchController?.close();
   }
 
@@ -54,9 +37,5 @@ class SearchBobaBloc extends BaseBloc {
     return _findTeaShopUseCase
         .execute(FindTeaShopParam(lat, lng, radius: radius, shopNames: {name}))
         .then((teaShopsStream) => teaShopsStream.first);
-    /*return _teaShopRepo
-        .getTeaShops(lat: lat, lng: lng, radius: radius, shopNames: {name})
-        .first
-        .timeout(Duration(seconds: 20));*/
   }
 }

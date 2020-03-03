@@ -16,10 +16,11 @@ class GetFavoriteShopsStreamUseCase extends UseCase<List<TeaShop>> {
 
   @override
   Future buildUseCaseFuture() {
-    return _getCurrentUserUseCase
-        .execute()
-        .then((userStream) => userStream.first)
-        .then((user) => _favoriteRepository.getFavoriteShops(uid: user?.uid));
+    return _getCurrentUserUseCase.execute().then((userStream) {
+      return userStream.asyncExpand((user) {
+        return _favoriteRepository.getFavoriteShops(uid: user?.uid);
+      });
+    });
   }
 }
 
@@ -33,12 +34,12 @@ class SetFavoriteShopUseCase extends ParamUseCase<SetFavoriteShopParam, void> {
 
   @override
   Future buildUseCaseFuture(SetFavoriteShopParam param) {
-    return _getCurrentUserUseCase
-        .execute()
-        .then((userStream) => userStream.first)
-        .then((user) => _favoriteRepository.setFavoriteShop(
-            param?.teaShop, param?.isFavorite,
-            uid: user?.uid));
+    return _getCurrentUserUseCase.execute().then((userStream) {
+      return userStream.asyncMap((user) {
+        return _favoriteRepository
+            .setFavoriteShop(param?.teaShop, param?.isFavorite, uid: user?.uid);
+      });
+    });
   }
 }
 
@@ -65,10 +66,11 @@ class SyncRemoteFavoriteShopUseCase extends UseCase<void> {
 
   @override
   Future buildUseCaseFuture() {
-    return _getCurrentUserUseCase
-        .execute()
-        .then((userStream) => userStream.first)
-        .then((user) => _favoriteRepository.syncRemoteFavoriteShops(user?.uid));
+    return _getCurrentUserUseCase.execute().then((userStream) {
+      return userStream.asyncMap((user) {
+        return _favoriteRepository.syncRemoteFavoriteShops(user?.uid);
+      });
+    });
   }
 }
 

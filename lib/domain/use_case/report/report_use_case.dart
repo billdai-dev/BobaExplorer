@@ -16,10 +16,9 @@ class ReportUseCase extends ParamUseCase<Report, bool> {
 
   @override
   Future buildUseCaseFuture(Report param) {
-    return _getCurrentUserUseCase
-        .execute()
-        .then((getUserStream) => getUserStream.first)
-        .then(
-            (user) => _reportRepository.report(param..reporterUid = user?.uid));
+    return _getCurrentUserUseCase.execute().then((userStream) {
+      return userStream.asyncMap(
+          (user) => _reportRepository.report(param..reporterUid = user?.uid));
+    });
   }
 }

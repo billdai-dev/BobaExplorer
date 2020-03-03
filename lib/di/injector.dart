@@ -19,7 +19,7 @@ import 'package:boba_explorer/domain/repository/tea_shop/tea_shop_repository.dar
 import 'package:boba_explorer/domain/service/device/device_manager.dart';
 import 'package:boba_explorer/domain/service/exception_handler.dart';
 import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
-import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
+import 'package:boba_explorer/domain/use_case/favorite/favorite_use_case.dart';
 import 'package:boba_explorer/domain/use_case/remote_config/remote_config_use_case.dart';
 import 'package:boba_explorer/domain/use_case/report/report_use_case.dart';
 import 'package:boba_explorer/domain/use_case/service/device/device_info_use_case.dart';

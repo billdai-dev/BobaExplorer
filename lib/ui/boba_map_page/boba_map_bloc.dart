@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:boba_explorer/domain/entity/tea_shop.dart';
 import 'package:boba_explorer/domain/use_case/auth/auth_use_case.dart';
-import 'package:boba_explorer/domain/use_case/auth/favorite_use_case.dart';
+import 'package:boba_explorer/domain/use_case/favorite/favorite_use_case.dart';
 import 'package:boba_explorer/domain/use_case/tea_shop/tea_shop_use_case.dart';
 import 'package:boba_explorer/ui/base_bloc.dart';
 import 'package:boba_explorer/ui/event.dart';
@@ -131,7 +131,7 @@ class BobaMapBloc extends BaseBloc {
     }).listen((teaShopsStream) {
       eventSink.add(Event.changeLoading(false));
       teaShopsStream.listen(_teaShopsController.add);
-    }, onError: (e) => print(e));
+    });
     //=============================================================
 
     _getUserChangedStreamUseCase.execute().then((userChangedStream) {
