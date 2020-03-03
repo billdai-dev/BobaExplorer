@@ -25,7 +25,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
   @override
   void initState() {
     super.initState();
-    _isLoadingController = BehaviorSubject(seedValue: widget.isLoading);
+    _isLoadingController = BehaviorSubject.seeded(widget.isLoading);
     _isLoadingStreamSub = widget.isLoadingStream
         ?.map((event) => event.isLoading)
         ?.listen(_isLoadingController.add);

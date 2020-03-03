@@ -117,22 +117,26 @@ class Network implements INetwork {
     );
     FirebaseUser newUser;
     if (currentUser == null) {
-      newUser = await _auth.signInWithCredential(credential);
+      var authResult = await _auth.signInWithCredential(credential);
+      newUser = authResult.user;
     } else if (currentUser.isAnonymous == true) {
-      newUser = await _auth.linkWithCredential(credential).catchError((e) {
+      var authResult =
+          await currentUser.linkWithCredential(credential).catchError((e) {
         if (e is PlatformException &&
             e.code == 'ERROR_CREDENTIAL_ALREADY_IN_USE') {
           return _auth.signInWithCredential(credential);
         }
         throw e; //TODO: Maybe throw custom domain exception
       });
+      newUser = authResult.user;
     } else {
       bool wasGoogleUser = currentUser.providerData?.any((provider) =>
               provider.providerId == GoogleAuthProvider.providerId) ==
           true;
-      newUser = wasGoogleUser
+      var authResult = wasGoogleUser
           ? await currentUser.reauthenticateWithCredential(credential)
-          : await _auth.linkWithCredential(credential);
+          : await currentUser.linkWithCredential(credential);
+      newUser = authResult.user;
     }
     final googleProviderData = newUser?.providerData?.firstWhere(
         (data) => data.providerId == GoogleAuthProvider.providerId,
@@ -156,22 +160,26 @@ class Network implements INetwork {
 
     FirebaseUser newUser;
     if (currentUser == null) {
-      newUser = await _auth.signInWithCredential(credential);
+      var authResult = await _auth.signInWithCredential(credential);
+      newUser = authResult.user;
     } else if (currentUser.isAnonymous == true) {
-      newUser = await _auth.linkWithCredential(credential).catchError((e) {
+      var authResult =
+          await currentUser.linkWithCredential(credential).catchError((e) {
         if (e is PlatformException &&
             e.code == 'ERROR_CREDENTIAL_ALREADY_IN_USE') {
           return _auth.signInWithCredential(credential);
         }
         throw e; //TODO: Maybe throw custom domain exception
       });
+      newUser = authResult.user;
     } else {
       bool wasFbUser = currentUser.providerData?.any((provider) =>
               provider.providerId == FacebookAuthProvider.providerId) ==
           true;
-      newUser = wasFbUser
+      var authResult = wasFbUser
           ? await currentUser.reauthenticateWithCredential(credential)
-          : await _auth.linkWithCredential(credential);
+          : await currentUser.linkWithCredential(credential);
+      newUser = authResult.user;
     }
     final fbProviderData = newUser?.providerData?.firstWhere(
         (data) => data.providerId == FacebookAuthProvider.providerId,
@@ -187,7 +195,7 @@ class Network implements INetwork {
   Future<User> guestLogin() {
     return _auth
         .signInAnonymously()
-        .then((user) => Mapper.fireBaseUserToUser(user));
+        .then((authResult) => Mapper.fireBaseUserToUser(authResult.user));
   }
 
   @override
@@ -209,7 +217,7 @@ class Network implements INetwork {
   }
 
   @override
-  Observable<List<TeaShop>> fetchTeaShops(double lat, double lng, double radius,
+  Stream<List<TeaShop>> fetchTeaShops(double lat, double lng, double radius,
       {Set<String> shopNames}) {
     if (shopNames == null || shopNames.isEmpty) {
       return _buildQueryStream(lat, lng, radius);
@@ -220,7 +228,7 @@ class Network implements INetwork {
     if (queries.length == 1) {
       return queries.first;
     }
-    return Observable.zip<List<TeaShop>, List<TeaShop>>(queries,
+    return Rx.zip<List<TeaShop>, List<TeaShop>>(queries,
         (results) => results.reduce((value, next) => value..addAll(next)));
   }
 

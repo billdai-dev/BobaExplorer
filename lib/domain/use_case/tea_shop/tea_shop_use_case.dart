@@ -14,11 +14,13 @@ class FindTeaShopUseCase extends ParamUseCase<FindTeaShopParam, List<TeaShop>> {
 
   @override
   Future buildUseCaseFuture(FindTeaShopParam param) async {
-    return _teaShopRepository.getTeaShops(
-        lat: param.lat,
-        lng: param.lng,
-        radius: param.radius,
-        shopNames: param.shopNames);
+    return _teaShopRepository
+        .getTeaShops(
+            lat: param.lat,
+            lng: param.lng,
+            radius: param.radius,
+            shopNames: param.shopNames)
+        .first;
   }
 }
 

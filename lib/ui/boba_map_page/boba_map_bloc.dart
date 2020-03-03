@@ -17,11 +17,10 @@ class BobaMapBloc extends BaseBloc {
   final GetUserChangedStreamUseCase _getUserChangedStreamUseCase;
 
   final BehaviorSubject<List<TeaShop>> _teaShopsController =
-      BehaviorSubject(seedValue: []);
+      BehaviorSubject.seeded([]);
 
   Stream<List<TeaShop>> get teaShops {
-    return Observable.combineLatest2<List<TeaShop>, List<TeaShop>,
-            List<TeaShop>>(
+    return Rx.combineLatest2<List<TeaShop>, List<TeaShop>, List<TeaShop>>(
         _teaShopsController.stream, _favoriteShopsController.stream,
         (shops, favoriteShops) {
       shops.forEach((shop) {
@@ -33,7 +32,7 @@ class BobaMapBloc extends BaseBloc {
   }
 
   final BehaviorSubject<List<TeaShop>> _favoriteShopsController =
-      BehaviorSubject(seedValue: []);
+      BehaviorSubject.seeded([]);
 
   Stream<List<TeaShop>> get favoriteShops => _favoriteShopsController.stream;
 
@@ -41,7 +40,7 @@ class BobaMapBloc extends BaseBloc {
       BehaviorSubject();
 
   final BehaviorSubject<Set<String>> _filterListController =
-      BehaviorSubject(seedValue: {});
+      BehaviorSubject.seeded({});
 
   Stream<Set<String>> get filterList => _filterListController.stream;
 
