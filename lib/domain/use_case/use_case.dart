@@ -19,7 +19,15 @@ abstract class UseCase<R> {
 
     buildUseCaseFuture().then((value) {
       if (value is Stream) {
-        _sub = value.listen(_sc.add);
+        _sub = value.listen((val) {
+          if (!_sc.isClosed) {
+            _sc.add(val);
+          }
+        }, onError: (e) {
+          if (!_sc.isClosed) {
+            _sc.addError(_exceptionHandler.parse(e));
+          }
+        });
       } else {
         _sc.add(value);
       }
@@ -51,12 +59,22 @@ abstract class ParamUseCase<P, R> {
 
     buildUseCaseFuture(param).then((value) {
       if (value is Stream) {
-        _sub = value.listen(_sc.add);
+        _sub = value.listen((val) {
+          if (!_sc.isClosed) {
+            _sc.add(val);
+          }
+        }, onError: (e) {
+          if (!_sc.isClosed) {
+            _sc.addError(_exceptionHandler.parse(e));
+          }
+        });
       } else {
         _sc.add(value);
       }
     }).catchError((e) {
-      _sc.addError(_exceptionHandler.parse(e));
+      if (!_sc.isClosed) {
+        _sc.addError(_exceptionHandler.parse(e));
+      }
     });
     /*.whenComplete(() {
       return _sc.close();
@@ -67,32 +85,3 @@ abstract class ParamUseCase<P, R> {
   @protected
   Future buildUseCaseFuture(P param);
 }
-
-/*abstract class WatchUseCase<R> {
-  final IExceptionHandler _exceptionHandler;
-  StreamSubscription<R> _sub;
-
-  WatchUseCase(this._exceptionHandler);
-
-  Future<Stream<R>> execute() async {
-    final StreamController<R> _sc = StreamController();
-    _sc.onCancel = () {
-      if (!_sc.isClosed) _sc.close();
-    };
-
-    _sub?.cancel();
-    buildUseCaseFuture().then((stream) {
-      _sub = stream.listen(_sc.add);
-    }).catchError((e) {
-      if (!_sc.isClosed) {
-        _sc.addError(_exceptionHandler.parse(e));
-      }
-    }).whenComplete(() {
-      return _sc.close();
-    });
-    return _sc.stream;
-  }
-
-  @protected
-  Future<Stream<R>> buildUseCaseFuture();
-}*/

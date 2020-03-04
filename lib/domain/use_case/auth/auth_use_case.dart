@@ -67,7 +67,7 @@ class GetCurrentUserUseCase extends UseCase<User> {
   }
 }
 
-class LogoutUseCase extends UseCase<User> {
+class LogoutUseCase extends UseCase<void> {
   final IAuthRepository _authRepository;
 
   LogoutUseCase(this._authRepository, IExceptionHandler exceptionHandler)
