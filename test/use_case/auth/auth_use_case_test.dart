@@ -17,6 +17,8 @@ void main() {
     setUp(() {
       mockAuthRepository = MockAuthRepository();
       mockExceptionHandler = MockExceptionHandler();
+      when(mockExceptionHandler.parse(any))
+          .thenReturn(DomainException.resourceNotAvailable());
     });
     test('Google login success', () async {
       var user = User();
@@ -35,8 +37,6 @@ void main() {
     test('Google login failure', () async {
       when(mockAuthRepository.googleLogin()).thenAnswer(
           (_) => Future.error(DomainException.resourceNotAvailable()));
-      when(mockExceptionHandler.parse(any))
-          .thenReturn(DomainException.resourceNotAvailable());
       var googleLoginUseCase =
           GoogleLoginUseCase(mockAuthRepository, mockExceptionHandler);
       var stream = await googleLoginUseCase.execute();
@@ -63,8 +63,6 @@ void main() {
     test('Facebook login failure', () async {
       when(mockAuthRepository.facebookLogin()).thenAnswer(
           (_) => Future.error(DomainException.resourceNotAvailable()));
-      when(mockExceptionHandler.parse(any))
-          .thenReturn(DomainException.resourceNotAvailable());
       var facebookLoginUseCase =
           FacebookLoginUseCase(mockAuthRepository, mockExceptionHandler);
       var stream = await facebookLoginUseCase.execute();
@@ -92,8 +90,6 @@ void main() {
     test('Guest login failure', () async {
       when(mockAuthRepository.guestLogin()).thenAnswer(
           (_) => Future.error(DomainException.resourceNotAvailable()));
-      when(mockExceptionHandler.parse(any))
-          .thenReturn(DomainException.resourceNotAvailable());
       var guestLoginUseCase =
           GuestLoginUseCase(mockAuthRepository, mockExceptionHandler);
       var stream = await guestLoginUseCase.execute();
@@ -121,8 +117,6 @@ void main() {
     test('Get current user failure', () async {
       when(mockAuthRepository.getCurrentUser()).thenAnswer(
           (_) => Future.error(DomainException.resourceNotAvailable()));
-      when(mockExceptionHandler.parse(any))
-          .thenReturn(DomainException.resourceNotAvailable());
       var getCurrentUserUseCase =
           GetCurrentUserUseCase(mockAuthRepository, mockExceptionHandler);
       var stream = await getCurrentUserUseCase.execute();
@@ -150,8 +144,6 @@ void main() {
     test('Get user changed stream failure', () async {
       when(mockAuthRepository.getAuthChangedStream()).thenAnswer(
           (_) => Stream.error(DomainException.resourceNotAvailable()));
-      when(mockExceptionHandler.parse(any))
-          .thenReturn(DomainException.resourceNotAvailable());
       var getUserChangedStreamUseCase =
           GetUserChangedStreamUseCase(mockAuthRepository, mockExceptionHandler);
       var stream = await getUserChangedStreamUseCase.execute();
@@ -177,8 +169,6 @@ void main() {
     test('Logout failure', () async {
       when(mockAuthRepository.logout())
           .thenAnswer((_) => Future.error(Exception()));
-      when(mockExceptionHandler.parse(any))
-          .thenReturn(DomainException.unknownException());
       var logoutUseCase =
           LogoutUseCase(mockAuthRepository, mockExceptionHandler);
       var stream = await logoutUseCase.execute();
